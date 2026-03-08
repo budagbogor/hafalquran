@@ -319,6 +319,35 @@ const METHODS = [
 
 const SCHEDULE_INTERVALS = [1, 3, 7, 14, 30, 60]; // spaced repetition days
 
+// ===== SHARED CSS VARIABLES =====
+const CSS_VARS_STYLE = `
+  :root {
+    --bg: #0A0C14; --bg-deeper: #0D1018; --card: #141824;
+    --border-soft: #1A1E2E; --border: #1E2535; --border-mid: #2A3045;
+    --muted-deep: #2A3050; --muted: #4A5068; --gold-disabled: #5A4A2E;
+    --muted-alt: #5A6080; --blue-dark: #5A8FB4; --text-dim: #6A7090;
+    --text-dim2: #8A9080; --text-secondary: #8A9098; --text-warm: #C8C0A8;
+    --text: #E8DCC8; --gold: #C8A96E; --gold-dark: #A8893E;
+    --blue: #7BAFD4; --purple: #9B7EC8; --green: #6BAF92;
+    --green-dark: #4A8F72; --purple-dark: #7B5EA8; --red: #E85040;
+  }
+  :root.light {
+    --bg: #F5F0E8; --bg-deeper: #EDE8DC; --card: #FFFFFF;
+    --border-soft: #E8E0D0; --border: #DDD5C0; --border-mid: #C8BFAA;
+    --muted-deep: #B8A890; --muted: #8A7D68; --gold-disabled: #C8A020;
+    --muted-alt: #9A8D78; --blue-dark: #4A7FA4; --text-dim: #7A6D58;
+    --text-dim2: #8A806A; --text-secondary: #6A5D48; --text-warm: #5A4D38;
+    --text: #2A1F0A; --gold: #B8891E; --gold-dark: #8A6518;
+    --blue: #3A7FAC; --purple: #6B4EA0; --green: #2A7F5A;
+    --green-dark: #1A5F3A; --purple-dark: #5A3E88; --red: #C83020;
+  }
+  * { -webkit-tap-highlight-color: transparent; box-sizing: border-box;
+      transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease; }
+  html, body { margin: 0; padding: 0; background: var(--bg); }
+  ::-webkit-scrollbar { display: none; }
+  input { -webkit-appearance: none; }
+`;
+
 // ===== INITIAL STATE =====
 const initHafalanData = () => {
   const data = {};
@@ -377,15 +406,16 @@ function AuthScreen({ onLogin }) {
       flexDirection: "column", alignItems: "center", justifyContent: "center",
       padding: "32px 24px", maxWidth: 430, margin: "0 auto",
     }}>
+      <style>{CSS_VARS_STYLE}</style>
       <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
       <div style={{ marginBottom: 36, textAlign: "center" }}>
-        <div style={{ fontSize: 18, color: "var(--gold)66", fontFamily: "serif", marginBottom: 14, letterSpacing: 3 }}>
+        <div style={{ fontSize: 18, color: "var(--gold)", opacity: 0.5, fontFamily: "serif", marginBottom: 14, letterSpacing: 3 }}>
           بِسْمِ اللهِ الرَّحْمَنِ الرَّحِيمِ
         </div>
         <h1 style={{ fontSize: 34, fontFamily: "'Playfair Display', serif", color: "var(--text)", margin: 0, lineHeight: 1.2 }}>
           Hafalan<br /><span style={{ color: "var(--gold)" }}>Al-Qur'an</span>
         </h1>
-        <div style={{ fontSize: 10, color: "var(--muted-deep)", marginTop: 10, letterSpacing: "0.18em", fontFamily: "'DM Sans', sans-serif" }}>
+        <div style={{ fontSize: 10, color: "var(--muted-alt)", marginTop: 10, letterSpacing: "0.18em", fontFamily: "'DM Sans', sans-serif" }}>
           B.O.A. INDONESIA • BERBASIS NEUROSAINS
         </div>
       </div>
@@ -395,7 +425,7 @@ function AuthScreen({ onLogin }) {
           <button key={t} onClick={() => { setTab(t); setMsg(""); }} style={{
             flex: 1, padding: "10px 0", border: "none", borderRadius: 9, cursor: "pointer",
             background: tab === t ? "var(--gold)" : "transparent",
-            color: tab === t ? "var(--bg)" : "var(--muted)",
+            color: tab === t ? "var(--bg)" : "var(--text-secondary)",
             fontSize: 12, fontWeight: 700, letterSpacing: "0.1em",
             fontFamily: "'DM Sans', sans-serif",
           }}>{t === "login" ? "MASUK" : "DAFTAR"}</button>
@@ -434,7 +464,7 @@ function AuthScreen({ onLogin }) {
         </button>
       </div>
 
-      <div style={{ marginTop: 40, fontSize: 9, color: "var(--border)", letterSpacing: "0.15em", fontFamily: "'DM Sans', sans-serif" }}>
+      <div style={{ marginTop: 40, fontSize: 9, color: "var(--muted)", letterSpacing: "0.15em", fontFamily: "'DM Sans', sans-serif" }}>
         B.O.A. INDONESIA © 2026
       </div>
     </div>
@@ -753,6 +783,7 @@ export default function QuranHafalanApp() {
   if (!authChecked) {
     return (
       <div style={{ minHeight: "100vh", background: "var(--bg)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <style>{CSS_VARS_STYLE}</style>
         <div style={{ color: "var(--gold)66", fontSize: 32 }}>◈</div>
       </div>
     );
@@ -2438,33 +2469,7 @@ export default function QuranHafalanApp() {
       paddingTop: "env(safe-area-inset-top, 0px)",
     }}>
       <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=DM+Sans:wght@400;500;600;700&family=Scheherazade+New:wght@400;700&display=swap" rel="stylesheet" />
-      <style>{`
-        :root {
-          --bg: #0A0C14; --bg-deeper: #0D1018; --card: #141824;
-          --border-soft: #1A1E2E; --border: #1E2535; --border-mid: #2A3045;
-          --muted-deep: #2A3050; --muted: #4A5068; --gold-disabled: #5A4A2E;
-          --muted-alt: #5A6080; --blue-dark: #5A8FB4; --text-dim: #6A7090;
-          --text-dim2: #8A9080; --text-secondary: #8A9098; --text-warm: #C8C0A8;
-          --text: #E8DCC8; --gold: #C8A96E; --gold-dark: #A8893E;
-          --blue: #7BAFD4; --purple: #9B7EC8; --green: #6BAF92;
-          --green-dark: #4A8F72; --purple-dark: #7B5EA8; --red: #E85040;
-        }
-        :root.light {
-          --bg: #F5F0E8; --bg-deeper: #EDE8DC; --card: #FFFFFF;
-          --border-soft: #E8E0D0; --border: #DDD5C0; --border-mid: #C8BFAA;
-          --muted-deep: #B8A890; --muted: #8A7D68; --gold-disabled: #C8A020;
-          --muted-alt: #9A8D78; --blue-dark: #4A7FA4; --text-dim: #7A6D58;
-          --text-dim2: #8A806A; --text-secondary: #6A5D48; --text-warm: #5A4D38;
-          --text: #2A1F0A; --gold: #B8891E; --gold-dark: #8A6518;
-          --blue: #3A7FAC; --purple: #6B4EA0; --green: #2A7F5A;
-          --green-dark: #1A5F3A; --purple-dark: #5A3E88; --red: #C83020;
-        }
-        * { -webkit-tap-highlight-color: transparent; box-sizing: border-box;
-            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease; }
-        html, body { margin: 0; padding: 0; background: var(--bg); }
-        ::-webkit-scrollbar { display: none; }
-        input { -webkit-appearance: none; }
-      `}</style>
+      <style>{CSS_VARS_STYLE}</style>
 
       <div style={{
         position: "fixed", inset: 0, pointerEvents: "none", zIndex: 0,
