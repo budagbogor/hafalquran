@@ -710,6 +710,1576 @@ const DoaScreen = () => {
 };
 
 
+// ===== COMPONENTS =====
+
+const Toast = ({ toast, undoMarkStatus }) => {
+  if (!toast) return null;
+  const label = toast.status === "hafal" ? "Ditandai Hafal" : toast.status === "proses" ? "Mulai Hafalan" : "Diubah";
+  return (
+    <div style={{
+      position: "fixed", bottom: 110, left: "50%", transform: "translateX(-50%)",
+      zIndex: 200, maxWidth: 360, width: "calc(100% - 40px)",
+      background: "var(--border)", border: "1px solid var(--gold)44",
+      borderRadius: 14, padding: "12px 16px",
+      display: "flex", alignItems: "center", gap: 12,
+      boxShadow: "0 8px 32px rgba(0,0,0,0.5)",
+      animation: "slideUp 0.25s ease",
+    }}>
+      <style>{`@keyframes slideUp { from { transform: translateX(-50%) translateY(20px); opacity:0; } to { transform: translateX(-50%) translateY(0); opacity:1; } }`}</style>
+      <div style={{ flex: 1 }}>
+        <div style={{ fontSize: 12, color: "var(--text)", fontFamily: "'DM Sans', sans-serif", fontWeight: 600 }}>
+          {label}: <span style={{ color: "var(--gold)" }}>{toast.surahName}</span>
+        </div>
+        <div style={{ fontSize: 10, color: "var(--muted)", fontFamily: "'DM Sans', sans-serif", marginTop: 2 }}>
+          Tap Batalkan jika salah klik
+        </div>
+      </div>
+      <button onClick={undoMarkStatus} style={{
+        background: "linear-gradient(135deg, var(--gold), var(--gold-dark))",
+        border: "none", borderRadius: 9, padding: "7px 14px",
+        color: "var(--bg)", fontSize: 11, fontWeight: 700,
+        cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
+        letterSpacing: "0.08em", whiteSpace: "nowrap", flexShrink: 0,
+      }}>↩ Batalkan</button>
+    </div>
+  );
+};
+
+const NavBar = ({ screen, setScreen, setSelectedSurahDetail, selectedSurahDetail }) => (
+  <nav style={{
+    position: "fixed", bottom: 0, left: 0, right: 0,
+    background: "linear-gradient(180deg, transparent 0%, var(--bg) 15%)",
+    display: "flex", flexDirection: "column",
+    zIndex: 100, backdropFilter: "blur(12px)",
+  }}>
+    <div style={{ display: "flex", justifyContent: "space-around", padding: "10px 0 6px" }}>
+      {[
+        { id: "dashboard", icon: "⌂", label: "Beranda" },
+        { id: "hafalan", icon: "◈", label: "Hafalan" },
+        { id: "muraja", icon: "⟳", label: "Muraja'ah" },
+        { id: "jadwal", icon: "◷", label: "Jadwal" },
+        { id: "doa", icon: "🤲", label: "Dzikir" },
+        { id: "sholat", icon: "🕌", label: "Sholat" },
+      ].map(nav => (
+        <button key={nav.id} onClick={() => { setScreen(nav.id); setSelectedSurahDetail(null); }} style={{
+          background: "none", border: "none", cursor: "pointer",
+          display: "flex", flexDirection: "column", alignItems: "center", gap: 3,
+          color: (screen === nav.id || (nav.id === 'hafalan' && selectedSurahDetail)) ? "var(--gold)" : "var(--muted)",
+          transition: "color 0.2s", padding: "4px 10px",
+        }}>
+          <span style={{ fontSize: 22, lineHeight: 1 }}>{nav.icon}</span>
+          <span style={{ fontSize: 10, fontFamily: "'DM Sans', sans-serif", letterSpacing: "0.08em", fontWeight: 500 }}>{nav.label}</span>
+        </button>
+      ))}
+    </div>
+    <div style={{
+      textAlign: "center",
+      padding: "6px 0 calc(10px + env(safe-area-inset-bottom, 8px))",
+      borderTop: "1px solid var(--border-soft)",
+    }}>
+      <span style={{
+        fontSize: 9, color: "var(--muted-deep)", fontFamily: "'DM Sans', sans-serif",
+        letterSpacing: "0.12em", fontWeight: 600,
+      }}>B.O.A. INDONESIA © 2026</span>
+    </div>
+  </nav>
+);
+
+const Dashboard = ({
+  user, syncing, setTheme, theme, handleLogout, setScreen, setSelectedSurahDetail,
+  stats, todayDone, dueToday, setSelectedSurah, formatTime, timerActive, setTimerActive, setTimer
+}) => (
+  <div style={{ padding: "0 20px 140px" }}>
+    {/* Header */}
+    <div style={{ padding: "56px 0 32px", position: "relative" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+        <div>
+          <div style={{ fontSize: 11, letterSpacing: "0.2em", color: "var(--muted)", fontFamily: "'DM Sans', sans-serif", marginBottom: 8 }}>
+            بِسْمِ اللهِ الرَّحْمَنِ الرَّحِيمِ
+          </div>
+          <h1 style={{ fontSize: 28, fontFamily: "'Playfair Display', Georgia, serif", color: "var(--text)", fontWeight: 700, margin: 0, lineHeight: 1.2 }}>
+            Hafalan<br /><span style={{ color: "var(--gold)" }}>Al-Qur'an</span>
+          </h1>
+          <div style={{ fontSize: 10, color: "var(--muted)", marginTop: 8, fontFamily: "'DM Sans', sans-serif", letterSpacing: "0.1em" }}>
+            BERBASIS NEUROSAINS • UNTUK ORANG DEWASA
+          </div>
+        </div>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 8, paddingTop: 4 }}>
+          {syncing && (
+            <div style={{ fontSize: 9, color: "var(--blue)", fontFamily: "'DM Sans', sans-serif", letterSpacing: "0.1em" }}>
+              ⟳ SYNCING...
+            </div>
+          )}
+          <div style={{ fontSize: 9, color: "var(--gold)88", fontFamily: "'DM Sans', sans-serif", maxWidth: 100, textAlign: "right", letterSpacing: "0.05em" }}>
+            {user.email?.split("@")[0]}
+          </div>
+          <div style={{ display: "flex", gap: 6 }}>
+            <button onClick={() => setScreen("panduan")} style={{
+              background: "var(--gold)22", border: "1px solid var(--gold)44", borderRadius: 8,
+              color: "var(--gold)", fontSize: 9, padding: "5px 10px", cursor: "pointer",
+              fontFamily: "'DM Sans', sans-serif", letterSpacing: "0.08em", fontWeight: 700,
+            }}>? PANDUAN</button>
+            <button onClick={() => setTheme(t => t === "dark" ? "light" : "dark")} title={theme === "dark" ? "Mode Terang" : "Mode Gelap"} style={{
+              background: "var(--border)", border: "1px solid var(--border-mid)", borderRadius: 8,
+              color: "var(--text-dim)", fontSize: 15, padding: "3px 9px", cursor: "pointer",
+              lineHeight: 1, display: "flex", alignItems: "center", justifyContent: "center",
+            }}>{theme === "dark" ? "☀" : "☾"}</button>
+            <button onClick={handleLogout} style={{
+              background: "var(--border)", border: "1px solid var(--border-mid)", borderRadius: 8,
+              color: "var(--muted)", fontSize: 9, padding: "5px 10px", cursor: "pointer",
+              fontFamily: "'DM Sans', sans-serif", letterSpacing: "0.08em",
+            }}>KELUAR</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {/* Stats Ring */}
+    <div style={{
+      background: "linear-gradient(135deg, var(--card) 0%, var(--bg-deeper) 100%)",
+      borderRadius: 20, padding: 24, marginBottom: 20,
+      border: "1px solid var(--border)",
+      display: "flex", alignItems: "center", gap: 24,
+    }}>
+      <div style={{ position: "relative", width: 90, height: 90, flexShrink: 0 }}>
+        <svg width="90" height="90" style={{ transform: "rotate(-90deg)" }}>
+          <circle cx="45" cy="45" r="38" fill="none" stroke="var(--border)" strokeWidth="6" />
+          <circle cx="45" cy="45" r="38" fill="none" stroke="var(--gold)" strokeWidth="6"
+            strokeDasharray={`${(stats.hafal / stats.total) * 239} 239`}
+            strokeLinecap="round" />
+        </svg>
+        <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
+          <span style={{ fontSize: 20, fontWeight: 700, color: "var(--gold)", fontFamily: "'Playfair Display', serif" }}>{stats.hafal}</span>
+          <span style={{ fontSize: 9, color: "var(--muted)", letterSpacing: "0.1em" }}>SURAH</span>
+        </div>
+      </div>
+      <div style={{ flex: 1 }}>
+        <div style={{ color: "var(--text)", fontSize: 15, fontFamily: "'Playfair Display', serif", marginBottom: 12 }}>Progress Hafalan</div>
+        {[
+          { label: "Hafal", value: stats.hafal, color: "var(--gold)" },
+          { label: "Dalam Proses", value: stats.proses, color: "var(--blue)" },
+          { label: "Belum Mulai", value: stats.total - stats.hafal - stats.proses, color: "var(--border-mid)" },
+        ].map(s => (
+          <div key={s.label} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+            <div style={{ width: 8, height: 8, borderRadius: 2, background: s.color, flexShrink: 0 }} />
+            <span style={{ fontSize: 11, color: "var(--text-dim)", flex: 1, fontFamily: "'DM Sans', sans-serif" }}>{s.label}</span>
+            <span style={{ fontSize: 12, color: "var(--text)", fontWeight: 600 }}>{s.value}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+
+    {/* Today's Tasks */}
+    <div style={{ marginBottom: 20 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
+        <span style={{ fontSize: 13, color: "var(--text)", fontFamily: "'Playfair Display', serif", letterSpacing: "0.02em" }}>Agenda Hari Ini</span>
+        <span style={{ fontSize: 10, color: "var(--gold)", fontFamily: "'DM Sans', sans-serif", letterSpacing: "0.12em" }}>
+          {todayDone} SELESAI
+        </span>
+      </div>
+
+      {dueToday.length > 0 ? dueToday.slice(0, 3).map(s => (
+        <div key={s.id} style={{
+          background: "var(--card)", borderRadius: 14, padding: "14px 16px",
+          marginBottom: 10, border: "1px solid var(--border)",
+          display: "flex", alignItems: "center", gap: 14,
+        }}>
+          <div style={{
+            width: 40, height: 40, borderRadius: 12,
+            background: "linear-gradient(135deg, var(--blue), var(--blue-dark))",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            fontSize: 18, color: "#fff", flexShrink: 0,
+          }}>⟳</div>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 13, color: "var(--text)", fontFamily: "'Playfair Display', serif" }}>{s.name}</div>
+            <div style={{ fontSize: 10, color: "var(--muted)", fontFamily: "'DM Sans', sans-serif", marginTop: 2 }}>Muraja'ah terjadwal</div>
+          </div>
+          <button onClick={() => { setSelectedSurah(s); setSelectedSurahDetail(null); setScreen("muraja"); }} style={{
+            background: "var(--border)", border: "1px solid var(--border-mid)", borderRadius: 8,
+            color: "var(--blue)", fontSize: 10, padding: "6px 12px", cursor: "pointer",
+            fontFamily: "'DM Sans', sans-serif", letterSpacing: "0.08em",
+          }}>MULAI</button>
+        </div>
+      )) : (
+        <div style={{
+          background: "var(--card)", borderRadius: 14, padding: 20, textAlign: "center",
+          border: "1px solid var(--border)",
+        }}>
+          <div style={{ fontSize: 28, marginBottom: 8 }}>✦</div>
+          <div style={{ fontSize: 12, color: "var(--gold)", fontFamily: "'DM Sans', sans-serif" }}>Tidak ada muraja'ah terjadwal hari ini</div>
+          <div style={{ fontSize: 10, color: "var(--muted)", marginTop: 4 }}>Mulai hafalan baru atau tambah waktu belajar</div>
+        </div>
+      )}
+    </div>
+
+    {/* Method Highlight */}
+    <div style={{ marginBottom: 20 }}>
+      <div style={{ fontSize: 13, color: "var(--text)", fontFamily: "'Playfair Display', serif", marginBottom: 14 }}>
+        Metode Ilmiah Aktif
+      </div>
+      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+        {METHODS.slice(0, 4).map(m => (
+          <div key={m.id} onClick={() => { setScreen("metode"); }}
+            style={{
+              background: "var(--card)", borderRadius: 14, padding: 14,
+              border: `1px solid ${m.color}22`, cursor: "pointer",
+            }}>
+            <div style={{ fontSize: 24, marginBottom: 6 }}>{m.icon}</div>
+            <div style={{ fontSize: 11, color: m.color, fontFamily: "'DM Sans', sans-serif", fontWeight: 600 }}>{m.name}</div>
+            <div style={{ fontSize: 9, color: "var(--muted)", marginTop: 4, fontFamily: "'DM Sans', sans-serif", lineHeight: 1.4 }}>{m.ref}</div>
+          </div>
+        ))}
+      </div>
+    </div>
+
+    {/* Quick Start */}
+    <button onClick={() => { setScreen("hafalan"); setSelectedSurahDetail(null); }} style={{
+      width: "100%", padding: "16px 0",
+      background: "linear-gradient(135deg, var(--gold), var(--gold-dark))",
+      border: "none", borderRadius: 16, cursor: "pointer",
+      color: "var(--bg)", fontSize: 13, fontWeight: 700,
+      fontFamily: "'DM Sans', sans-serif", letterSpacing: "0.1em",
+    }}>
+      ✦ MULAI SESI HAFALAN
+    </button>
+  </div>
+);
+
+const HafalanScreen = ({
+  activeTab, setActiveTab, searchQuery, setSearchQuery, activeJuz, setActiveJuz,
+  hafalanData, stats, markStatus, resetStatus, setSelectedSurahDetail
+}) => {
+  // Filter by status tab
+  let filtered = activeTab === "semua" ? SURAHS
+    : activeTab === "proses" ? SURAHS.filter(s => hafalanData[s.id].status === "proses")
+      : activeTab === "hafal" ? SURAHS.filter(s => hafalanData[s.id].status === "hafal")
+        : SURAHS.filter(s => hafalanData[s.id].status === "belum");
+
+  // Filter by search
+  if (searchQuery.trim()) {
+    const q = searchQuery.toLowerCase();
+    filtered = filtered.filter(s =>
+      s.name.toLowerCase().includes(q) ||
+      s.arabic.includes(q) ||
+      String(s.id).includes(q)
+    );
+  }
+
+  // Filter by juz
+  if (activeJuz > 0) {
+    filtered = filtered.filter(s => s.juz === activeJuz);
+  }
+
+  // Group by juz for display
+  const grouped = filtered.reduce((acc, s) => {
+    const j = s.juz;
+    if (!acc[j]) acc[j] = [];
+    acc[j].push(s);
+    return acc;
+  }, {});
+  const juzKeys = Object.keys(grouped).map(Number).sort((a, b) => a - b);
+
+  // Progress per juz
+  const juzProgress = (juz) => {
+    const inJuz = SURAHS.filter(s => s.juz === juz);
+    const done = inJuz.filter(s => hafalanData[s.id].status === "hafal").length;
+    return { done, total: inJuz.length };
+  };
+
+  return (
+    <div style={{ padding: "0 20px 140px" }}>
+      <div style={{ padding: "52px 0 16px" }}>
+        <h2 style={{ fontSize: 24, fontFamily: "'Playfair Display', serif", color: "var(--text)", margin: 0 }}>
+          114 <span style={{ color: "var(--gold)" }}>Surah</span>
+        </h2>
+        <div style={{ fontSize: 10, color: "var(--muted)", marginTop: 4, fontFamily: "'DM Sans', sans-serif" }}>
+          {stats.hafal} hafal • {stats.proses} proses • {stats.total - stats.hafal - stats.proses} belum
+        </div>
+      </div>
+
+      {/* Search Bar */}
+      <div style={{ position: "relative", marginBottom: 14 }}>
+        <span style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", fontSize: 14, color: "var(--muted)" }}>⌕</span>
+        <input
+          value={searchQuery}
+          onChange={e => setSearchQuery(e.target.value)}
+          placeholder="Cari nama surah..."
+          style={{
+            width: "100%", boxSizing: "border-box",
+            background: "var(--card)", border: "1px solid var(--border)", borderRadius: 12,
+            padding: "11px 14px 11px 36px", color: "var(--text)", fontSize: 13,
+            fontFamily: "'DM Sans', sans-serif", outline: "none",
+          }}
+        />
+        {searchQuery && (
+          <button onClick={() => setSearchQuery("")} style={{
+            position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)",
+            background: "none", border: "none", color: "var(--muted)", cursor: "pointer", fontSize: 16,
+          }}>×</button>
+        )}
+      </div>
+
+      {/* Status Tabs */}
+      <div style={{ display: "flex", gap: 7, marginBottom: 12, overflowX: "auto", paddingBottom: 2 }}>
+        {["semua", "proses", "hafal", "belum"].map(tab => (
+          <button key={tab} onClick={() => setActiveTab(tab)} style={{
+            background: activeTab === tab ? "var(--gold)" : "var(--card)",
+            border: `1px solid ${activeTab === tab ? "var(--gold)" : "var(--border)"}`,
+            borderRadius: 20, padding: "6px 14px", cursor: "pointer",
+            color: activeTab === tab ? "var(--bg)" : "var(--text-dim)",
+            fontSize: 10, fontFamily: "'DM Sans', sans-serif",
+            fontWeight: 700, letterSpacing: "0.08em", whiteSpace: "nowrap",
+          }}>{tab.toUpperCase()}</button>
+        ))}
+      </div>
+
+      {/* Juz Filter Strip */}
+      <div style={{ display: "flex", gap: 6, marginBottom: 18, overflowX: "auto", paddingBottom: 4 }}>
+        <button onClick={() => setActiveJuz(0)} style={{
+          background: activeJuz === 0 ? "var(--blue)" : "var(--card)",
+          border: `1px solid ${activeJuz === 0 ? "var(--blue)" : "var(--border)"}`,
+          borderRadius: 20, padding: "5px 14px", cursor: "pointer",
+          color: activeJuz === 0 ? "var(--bg)" : "var(--text-dim)",
+          fontSize: 10, fontFamily: "'DM Sans', sans-serif", fontWeight: 700, whiteSpace: "nowrap",
+        }}>ALL JUZ</button>
+        {Array.from({ length: 30 }, (_, i) => i + 1).map(juz => {
+          const p = juzProgress(juz);
+          const done = p.done === p.total && p.total > 0;
+          return (
+            <button key={juz} onClick={() => setActiveJuz(juz)} style={{
+              background: activeJuz === juz ? "var(--blue)" : done ? "var(--blue)22" : "var(--card)",
+              border: `1px solid ${activeJuz === juz ? "var(--blue)" : done ? "var(--blue)44" : "var(--border)"}`,
+              borderRadius: 20, padding: "5px 12px", cursor: "pointer",
+              color: activeJuz === juz ? "var(--bg)" : done ? "var(--blue)" : "var(--text-dim)",
+              fontSize: 10, fontFamily: "'DM Sans', sans-serif", fontWeight: 700, whiteSpace: "nowrap",
+            }}>{juz}</button>
+          );
+        })}
+      </div>
+
+      {/* Results count */}
+      {(searchQuery || activeJuz > 0) && (
+        <div style={{ fontSize: 10, color: "var(--muted)", marginBottom: 12, fontFamily: "'DM Sans', sans-serif" }}>
+          {filtered.length} surah ditemukan
+          {activeJuz > 0 && ` di Juz ${activeJuz}`}
+        </div>
+      )}
+
+      {/* Grouped Surah List */}
+      {filtered.length === 0 ? (
+        <div style={{ background: "var(--card)", borderRadius: 14, padding: 24, textAlign: "center", border: "1px solid var(--border)" }}>
+          <div style={{ fontSize: 24, color: "var(--muted)", marginBottom: 8 }}>◈</div>
+          <div style={{ fontSize: 12, color: "var(--muted)", fontFamily: "'DM Sans', sans-serif" }}>Tidak ada surah yang cocok</div>
+        </div>
+      ) : juzKeys.map(juz => (
+        <div key={juz}>
+          {/* Juz Header */}
+          {(activeJuz === 0 && !searchQuery) && (
+            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10, marginTop: 6 }}>
+              <div style={{
+                background: "var(--blue)18", border: "1px solid var(--blue)33", borderRadius: 8,
+                padding: "4px 12px", fontSize: 10, color: "var(--blue)", fontFamily: "'DM Sans', sans-serif", fontWeight: 700,
+              }}>JUZ {juz}</div>
+              <div style={{ flex: 1, height: 1, background: "var(--border)" }} />
+              <div style={{ fontSize: 9, color: "var(--muted)", fontFamily: "'DM Sans', sans-serif" }}>
+                {juzProgress(juz).done}/{juzProgress(juz).total} hafal
+              </div>
+            </div>
+          )}
+
+          {grouped[juz].map(s => {
+            const d = hafalanData[s.id];
+            return (
+              <div key={s.id}
+                style={{
+                  background: "var(--card)", borderRadius: 14, padding: "13px 14px",
+                  marginBottom: 8, border: "1px solid var(--border)",
+                  display: "flex", alignItems: "center", gap: 12, cursor: "pointer",
+                }}
+                onClick={(e) => { if (!e.target.closest("button")) { setSelectedSurahDetail(s); } }}
+              >
+                {/* Nomor */}
+                <div style={{
+                  width: 40, height: 40, borderRadius: 10, flexShrink: 0,
+                  background: d.status === "hafal" ? "linear-gradient(135deg, var(--gold), var(--gold-dark))"
+                    : d.status === "proses" ? "linear-gradient(135deg, var(--blue), var(--blue-dark))"
+                      : "var(--border)",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  fontSize: 12, color: d.status === "belum" ? "var(--muted)" : "#fff",
+                  fontFamily: "'Playfair Display', serif", fontWeight: 700,
+                }}>{s.id}</div>
+
+                {/* Info */}
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <span style={{ fontSize: 13, color: "var(--text)", fontFamily: "'Playfair Display', serif" }}>{s.name}</span>
+                    <span style={{ fontSize: 15, color: "var(--gold)88", fontFamily: "serif" }}>{s.arabic}</span>
+                  </div>
+                  <div style={{ fontSize: 9, color: "var(--muted)", marginTop: 2, fontFamily: "'DM Sans', sans-serif" }}>
+                    {s.ayat} ayat • Juz {s.juz}
+                    {d.status !== "belum" && ` • ${d.repetitions}× ulang`}
+                    <span style={{ color: "var(--gold)55", marginLeft: 4 }}>• Tap untuk baca ›</span>
+                  </div>
+                  {d.status !== "belum" && (
+                    <div style={{ marginTop: 5, height: 2, background: "var(--border)", borderRadius: 2 }}>
+                      <div style={{ height: "100%", width: `${d.progress}%`, background: d.status === "hafal" ? "var(--gold)" : "var(--blue)", borderRadius: 2, transition: "width 0.4s" }} />
+                    </div>
+                  )}
+                </div>
+
+                {/* Action Buttons */}
+                <div style={{ display: "flex", flexDirection: "column", gap: 5, flexShrink: 0 }}>
+                  {d.status !== "hafal" && (
+                    <button onClick={() => markStatus(s.id, "hafal")} style={{
+                      background: "var(--gold)18", border: "1px solid var(--gold)44",
+                      borderRadius: 7, color: "var(--gold)", fontSize: 9,
+                      padding: "5px 9px", cursor: "pointer",
+                      fontFamily: "'DM Sans', sans-serif", fontWeight: 700,
+                    }}>HAFAL ✓</button>
+                  )}
+                  {d.status === "belum" && (
+                    <button onClick={() => markStatus(s.id, "proses")} style={{
+                      background: "var(--blue)18", border: "1px solid var(--blue)44",
+                      borderRadius: 7, color: "var(--blue)", fontSize: 9,
+                      padding: "5px 9px", cursor: "pointer",
+                      fontFamily: "'DM Sans', sans-serif", fontWeight: 700,
+                    }}>MULAI</button>
+                  )}
+                  {d.status === "hafal" && (
+                    <button onClick={() => resetStatus(s.id)} style={{
+                      background: "var(--gold)12", border: "1px solid var(--gold)33",
+                      borderRadius: 7, color: "var(--gold)88", fontSize: 9,
+                      padding: "5px 9px", cursor: "pointer",
+                      fontFamily: "'DM Sans', sans-serif", fontWeight: 700,
+                    }}>↩ RESET</button>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      ))}
+    </div>
+  );
+};
+
+const MetodeScreen = ({
+  activeMethodSession, setActiveMethodSession, sessionChecked, setSessionChecked, setScreen, setSelectedSurahDetail
+}) => {
+  // If in active session mode
+  if (activeMethodSession) {
+    const m = METHODS.find(x => x.id === activeMethodSession.methodId);
+    if (!m) return null;
+    const phase = m.session[activeMethodSession.phaseIdx];
+    const totalPhases = m.session.length;
+    const phaseIdx = activeMethodSession.phaseIdx;
+    const checkedKey = (pi, si) => `${pi}-${si}`;
+    const allChecked = phase.steps.every((_, si) => sessionChecked[checkedKey(phaseIdx, si)]);
+    const isLastPhase = phaseIdx === totalPhases - 1;
+
+    return (
+      <div style={{ padding: "0 0 120px" }}>
+        {/* Session Header */}
+        <div style={{
+          background: "var(--bg)", padding: "52px 20px 16px",
+          borderBottom: `1px solid ${m.color}33`,
+          position: "sticky", top: 0, zIndex: 10,
+        }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
+            <button onClick={() => { setActiveMethodSession(null); setSessionChecked({}); }} style={{
+              background: "var(--border)", border: "1px solid var(--border-mid)", borderRadius: 10,
+              color: m.color, fontSize: 20, width: 38, height: 38,
+              cursor: "pointer", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center",
+            }}>←</button>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 11, color: m.color, fontFamily: "'DM Sans', sans-serif", fontWeight: 700, letterSpacing: "0.1em" }}>
+                {m.icon} {m.name.toUpperCase()}
+              </div>
+              <div style={{ fontSize: 10, color: "var(--muted)", fontFamily: "'DM Sans', sans-serif", marginTop: 2 }}>
+                Fase {phaseIdx + 1} dari {totalPhases}
+              </div>
+            </div>
+            <div style={{ fontSize: 10, color: m.color, fontFamily: "'DM Sans', sans-serif", fontWeight: 700 }}>
+              {phase.time}
+            </div>
+          </div>
+          {/* Progress bar */}
+          <div style={{ height: 4, background: "var(--border)", borderRadius: 2 }}>
+            <div style={{ height: "100%", width: `${((phaseIdx) / totalPhases) * 100}%`, background: m.color, borderRadius: 2, transition: "width 0.4s" }} />
+          </div>
+        </div>
+
+        <div style={{ padding: "24px 20px" }}>
+          {/* Phase title */}
+          <div style={{
+            background: `${m.color}15`, border: `1px solid ${m.color}33`,
+            borderRadius: 16, padding: "16px 18px", marginBottom: 20,
+            display: "flex", alignItems: "center", gap: 14,
+          }}>
+            <div style={{
+              width: 44, height: 44, borderRadius: 12, flexShrink: 0,
+              background: `${m.color}22`, border: `1px solid ${m.color}44`,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              fontSize: 20, color: m.color,
+            }}>{phase.icon}</div>
+            <div>
+              <div style={{ fontSize: 14, color: m.color, fontFamily: "'Playfair Display', serif", fontWeight: 700 }}>
+                {phase.phase}
+              </div>
+              <div style={{ fontSize: 10, color: "var(--muted)", fontFamily: "'DM Sans', sans-serif", marginTop: 2 }}>
+                Estimasi waktu: {phase.time}
+              </div>
+            </div>
+          </div>
+
+          {/* Checklist steps */}
+          <div style={{ marginBottom: 24 }}>
+            {phase.steps.map((step, si) => {
+              const key = checkedKey(phaseIdx, si);
+              const checked = !!sessionChecked[key];
+              return (
+                <div key={si}
+                  onClick={() => setSessionChecked(prev => ({ ...prev, [key]: !checked }))}
+                  style={{
+                    display: "flex", gap: 14, padding: "14px 16px", marginBottom: 10,
+                    background: checked ? `${m.color}12` : "var(--card)",
+                    border: `1px solid ${checked ? m.color + "44" : "var(--border)"}`,
+                    borderRadius: 14, cursor: "pointer", alignItems: "flex-start",
+                    transition: "all 0.2s",
+                  }}>
+                  <div style={{
+                    width: 24, height: 24, borderRadius: 7, flexShrink: 0,
+                    background: checked ? m.color : "var(--border)",
+                    border: `1px solid ${checked ? m.color : "var(--border-mid)"}`,
+                    display: "flex", alignItems: "center", justifyContent: "center",
+                    fontSize: 13, color: checked ? "var(--bg)" : "var(--muted)",
+                    transition: "all 0.2s", marginTop: 1,
+                  }}>{checked ? "✓" : si + 1}</div>
+                  <span style={{
+                    fontSize: 12, color: checked ? "var(--text-dim)" : "var(--text-warm)",
+                    fontFamily: "'DM Sans', sans-serif", lineHeight: 1.6,
+                    textDecoration: checked ? "line-through" : "none",
+                    transition: "all 0.2s",
+                  }}>{step}</span>
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Navigation */}
+          <div style={{ display: "flex", gap: 10 }}>
+            {phaseIdx > 0 && (
+              <button onClick={() => setActiveMethodSession(prev => ({ ...prev, phaseIdx: prev.phaseIdx - 1 }))} style={{
+                flex: 1, padding: "13px 0", background: "var(--card)",
+                border: "1px solid var(--border)", borderRadius: 14,
+                color: "var(--text-dim)", fontSize: 12, cursor: "pointer",
+                fontFamily: "'DM Sans', sans-serif", fontWeight: 600,
+              }}>← Sebelumnya</button>
+            )}
+            {!isLastPhase ? (
+              <button
+                onClick={() => { if (allChecked) setActiveMethodSession(prev => ({ ...prev, phaseIdx: prev.phaseIdx + 1 })); }}
+                style={{
+                  flex: 2, padding: "13px 0",
+                  background: allChecked ? `linear-gradient(135deg, ${m.color}, ${m.color}CC)` : "var(--border)",
+                  border: "none", borderRadius: 14,
+                  color: allChecked ? "var(--bg)" : "var(--muted)",
+                  fontSize: 12, cursor: allChecked ? "pointer" : "not-allowed",
+                  fontFamily: "'DM Sans', sans-serif", fontWeight: 700, letterSpacing: "0.06em",
+                }}>
+                {allChecked ? "Fase Berikutnya →" : `Centang semua (${phase.steps.filter((_, si) => sessionChecked[checkedKey(phaseIdx, si)]).length}/${phase.steps.length})`}
+              </button>
+            ) : (
+              <button
+                onClick={() => { if (allChecked) { setActiveMethodSession(null); setSessionChecked({}); setScreen("hafalan"); setSelectedSurahDetail(null); } }}
+                style={{
+                  flex: 2, padding: "13px 0",
+                  background: allChecked ? "linear-gradient(135deg, var(--green), var(--green-dark))" : "var(--border)",
+                  border: "none", borderRadius: 14,
+                  color: allChecked ? "var(--bg)" : "var(--muted)",
+                  fontSize: 12, cursor: allChecked ? "pointer" : "not-allowed",
+                  fontFamily: "'DM Sans', sans-serif", fontWeight: 700, letterSpacing: "0.06em",
+                }}>
+                {allChecked ? "✦ Sesi Selesai! Mulai Hafal →" : `Centang semua dulu (${phase.steps.filter((_, si) => sessionChecked[checkedKey(phaseIdx, si)]).length}/${phase.steps.length})`}
+              </button>
+            )}
+          </div>
+
+          {/* Phase overview mini */}
+          <div style={{ display: "flex", gap: 6, marginTop: 20, justifyContent: "center" }}>
+            {m.session.map((ph, pi) => (
+              <div key={pi} style={{
+                width: pi === phaseIdx ? 24 : 8, height: 8, borderRadius: 4,
+                background: pi < phaseIdx ? m.color : pi === phaseIdx ? m.color : "var(--border)",
+                opacity: pi < phaseIdx ? 0.5 : 1,
+                transition: "width 0.3s",
+              }} />
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Default: method list view
+  return (
+    <div style={{ padding: "0 20px 140px" }}>
+      <div style={{ padding: "56px 0 20px" }}>
+        <h2 style={{ fontSize: 24, fontFamily: "'Playfair Display', serif", color: "var(--text)", margin: 0 }}>
+          Metode <span style={{ color: "var(--purple)" }}>Ilmiah</span>
+        </h2>
+        <div style={{ fontSize: 11, color: "var(--muted)", marginTop: 6, fontFamily: "'DM Sans', sans-serif" }}>
+          4 metode berbasis neurosains • Panduan sesi interaktif
+        </div>
+      </div>
+
+      {/* Intro card */}
+      <div style={{
+        background: "linear-gradient(135deg, var(--purple)11, var(--purple-dark)11)", borderRadius: 16,
+        padding: 18, marginBottom: 20, border: "1px solid var(--purple)33",
+      }}>
+        <div style={{ fontSize: 12, color: "var(--purple)", fontWeight: 700, fontFamily: "'DM Sans', sans-serif", marginBottom: 8, letterSpacing: "0.08em" }}>
+          ◎ MENGAPA METODE INI UNTUK ORANG DEWASA?
+        </div>
+        <div style={{ fontSize: 11, color: "var(--text-secondary)", fontFamily: "'DM Sans', sans-serif", lineHeight: 1.8 }}>
+          Otak dewasa berbeda dari anak-anak. Prefrontal cortex sudah matang — kita lebih kuat di <span style={{ color: "var(--text)" }}>memori bermakna</span> dan lebih lemah di <span style={{ color: "var(--text)" }}>hafalan mekanis</span>. Keempat metode ini dirancang memanfaatkan kekuatan unik otak dewasa.
+        </div>
+      </div>
+
+      {/* Methods list */}
+      {METHODS.map(m => (
+        <div key={m.id} style={{
+          background: "var(--card)", borderRadius: 16, marginBottom: 14,
+          border: `1px solid ${m.color}33`, overflow: "hidden",
+        }}>
+          {/* Collapsed header */}
+          <div onClick={() => setScreen("metode")}
+            style={{ padding: 18, display: "flex", alignItems: "center", gap: 14, cursor: "pointer" }}>
+            <div style={{
+              width: 52, height: 52, borderRadius: 14, flexShrink: 0,
+              background: `${m.color}22`, border: `1px solid ${m.color}44`,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              fontSize: 26, color: m.color,
+            }}>{m.icon}</div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 14, color: "var(--text)", fontFamily: "'Playfair Display', serif" }}>{m.name}</div>
+              <div style={{ fontSize: 10, color: m.color, fontFamily: "'DM Sans', sans-serif", marginTop: 3, fontStyle: "italic" }}>"{m.tagline}"</div>
+              <div style={{ fontSize: 9, color: "var(--muted)", fontFamily: "'DM Sans', sans-serif", marginTop: 3, letterSpacing: "0.04em" }}>
+                ⏱ {m.duration} • {m.bestFor}
+              </div>
+            </div>
+            <span style={{ color: "var(--muted)", fontSize: 16, flexShrink: 0 }}>▼</span>
+          </div>
+        </div>
+      ))}
+
+      {/* Science refs */}
+      <div style={{ background: "var(--card)", borderRadius: 16, padding: 18, border: "1px solid var(--border)" }}>
+        <div style={{ fontSize: 11, color: "var(--gold)", fontFamily: "'DM Sans', sans-serif", fontWeight: 600, marginBottom: 12, letterSpacing: "0.1em" }}>
+          ◈ 40 REFERENSI ILMIAH — RECITATION ACADEMY
+        </div>
+        {[
+          { cat: "Prefrontal Cortex", refs: "Arain, Petanjek, Rosch, Somerville" },
+          { cat: "Working Memory", refs: "Funahashi, Baddeley, D'Esposito" },
+          { cat: "Method of Loci", refs: "Dresler, Wagner, Maguire, Legge" },
+          { cat: "Spatial Memory", refs: "O'Keefe, Maguire, Konishi" },
+          { cat: "Levels of Processing", refs: "Craik & Lockhart, Tulving, Galli" },
+          { cat: "Multi-Sensory", refs: "Paivio, Shams, Mayer" },
+          { cat: "Spaced Repetition", refs: "Ebbinghaus, Cepeda, Karpicke, Roediger" },
+          { cat: "Adult Learning", refs: "Knowles, Kolb, Draganski, Park" },
+          { cat: "Chunking", refs: "Miller (7±2), Gobet" },
+          { cat: "Cognitive Neuroscience", refs: "Squire, Tulving, Atkinson, D'Esposito" },
+        ].map(r => (
+          <div key={r.cat} style={{ display: "flex", gap: 10, marginBottom: 7, alignItems: "flex-start" }}>
+            <div style={{ width: 4, height: 4, borderRadius: 1, background: "var(--gold)55", flexShrink: 0, marginTop: 6 }} />
+            <div>
+              <span style={{ fontSize: 10, color: "var(--text)", fontFamily: "'DM Sans', sans-serif" }}>{r.cat}</span>
+              <span style={{ fontSize: 9, color: "var(--muted)", fontFamily: "'DM Sans', sans-serif" }}> — {r.refs}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+const PanduanScreen = ({ setScreen }) => {
+  const [activeSection, setActiveSection] = useState(null);
+
+  const PANDUAN_SECTIONS = [
+    {
+      id: "mulai",
+      icon: "✦",
+      color: "var(--gold)",
+      title: "Cara Memulai Hafalan",
+      subtitle: "Untuk pemula — langkah 1 s.d. selesai",
+      steps: [
+        {
+          n: "1", title: "Pilih Surah Target",
+          body: "Buka menu Hafalan → pilih surah yang ingin dihafal. Untuk pemula, mulai dari surah pendek di Juz 30 (An-Nas, Al-Falaq, Al-Ikhlas). Tap kartu surah untuk melihat teks Arab lengkap.",
+          tips: "Jangan langsung pilih surah panjang. Bangun kepercayaan diri dulu dengan 3–5 surah pendek.",
+          icon: "◈",
+        },
+        {
+          n: "2", title: "Pilih Metode Hafalan",
+          body: "Buka menu Panduan → Metode Hafalan → pilih salah satu dari 4 metode. Untuk pemula, disarankan mulai dengan Chunking + Snowball karena paling sistematis dan cocok untuk otak dewasa.",
+          tips: "Konsisten dengan 1 metode dulu selama 2 minggu sebelum mencoba metode lain.",
+          icon: "◎",
+        },
+        {
+          n: "3", title: "Jalankan Sesi Interaktif",
+          body: "Di halaman Metode, tap ▶ MULAI SESI PANDUAN INTERAKTIF. Ikuti setiap fase dan centang langkah yang sudah dikerjakan. Tombol Fase Berikutnya hanya aktif jika semua langkah sudah dicentang.",
+          tips: "Satu sesi = 30–45 menit. Jangan terburu. Kualitas lebih penting dari kuantitas.",
+          icon: "▶",
+        },
+        {
+          n: "4", title: "Tandai Status Hafalan",
+          body: "Setelah berhasil menghafal surah, kembali ke menu Hafalan → tap kartu surah → tap HAFAL ✓ atau buka halaman detail surah → tap TANDAI HAFAL. Status akan berubah ke emas.",
+          tips: "Tandai PROSES jika masih belajar, HAFAL hanya jika sudah bisa recite tanpa lihat 3 kali berturut-turut.",
+          icon: "✓",
+        },
+        {
+          n: "5", title: "Lakukan Muraja'ah Terjadwal",
+          body: "Buka menu Muraja'ah → pilih surah yang sudah dihafal → tap ✓ LANCAR atau ⟳ PERLU ULANG. App akan otomatis menjadwalkan kapan harus review lagi berdasarkan sistem 7-3-2-1.",
+          tips: "Muraja'ah adalah kunci. Hafalan tanpa review akan hilang dalam 3–7 hari.",
+          icon: "⟳",
+        },
+      ],
+    },
+    {
+      id: "alur",
+      icon: "◷",
+      color: "var(--blue)",
+      title: "Rutinitas Harian yang Ideal",
+      subtitle: "Jadwal belajar berbasis neurosains otak dewasa",
+      steps: [
+        {
+          n: "☽", title: "Subuh (05:00–06:00) — Hafalan Baru",
+          body: "Ini waktu terbaik untuk menghafal materi baru. Otak mencapai puncak neuroplastisitas 60–90 menit setelah bangun tidur. Gunakan sesi 30–45 menit dengan metode pilihan Anda.",
+          tips: "Setelah sholat Subuh, langsung mulai. Jangan cek HP dulu — distraksi memecah fokus prefrontal cortex.",
+          icon: "☽",
+        },
+        {
+          n: "◎", title: "Pagi (08:00–08:30) — Review Cepat",
+          body: "Review singkat hafalan kemarin. Cukup recite 3–5 kali tanpa lihat mushaf. Ini fase konsolidasi working memory yang terjadi setelah tidur malam.",
+          tips: "Jika ada yang terlupa, jangan panik. Itu normal dan justru penanda otak sedang memperkuat jalur memori.",
+          icon: "◎",
+        },
+        {
+          n: "⟳", title: "Ashar (15:00–15:30) — Muraja'ah",
+          body: "Buka menu Muraja'ah di app. Kerjakan semua surah yang terjadwal hari ini. Tandai LANCAR atau PERLU ULANG secara jujur. Sesi ini memanfaatkan retrieval practice — efek testing.",
+          tips: "Gunakan timer di menu Muraja'ah untuk mendisiplinkan diri. 20–25 menit cukup untuk 2–3 surah.",
+          icon: "⟳",
+        },
+        {
+          n: "✦", title: "Isya (20:00–20:30) — Pra-Tidur",
+          body: "Recite seluruh hafalan dalam sholat atau setelahnya. Otak akan mengkonsolidasi memori ini selama tidur malam. Ini salah satu mekanisme terkuat dalam neurosains memori.",
+          tips: "Jangan langsung tidur setelah recite — beri jeda 10–15 menit. Tidur terlalu cepat setelah belajar bisa mengganggu konsolidasi.",
+          icon: "✦",
+        },
+      ],
+    },
+    {
+      id: "fitur",
+      icon: "◈",
+      color: "var(--purple)",
+      title: "Panduan Fitur App",
+      subtitle: "Semua yang bisa dilakukan di app ini",
+      steps: [
+        {
+          n: "⌂", title: "Beranda — Dashboard Progress",
+          body: "Tampilkan ringkasan: jumlah surah hafal/proses/belum, agenda muraja'ah hari ini, dan shortcut ke metode ilmiah. Progress ring berubah seiring hafalan bertambah.",
+          tips: "Jika ada surah terjadwal di agenda, selesaikan dulu sebelum hafalan baru.",
+          icon: "⌂",
+        },
+        {
+          n: "◈", title: "Hafalan — 114 Surah Lengkap",
+          body: "Daftar 114 surah dengan status & progress. Tap kartu surah → baca teks Arab Madinah (Uthmani) + terjemahan Indonesia. Gunakan filter Juz & tab Status untuk navigasi cepat.",
+          tips: "Tap ayat untuk highlight. Gunakan toggle Terjemahan untuk fokus ke teks Arab saja saat menghafal.",
+          icon: "◈",
+        },
+        {
+          n: "⟳", title: "Muraja'ah — Sistem Review Otomatis",
+          body: "Setelah hafal surah, gunakan menu ini untuk review berkala. Timer bawaan untuk mengukur durasi sesi. Tandai LANCAR atau PERLU ULANG — app otomatis atur jadwal review berikutnya.",
+          tips: "Pilih PERLU ULANG dengan jujur. App akan jadwalkan lebih sering — ini lebih baik dari menandai LANCAR padahal masih ragu.",
+          icon: "⟳",
+        },
+        {
+          n: "◷", title: "Jadwal — Waktu Sholat & Sesi Belajar",
+          body: "Tap Deteksi Lokasi untuk jadwal sholat otomatis sesuai GPS. Aktifkan toggle pengingat di setiap sesi belajar. Waktu sholat Subuh/Ashar/Isya otomatis tersambung ke jadwal belajar.",
+          tips: "Aktifkan izin lokasi di browser/app agar fitur jadwal sholat berfungsi.",
+          icon: "◷",
+        },
+        {
+          n: "◎", title: "Metode — Panduan Sesi Interaktif",
+          body: "4 metode ilmiah dengan panduan langkah demi langkah. Bisa diakses dari menu Panduan → Metode Hafalan. Setiap metode punya sesi interaktif dengan checklist yang harus diselesaikan per fase.",
+          tips: "Selesaikan seluruh fase dalam satu duduk jika memungkinkan untuk hasil terbaik.",
+          icon: "◎",
+        },
+        {
+          n: "↩", title: "Undo & Reset Status",
+          body: "Salah tap Hafal? Ada 3 cara batalkan: (1) Toast 'Batalkan' yang muncul 5 detik setelah tap, (2) Tombol ↩ RESET di kartu surah, (3) Tombol ↩ BATALKAN HAFAL di halaman detail surah.",
+          tips: "Toast undo hanya muncul 5 detik — segera tap jika salah klik.",
+          icon: "↩",
+        },
+      ],
+    },
+    {
+      id: "faq",
+      icon: "◐",
+      color: "var(--green)",
+      title: "Pertanyaan Umum (FAQ)",
+      subtitle: "Jawaban untuk pertanyaan yang sering muncul",
+      steps: [
+        {
+          n: "Q", title: "Berapa ayat yang wajar dihafal per hari?",
+          body: "Untuk orang dewasa: 3–5 ayat per sesi adalah optimal (Miller, 1956). Lebih dari itu justru menurunkan kualitas hafalan. Konsistensi harian 3 ayat lebih baik dari 20 ayat sehari lalu berhenti 3 hari.",
+          tips: "Motto: 'Sedikit tapi istiqomah mengalahkan banyak tapi putus.'",
+          icon: "◐",
+        },
+        {
+          n: "Q", title: "Kenapa saya cepat lupa padahal sudah hafal?",
+          body: "Ini normal — disebut Forgetting Curve (Ebbinghaus). Otak dewasa melupakan 70% dalam 24 jam jika tidak direview. Solusinya bukan hafal lebih keras, tapi review lebih teratur dengan Spaced Repetition.",
+          tips: "Buka menu Muraja'ah setiap hari. Itulah kunci hafalan jangka panjang.",
+          icon: "◐",
+        },
+        {
+          n: "Q", title: "Metode mana yang cocok untuk saya?",
+          body: "Chunking + Snowball → cocok untuk semua, terutama pemula. Spaced Repetition → untuk menjaga hafalan yang sudah ada. Multi-Sensory VAKT → jika Anda tipe visual/auditory atau suka mendengar murattal. Semantic → jika Anda ingin pahami makna sebelum hafal.",
+          tips: "Tidak ada yang salah — coba keduanya selama 1 minggu, pilih yang lebih nyaman.",
+          icon: "◐",
+        },
+        {
+          n: "Q", title: "Bagaimana jika tidak punya banyak waktu?",
+          body: "Cukup 2 sesi: Subuh (15 menit hafal baru) + Ashar (10 menit muraja'ah). Total 25 menit/hari. Penelitian Park & Bischof (2013): otak dewasa lebih efektif dengan sesi pendek & sering daripada maraton hafalan.",
+          tips: "Set alarm 2 kali sehari. Konsistensi jadwal = kunci neuroplastisitas otak dewasa.",
+          icon: "◐",
+        },
+        {
+          n: "Q", title: "Apakah data saya tersimpan jika ganti HP?",
+          body: "Ya. Semua progress hafalan, status surah, dan pengaturan pengingat tersimpan di cloud (Supabase) dan terhubung ke akun email Anda. Login dengan email yang sama di HP baru dan data akan langsung muncul.",
+          tips: "Pastikan selalu login sebelum mulai sesi agar data tersinkronisasi.",
+          icon: "◐",
+        },
+      ],
+    },
+  ];
+
+  // If section is open, show it full
+  if (activeSection) {
+    const sec = PANDUAN_SECTIONS.find(s => s.id === activeSection);
+    return (
+      <div style={{ paddingBottom: 120 }}>
+        {/* Sticky header */}
+        <div style={{
+          background: "var(--bg)", padding: "52px 20px 16px",
+          borderBottom: `1px solid ${sec.color}33`,
+          position: "sticky", top: 0, zIndex: 10,
+        }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <button onClick={() => setActiveSection(null)} style={{
+              background: "var(--border)", border: "1px solid var(--border-mid)", borderRadius: 10,
+              color: sec.color, fontSize: 20, width: 38, height: 38,
+              cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+            }}>←</button>
+            <div>
+              <div style={{ fontSize: 16, color: "var(--text)", fontFamily: "'Playfair Display', serif", fontWeight: 700 }}>
+                {sec.title}
+              </div>
+              <div style={{ fontSize: 10, color: "var(--muted)", fontFamily: "'DM Sans', sans-serif", marginTop: 2 }}>
+                {sec.subtitle}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div style={{ padding: "20px 20px" }}>
+          {sec.steps.map((step, idx) => (
+            <div key={idx} style={{
+              background: "var(--card)", borderRadius: 16, padding: 18,
+              marginBottom: 14, border: `1px solid ${sec.color}22`,
+              position: "relative", overflow: "hidden",
+            }}>
+              {/* Number badge */}
+              <div style={{
+                position: "absolute", top: 14, right: 14,
+                width: 32, height: 32, borderRadius: 10,
+                background: `${sec.color}22`, border: `1px solid ${sec.color}44`,
+                display: "flex", alignItems: "center", justifyContent: "center",
+                fontSize: 16, color: sec.color,
+              }}>{step.icon}</div>
+
+              {/* Step number */}
+              <div style={{
+                display: "inline-block",
+                background: sec.color, borderRadius: 7,
+                padding: "2px 10px", fontSize: 10, color: "var(--bg)",
+                fontFamily: "'DM Sans', sans-serif", fontWeight: 800,
+                letterSpacing: "0.08em", marginBottom: 10,
+              }}>LANGKAH {step.n}</div>
+
+              <div style={{ fontSize: 14, color: "var(--text)", fontFamily: "'Playfair Display', serif", marginBottom: 10, paddingRight: 40 }}>
+                {step.title}
+              </div>
+              <div style={{ fontSize: 12, color: "var(--text-secondary)", fontFamily: "'DM Sans', sans-serif", lineHeight: 1.8, marginBottom: 12 }}>
+                {step.body}
+              </div>
+
+              {/* Tips box */}
+              <div style={{
+                background: `${sec.color}10`, border: `1px solid ${sec.color}22`,
+                borderRadius: 10, padding: "10px 12px",
+                display: "flex", gap: 8, alignItems: "flex-start",
+              }}>
+                <span style={{ fontSize: 12, color: sec.color, flexShrink: 0 }}>💡</span>
+                <div style={{ fontSize: 11, color: `${sec.color}CC`, fontFamily: "'DM Sans', sans-serif", lineHeight: 1.6 }}>
+                  {step.tips}
+                </div>
+              </div>
+            </div>
+          ))}
+
+          {/* CTA at bottom of section */}
+          {activeSection === "mulai" && (
+            <button onClick={() => { setActiveSection(null); setScreen("metode"); }} style={{
+              width: "100%", padding: "15px 0", marginTop: 6,
+              background: "linear-gradient(135deg, var(--gold), var(--gold-dark))",
+              border: "none", borderRadius: 14, cursor: "pointer",
+              color: "var(--bg)", fontSize: 13, fontWeight: 800,
+              fontFamily: "'DM Sans', sans-serif", letterSpacing: "0.1em",
+            }}>▶ MULAI — BUKA METODE HAFALAN</button>
+          )}
+          {activeSection === "alur" && (
+            <button onClick={() => { setActiveSection(null); setScreen("sholat"); }} style={{
+              width: "100%", padding: "15px 0", marginTop: 6,
+              background: "linear-gradient(135deg, var(--blue), var(--blue-dark))",
+              border: "none", borderRadius: 14, cursor: "pointer",
+              color: "var(--bg)", fontSize: 13, fontWeight: 800,
+              fontFamily: "'DM Sans', sans-serif", letterSpacing: "0.1em",
+            }}>◷ ATUR JADWAL SHOLAT & BELAJAR</button>
+          )}
+          {activeSection === "fitur" && (
+            <button onClick={() => { setActiveSection(null); setScreen("hafalan"); }} style={{
+              width: "100%", padding: "15px 0", marginTop: 6,
+              background: "linear-gradient(135deg, var(--purple), var(--purple-dark))",
+              border: "none", borderRadius: 14, cursor: "pointer",
+              color: "#fff", fontSize: 13, fontWeight: 800,
+              fontFamily: "'DM Sans', sans-serif", letterSpacing: "0.1em",
+            }}>◈ BUKA DAFTAR SURAH</button>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // Landing page
+  return (
+    <div style={{ padding: "0 20px 140px" }}>
+      {/* Header */}
+      <div style={{ padding: "56px 0 24px" }}>
+        <h2 style={{ fontSize: 26, fontFamily: "'Playfair Display', serif", color: "var(--text)", margin: 0, lineHeight: 1.2 }}>
+          Panduan <span style={{ color: "var(--gold)" }}>Penggunaan</span>
+        </h2>
+        <div style={{ fontSize: 11, color: "var(--muted)", marginTop: 8, fontFamily: "'DM Sans', sans-serif", lineHeight: 1.6 }}>
+          Mulai dari sini — semua yang perlu diketahui untuk menghafal Al-Qur'an secara sistematis
+        </div>
+      </div>
+
+      {/* Hero start card */}
+      <div style={{
+        background: "linear-gradient(135deg, var(--gold)22 0%, var(--gold-dark)0A 100%)",
+        borderRadius: 20, padding: 20, marginBottom: 24,
+        border: "1px solid var(--gold)44",
+      }}>
+        <div style={{ fontSize: 28, marginBottom: 12 }}>🕌</div>
+        <div style={{ fontSize: 18, color: "var(--text)", fontFamily: "'Playfair Display', serif", fontWeight: 700, marginBottom: 8 }}>
+          Selamat Datang
+        </div>
+        <div style={{ fontSize: 12, color: "var(--text-secondary)", fontFamily: "'DM Sans', sans-serif", lineHeight: 1.8, marginBottom: 16 }}>
+          App ini menggunakan <span style={{ color: "var(--gold)" }}>40 penelitian neurosains</span> untuk membantu orang dewasa menghafal Al-Qur'an secara efektif. Ikuti panduan ini untuk hasil terbaik.
+        </div>
+        <button onClick={() => setActiveSection("mulai")} style={{
+          width: "100%", padding: "13px 0",
+          background: "linear-gradient(135deg, var(--gold), var(--gold-dark))",
+          border: "none", borderRadius: 12, cursor: "pointer",
+          color: "var(--bg)", fontSize: 12, fontWeight: 800,
+          fontFamily: "'DM Sans', sans-serif", letterSpacing: "0.1em",
+        }}>✦ CARA MEMULAI HAFALAN →</button>
+      </div>
+
+      {/* Section cards */}
+      {PANDUAN_SECTIONS.map(sec => (
+        <div key={sec.id}
+          onClick={() => setActiveSection(sec.id)}
+          style={{
+            background: "var(--card)", borderRadius: 16, padding: "16px 18px",
+            marginBottom: 12, border: `1px solid ${sec.color}33`,
+            display: "flex", alignItems: "center", gap: 16, cursor: "pointer",
+          }}>
+          <div style={{
+            width: 52, height: 52, borderRadius: 15, flexShrink: 0,
+            background: `${sec.color}22`, border: `1px solid ${sec.color}44`,
+            display: "flex", alignItems: "center", justifyContent: "center",
+            fontSize: 24, color: sec.color,
+          }}>{sec.icon}</div>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 14, color: "var(--text)", fontFamily: "'Playfair Display', serif", fontWeight: 700 }}>
+              {sec.title}
+            </div>
+            <div style={{ fontSize: 10, color: "var(--muted)", fontFamily: "'DM Sans', sans-serif", marginTop: 4, lineHeight: 1.4 }}>
+              {sec.subtitle}
+            </div>
+            <div style={{ fontSize: 9, color: `${sec.color}88`, fontFamily: "'DM Sans', sans-serif", marginTop: 4 }}>
+              {sec.steps.length} {sec.id === "faq" ? "pertanyaan" : "langkah"} →
+            </div>
+          </div>
+          <span style={{ color: "var(--border-mid)", fontSize: 20 }}>›</span>
+        </div>
+      ))}
+
+      {/* Quick access to Metode */}
+      <div style={{
+        background: "var(--card)", borderRadius: 16, padding: "16px 18px",
+        marginBottom: 12, border: "1px solid var(--purple)33",
+        display: "flex", alignItems: "center", gap: 16, cursor: "pointer",
+      }} onClick={() => setScreen("metode")}>
+        <div style={{
+          width: 52, height: 52, borderRadius: 15, flexShrink: 0,
+          background: "var(--purple)22", border: "1px solid var(--purple)44",
+          display: "flex", alignItems: "center", justifyContent: "center",
+          fontSize: 24, color: "var(--purple)",
+        }}>◎</div>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontSize: 14, color: "var(--text)", fontFamily: "'Playfair Display', serif", fontWeight: 700 }}>
+            Metode Hafalan Ilmiah
+          </div>
+          <div style={{ fontSize: 10, color: "var(--muted)", fontFamily: "'DM Sans', sans-serif", marginTop: 4 }}>
+            4 metode dengan sesi panduan interaktif
+          </div>
+          <div style={{ fontSize: 9, color: "var(--purple)88", fontFamily: "'DM Sans', sans-serif", marginTop: 4 }}>
+            Chunking • Spaced Repetition • Multi-Sensory • Semantic →
+          </div>
+        </div>
+        <span style={{ color: "var(--border-mid)", fontSize: 20 }}>›</span>
+      </div>
+
+      {/* Version info */}
+      <div style={{ textAlign: "center", padding: "16px 0 4px" }}>
+        <div style={{ fontSize: 9, color: "var(--border)", fontFamily: "'DM Sans', sans-serif", letterSpacing: "0.15em" }}>
+          HAFALAN AL-QUR'AN v1.2 • B.O.A. INDONESIA © 2026
+        </div>
+        <div style={{ fontSize: 9, color: "var(--border)", fontFamily: "'DM Sans', sans-serif", marginTop: 4 }}>
+          Berdasarkan 40 Referensi Ilmiah • recitationacademy.com
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const JadwalScreen = ({
+  reminders, setReminders, user, currentTime, prayerTimes, prayerLocation, setScreen
+}) => {
+  const days = ["Sen", "Sel", "Rab", "Kam", "Jum", "Sab", "Min"];
+  const sessions = [
+    { timeKey: "Subuh", label: "Subuh", desc: "Hafalan baru — otak paling segar (Neuroplasticity peak)", icon: "☽", color: "var(--gold)", reminderKey: "subuh" },
+    { timeKey: null, label: "Pagi", desc: "Review cepat — working memory consolidation", icon: "◎", color: "var(--blue)", reminderKey: "pagi", staticTime: "08:00" },
+    { timeKey: "Ashar", label: "Ashar", desc: "Muraja'ah — retrieval practice (Karpicke, 2008)", icon: "⟳", color: "var(--purple)", reminderKey: "ashar" },
+    { timeKey: "Isya", label: "Isya", desc: "Pra-tidur — memory consolidation selama tidur", icon: "✦", color: "var(--green)", reminderKey: "isya" },
+  ];
+
+  const handleToggleReminder = async (key) => {
+    const newVal = !reminders[key];
+    setReminders(r => ({ ...r, [key]: newVal }));
+    if (user) {
+      try { await upsertReminder(user.id, key, newVal); }
+      catch (e) { console.error(e); }
+    }
+  };
+
+  const toMins = (str) => {
+    if (!str) return -1;
+    const [h, m] = str.split(":").map(Number);
+    return h * 60 + m;
+  };
+  const nowMins = currentTime.getHours() * 60 + currentTime.getMinutes();
+
+  return (
+    <div style={{ padding: "0 20px 140px" }}>
+      {/* Header */}
+      <div style={{ padding: "56px 0 20px" }}>
+        <h2 style={{ fontSize: 24, fontFamily: "'Playfair Display', serif", color: "var(--text)", margin: 0 }}>
+          Jadwal <span style={{ color: "var(--green)" }}>Hafalan</span>
+        </h2>
+        <div style={{ fontSize: 11, color: "var(--muted)", marginTop: 6, fontFamily: "'DM Sans', sans-serif" }}>
+          Adult Learning Theory — Knowles (1980) + Park & Bischof (2013)
+        </div>
+      </div>
+
+      {/* Shortcut ke jadwal sholat */}
+      <div onClick={() => setScreen("sholat")} style={{
+        background: "var(--green)12", border: "1px solid var(--green)33",
+        borderRadius: 14, padding: "12px 16px", marginBottom: 20,
+        display: "flex", alignItems: "center", gap: 12, cursor: "pointer",
+      }}>
+        <span style={{ fontSize: 22 }}>🕌</span>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontSize: 12, color: "var(--green)", fontFamily: "'DM Sans', sans-serif", fontWeight: 700 }}>Lihat Jadwal Sholat</div>
+          <div style={{ fontSize: 10, color: "var(--muted)", fontFamily: "'DM Sans', sans-serif", marginTop: 2 }}>
+            {prayerLocation ? `📍 ${prayerLocation.city} — Tap untuk detail` : "Tap untuk deteksi waktu sholat otomatis"}
+          </div>
+        </div>
+        <span style={{ color: "var(--border-mid)", fontSize: 18 }}>›</span>
+      </div>
+
+      {/* Week Strip */}
+      <div style={{ display: "flex", gap: 6, marginBottom: 20 }}>
+        {days.map((d, i) => {
+          const isToday = i === new Date().getDay() - 1;
+          return (
+            <div key={d} style={{
+              flex: 1, background: isToday ? "var(--gold)" : "var(--card)",
+              borderRadius: 10, padding: "8px 4px", textAlign: "center",
+              border: `1px solid ${isToday ? "var(--gold)" : "var(--border)"}`,
+            }}>
+              <div style={{ fontSize: 9, color: isToday ? "var(--bg)" : "var(--muted)", fontFamily: "'DM Sans', sans-serif", marginBottom: 4 }}>{d}</div>
+              <div style={{ fontSize: 14, color: isToday ? "var(--bg)" : "var(--border-mid)" }}>◆</div>
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Sesi Belajar */}
+      <div style={{ fontSize: 13, color: "var(--text)", fontFamily: "'Playfair Display', serif", marginBottom: 14 }}>
+        Sesi Belajar Harian
+      </div>
+
+      {sessions.map((s) => {
+        const prayTime = s.timeKey && prayerTimes ? prayerTimes[s.timeKey] : s.staticTime || null;
+        const displayTime = prayTime || "—";
+        const isNow = s.timeKey && prayerTimes
+          ? Math.abs(toMins(prayerTimes[s.timeKey]) - nowMins) < 30
+          : false;
+        return (
+          <div key={s.label} style={{
+            background: isNow ? `${s.color}0E` : "var(--card)",
+            borderRadius: 16, padding: 16, marginBottom: 12,
+            border: `1px solid ${isNow ? s.color + "44" : s.color + "22"}`,
+            display: "flex", alignItems: "center", gap: 14,
+          }}>
+            <div style={{
+              width: 48, height: 48, borderRadius: 14, flexShrink: 0,
+              background: `${s.color}22`, border: `1px solid ${s.color}44`,
+              display: "flex", alignItems: "center", justifyContent: "center",
+              fontSize: 20, color: s.color,
+            }}>{s.icon}</div>
+            <div style={{ flex: 1 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <span style={{ fontSize: 14, color: "var(--text)", fontFamily: "'Playfair Display', serif" }}>{s.label}</span>
+                <span style={{ fontSize: 11, color: s.color, fontFamily: "'DM Sans', sans-serif", fontWeight: 700 }}>
+                  {displayTime}
+                  {s.timeKey && prayerTimes && <span style={{ fontSize: 9, opacity: 0.6, marginLeft: 3 }}>(sholat)</span>}
+                </span>
+              </div>
+              <div style={{ fontSize: 10, color: "var(--muted)", marginTop: 4, fontFamily: "'DM Sans', sans-serif", lineHeight: 1.5 }}>{s.desc}</div>
+              {isNow && (
+                <div style={{ fontSize: 9, color: s.color, marginTop: 4, fontWeight: 700, letterSpacing: "0.08em" }}>● WAKTU SHOLAT SEKARANG</div>
+              )}
+            </div>
+            <button onClick={() => handleToggleReminder(s.reminderKey)} style={{
+              width: 36, height: 20, borderRadius: 10, border: "none", cursor: "pointer",
+              background: reminders[s.reminderKey] ? s.color : "var(--border)",
+              position: "relative", flexShrink: 0, transition: "background 0.2s",
+            }}>
+              <div style={{
+                width: 16, height: 16, borderRadius: 8, background: "#fff",
+                position: "absolute", top: 2,
+                left: reminders[s.reminderKey] ? 18 : 2, transition: "left 0.2s",
+              }} />
+            </button>
+          </div>
+        );
+      })}
+
+      {/* Neuroscience tip */}
+      <div style={{
+        background: "linear-gradient(135deg, var(--gold)11, var(--gold-dark)0A)", borderRadius: 16,
+        padding: 18, border: "1px solid var(--gold)22", marginTop: 4,
+      }}>
+        <div style={{ fontSize: 11, color: "var(--gold)", fontFamily: "'DM Sans', sans-serif", fontWeight: 600, marginBottom: 8, letterSpacing: "0.1em" }}>
+          ✦ TIPS NEUROSAINS
+        </div>
+        <div style={{ fontSize: 11, color: "var(--text-secondary)", fontFamily: "'DM Sans', sans-serif", lineHeight: 1.7 }}>
+          Otak orang dewasa mencapai puncak plastisitas neural 60–90 menit setelah bangun tidur. Waktu subuh adalah waktu terbaik untuk hafalan baru — memori jangka panjang dikonsolidasi saat tidur malam.
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const SholatScreen = ({
+  currentTime, prayerTimes, prayerLocation, prayerLoading, prayerError, fetchPrayerTimes
+}) => {
+  const toMins = (str) => {
+    if (!str) return -1;
+    const [h, m] = str.split(":").map(Number);
+    return h * 60 + m;
+  };
+  const nowMins = currentTime.getHours() * 60 + currentTime.getMinutes();
+  const mainKeys = ["Subuh", "Dzuhur", "Ashar", "Maghrib", "Isya"];
+  const nextPrayer = prayerTimes
+    ? mainKeys.find(k => toMins(prayerTimes[k]) > nowMins) || "Subuh"
+    : null;
+  const nextMins = prayerTimes && nextPrayer
+    ? (toMins(prayerTimes[nextPrayer]) - nowMins + 1440) % 1440
+    : null;
+  const formatCountdown = (mins) => {
+    if (mins === null) return "";
+    const h = Math.floor(mins / 60), m = mins % 60;
+    return h > 0 ? `${h} jam ${m} mnt` : `${m} menit lagi`;
+  };
+
+  const prayerMeta = {
+    Subuh: { icon: "☽", color: "var(--gold)", desc: "Fajar — waktu terbaik hafalan baru" },
+    Terbit: { icon: "◇", color: "var(--text-dim)", desc: "Matahari terbit — waktu larangan sholat" },
+    Dzuhur: { icon: "◉", color: "var(--blue)", desc: "Tengah hari — review cepat setelah sholat" },
+    Ashar: { icon: "⟳", color: "var(--purple)", desc: "Sore — muraja'ah & retrieval practice" },
+    Maghrib: { icon: "◐", color: "var(--red)", desc: "Magrib — istirahat sejenak, banyak dzikir" },
+    Isya: { icon: "✦", color: "var(--green)", desc: "Malam — pra-tidur, konsolidasi memori" },
+  };
+
+  // Auto-request GPS saat pertama kali layar Sholat dibuka
+  useEffect(() => {
+    if (!prayerTimes && !prayerLoading && !prayerError) {
+      fetchPrayerTimes();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const isDenied = prayerError && prayerError.includes("ditolak");
+
+  return (
+    <div style={{ padding: "0 20px 140px" }}>
+      {/* Header */}
+      <div style={{ padding: "56px 0 20px" }}>
+        <h2 style={{ fontSize: 24, fontFamily: "'Playfair Display', serif", color: "var(--text)", margin: 0 }}>
+          Waktu <span style={{ color: "var(--green)" }}>Sholat</span>
+        </h2>
+        <div style={{ fontSize: 11, color: "var(--muted)", marginTop: 6, fontFamily: "'DM Sans', sans-serif" }}>
+          Otomatis sesuai lokasi GPS smartphone
+        </div>
+      </div>
+
+      {/* Clock + Lokasi Card */}
+      <div style={{
+        background: "linear-gradient(135deg, var(--card) 0%, var(--bg-deeper) 100%)",
+        borderRadius: 20, padding: 20, marginBottom: 20,
+        border: "1px solid var(--green)33",
+      }}>
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
+          <div>
+            <div style={{ fontSize: 36, color: "var(--text)", fontFamily: "'Playfair Display', serif", fontWeight: 700, letterSpacing: 2, lineHeight: 1 }}>
+              {currentTime.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })}
+            </div>
+            <div style={{ fontSize: 11, color: "var(--muted)", fontFamily: "'DM Sans', sans-serif", marginTop: 6 }}>
+              {currentTime.toLocaleDateString("id-ID", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
+            </div>
+            {prayerLocation && (
+              <div style={{ fontSize: 11, color: "var(--green)", fontFamily: "'DM Sans', sans-serif", marginTop: 4, fontWeight: 700 }}>
+                📍 {prayerLocation.city}
+              </div>
+            )}
+          </div>
+          <button onClick={fetchPrayerTimes} disabled={prayerLoading} style={{
+            background: prayerLoading ? "var(--border)" : "linear-gradient(135deg, var(--green), var(--green-dark))",
+            border: "none", borderRadius: 12, padding: "10px 14px",
+            color: prayerLoading ? "var(--muted)" : "var(--bg)",
+            fontSize: 10, fontWeight: 700, cursor: prayerLoading ? "not-allowed" : "pointer",
+            fontFamily: "'DM Sans', sans-serif", letterSpacing: "0.08em", textAlign: "center", lineHeight: 1.5,
+          }}>
+            {prayerLoading ? "⟳" : "📍"}<br />{prayerLoading ? "Memuat..." : "Perbarui Lokasi"}
+          </button>
+        </div>
+
+        {/* Error dengan panduan aktifkan GPS Android */}
+        {prayerError && (
+          <div style={{
+            background: "var(--red)15", border: "1px solid var(--red)33", borderRadius: 12,
+            padding: "12px 14px", fontSize: 11, color: "var(--red)",
+            fontFamily: "'DM Sans', sans-serif", lineHeight: 1.6, marginBottom: 12,
+          }}>
+            <div style={{ fontWeight: 700, marginBottom: isDenied ? 10 : 0 }}>⚠️ {prayerError}</div>
+            {isDenied && (
+              <div style={{
+                background: "var(--card)", borderRadius: 10, padding: "10px 12px",
+                border: "1px solid var(--border)",
+              }}>
+                <div style={{ fontWeight: 700, marginBottom: 8, color: "var(--gold)", fontSize: 10, letterSpacing: "0.08em" }}>
+                  🤖 CARA AKTIFKAN IZIN LOKASI DI ANDROID:
+                </div>
+                {[
+                  "Buka Pengaturan HP → Aplikasi → Browser Anda (Chrome/Firefox/dll)",
+                  "Pilih Izin → Lokasi (Location)",
+                  "Pilih \"Izinkan saat menggunakan aplikasi\"",
+                  "Kembali ke aplikasi ini dan tap Perbarui Lokasi",
+                ].map((step, i) => (
+                  <div key={i} style={{ display: "flex", gap: 8, marginBottom: 6, alignItems: "flex-start" }}>
+                    <div style={{
+                      width: 18, height: 18, borderRadius: 5, background: "var(--gold)22",
+                      border: "1px solid var(--gold)44", flexShrink: 0,
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      fontSize: 9, color: "var(--gold)", fontWeight: 700,
+                    }}>{i + 1}</div>
+                    <div style={{ fontSize: 10, color: "var(--text-secondary)", lineHeight: 1.5 }}>{step}</div>
+                  </div>
+                ))}
+                <button onClick={fetchPrayerTimes} style={{
+                  width: "100%", marginTop: 6, padding: "9px 0",
+                  background: "linear-gradient(135deg, var(--green), var(--green-dark))",
+                  border: "none", borderRadius: 9, color: "var(--bg)",
+                  fontSize: 11, fontWeight: 700, cursor: "pointer",
+                  fontFamily: "'DM Sans', sans-serif", letterSpacing: "0.08em",
+                }}>📍 Coba Lagi Deteksi Lokasi</button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Loading state */}
+        {prayerLoading && (
+          <div style={{ textAlign: "center", padding: "16px 0 8px" }}>
+            <div style={{ fontSize: 24, color: "var(--green)33", marginBottom: 8 }}>📡</div>
+            <div style={{ fontSize: 11, color: "var(--green)", fontFamily: "'DM Sans', sans-serif", letterSpacing: "0.08em" }}>
+              Mendeteksi lokasi GPS...
+            </div>
+            <div style={{ fontSize: 10, color: "var(--muted)", fontFamily: "'DM Sans', sans-serif", marginTop: 6, lineHeight: 1.6 }}>
+              Jika muncul popup izin lokasi,<br />
+              pilih <strong style={{ color: "var(--text)" }}>"Izinkan"</strong> untuk mendeteksi waktu sholat Anda
+            </div>
+          </div>
+        )}
+
+        {/* Next prayer highlight */}
+        {prayerTimes && nextPrayer && (
+          <div style={{
+            background: "var(--green)15", border: "1px solid var(--green)44",
+            borderRadius: 14, padding: "14px 16px",
+            display: "flex", justifyContent: "space-between", alignItems: "center",
+          }}>
+            <div>
+              <div style={{ fontSize: 10, color: "var(--muted)", fontFamily: "'DM Sans', sans-serif", letterSpacing: "0.08em" }}>SHOLAT BERIKUTNYA</div>
+              <div style={{ fontSize: 20, color: "var(--green)", fontFamily: "'Playfair Display', serif", fontWeight: 700, marginTop: 4 }}>
+                {prayerMeta[nextPrayer]?.icon} {nextPrayer}
+              </div>
+              <div style={{ fontSize: 13, color: "var(--text)", fontFamily: "'Playfair Display', serif", marginTop: 2 }}>
+                {prayerTimes[nextPrayer]}
+              </div>
+            </div>
+            <div style={{ textAlign: "right" }}>
+              <div style={{ fontSize: 18, color: "var(--green)", fontFamily: "'Playfair Display', serif", fontWeight: 700 }}>
+                {formatCountdown(nextMins)}
+              </div>
+              <div style={{ fontSize: 9, color: "var(--muted)", fontFamily: "'DM Sans', sans-serif", marginTop: 4, maxWidth: 120, lineHeight: 1.4 }}>
+                {prayerMeta[nextPrayer]?.desc}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Empty state — hanya tampil jika tidak loading dan tidak ada error */}
+        {!prayerTimes && !prayerLoading && !prayerError && (
+          <div style={{ textAlign: "center", padding: "20px 0 8px" }}>
+            <div style={{ fontSize: 36, color: "var(--green)33", marginBottom: 12 }}>🕌</div>
+            <div style={{ fontSize: 12, color: "var(--muted)", fontFamily: "'DM Sans', sans-serif", lineHeight: 1.7 }}>
+              Menunggu izin GPS...<br />
+              <span style={{ fontSize: 10 }}>Jika tidak otomatis, tap <strong style={{ color: "var(--green)" }}>Perbarui Lokasi</strong></span>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Prayer times list — detailed */}
+      {prayerTimes && (
+        <div>
+          <div style={{ fontSize: 13, color: "var(--text)", fontFamily: "'Playfair Display', serif", marginBottom: 14 }}>
+            Waktu Sholat Hari Ini
+          </div>
+          {Object.entries(prayerTimes).map(([name, time]) => {
+            const meta = prayerMeta[name] || { icon: "◇", color: "var(--muted)", desc: "" };
+            const isNext = name === nextPrayer;
+            const isPast = toMins(time) < nowMins && !isNext;
+            const isMain = mainKeys.includes(name);
+            return (
+              <div key={name} style={{
+                background: isNext ? "var(--green)12" : "var(--card)",
+                borderRadius: 16, padding: "14px 16px", marginBottom: 10,
+                border: `1px solid ${isNext ? "var(--green)44" : isPast ? "var(--border-soft)" : "var(--border)"}`,
+                display: "flex", alignItems: "center", gap: 14,
+                opacity: isPast && !isMain ? 0.5 : 1,
+              }}>
+                <div style={{
+                  width: 44, height: 44, borderRadius: 13, flexShrink: 0,
+                  background: isNext ? "var(--green)22" : `${meta.color}18`,
+                  border: `1px solid ${isNext ? "var(--green)44" : meta.color + "33"}`,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  fontSize: 20, color: isNext ? "var(--green)" : meta.color,
+                }}>{meta.icon}</div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <span style={{ fontSize: 15, color: isNext ? "var(--green)" : isPast ? "var(--text-dim)" : "var(--text)", fontFamily: "'Playfair Display', serif", fontWeight: 700 }}>
+                      {name}
+                    </span>
+                    <span style={{ fontSize: 18, color: isNext ? "var(--green)" : isPast ? "var(--muted)" : "var(--text)", fontFamily: "'Playfair Display', serif", fontWeight: 700 }}>
+                      {time}
+                    </span>
+                  </div>
+                  <div style={{ fontSize: 10, color: isNext ? "var(--green)88" : "var(--muted)", fontFamily: "'DM Sans', sans-serif", marginTop: 3 }}>
+                    {meta.desc}
+                    {isPast && <span style={{ color: "var(--muted-alt)", marginLeft: 6 }}>• Sudah lewat</span>}
+                    {isNext && <span style={{ fontWeight: 700, marginLeft: 6 }}>• {formatCountdown(nextMins)}</span>}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Info metode kalkulasi */}
+      {prayerTimes && (
+        <div style={{
+          background: "var(--green)0A", border: "1px solid var(--green)22",
+          borderRadius: 14, padding: 14, marginTop: 4,
+        }}>
+          <div style={{ fontSize: 9, color: "var(--green)", fontFamily: "'DM Sans', sans-serif", fontWeight: 700, letterSpacing: "0.1em", marginBottom: 4 }}>
+            ℹ METODE KALKULASI
+          </div>
+          <div style={{ fontSize: 10, color: "var(--muted)", fontFamily: "'DM Sans', sans-serif", lineHeight: 1.6 }}>
+            Menggunakan metode <strong style={{ color: "var(--text)" }}>Kementerian Agama Republik Indonesia</strong> (method=20) via aladhan.com. Waktu disesuaikan otomatis dengan koordinat GPS smartphone Anda.
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+const MurajaScreen = ({
+  hafalanData, timer, setTimer, timerActive, setTimerActive, formatTime, markMuraja, setSelectedSurah, setSelectedSurahDetail, setScreen
+}) => {
+  const hafalSurahs = SURAHS.filter(s => hafalanData[s.id].status === "hafal" || hafalanData[s.id].status === "proses");
+
+  return (
+    <div style={{ padding: "0 20px 140px" }}>
+      <div style={{ padding: "56px 0 24px" }}>
+        <h2 style={{ fontSize: 24, fontFamily: "'Playfair Display', serif", color: "var(--text)", margin: 0 }}>
+          Muraja'ah <span style={{ color: "var(--blue)" }}>& Ujian</span>
+        </h2>
+        <div style={{ fontSize: 11, color: "var(--muted)", marginTop: 6, fontFamily: "'DM Sans', sans-serif" }}>
+          Retrieval Practice — Karpicke & Roediger (2008)
+        </div>
+      </div>
+
+      {/* Timer Card */}
+      <div style={{
+        background: "linear-gradient(135deg, var(--card), var(--bg-deeper))", borderRadius: 20,
+        padding: 24, marginBottom: 20, border: "1px solid var(--border)", textAlign: "center",
+      }}>
+        <div style={{ fontSize: 48, fontFamily: "'Playfair Display', serif", color: "var(--gold)", letterSpacing: 4, marginBottom: 16 }}>
+          {formatTime(timer)}
+        </div>
+        <div style={{ display: "flex", gap: 12, justifyContent: "center" }}>
+          <button onClick={() => setTimerActive(!timerActive)} style={{
+            background: timerActive ? "var(--gold)22" : "linear-gradient(135deg, var(--gold), var(--gold-dark))",
+            border: timerActive ? "1px solid var(--gold)" : "none",
+            borderRadius: 12, padding: "10px 24px",
+            color: timerActive ? "var(--gold)" : "var(--bg)",
+            fontSize: 12, fontWeight: 700, cursor: "pointer",
+            fontFamily: "'DM Sans', sans-serif", letterSpacing: "0.1em",
+          }}>{timerActive ? "⏸ JEDA" : "▶ MULAI"}</button>
+          <button onClick={() => { setTimer(0); setTimerActive(false); }} style={{
+            background: "var(--border)", border: "1px solid var(--border-mid)", borderRadius: 12,
+            padding: "10px 20px", color: "var(--text-dim)", fontSize: 12,
+            cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
+          }}>RESET</button>
+        </div>
+      </div>
+
+      {/* Method: 7-3-2-1 */}
+      <div style={{
+        background: "var(--card)", borderRadius: 16, padding: 18, marginBottom: 20,
+        border: "1px solid var(--purple)22",
+      }}>
+        <div style={{ fontSize: 12, color: "var(--purple)", fontFamily: "'DM Sans', sans-serif", fontWeight: 600, marginBottom: 10, letterSpacing: "0.1em" }}>
+          ◎ TEKNIK 7-3-2-1 (Spaced Repetition)
+        </div>
+        {[
+          { day: "Hari 1", times: 7, color: "var(--gold)" },
+          { day: "Hari 2", times: 3, color: "var(--purple)" },
+          { day: "Hari 3", times: 2, color: "var(--blue)" },
+          { day: "Hari 7", times: 1, color: "var(--green)" },
+        ].map(r => (
+          <div key={r.day} style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 8 }}>
+            <span style={{ fontSize: 10, color: "var(--muted)", width: 48, fontFamily: "'DM Sans', sans-serif" }}>{r.day}</span>
+            <div style={{ flex: 1, height: 6, background: "var(--border)", borderRadius: 3 }}>
+              <div style={{ height: "100%", width: `${(r.times / 7) * 100}%`, background: r.color, borderRadius: 3 }} />
+            </div>
+            <span style={{ fontSize: 11, color: r.color, fontWeight: 700, width: 24, textAlign: "right" }}>{r.times}×</span>
+          </div>
+        ))}
+      </div>
+
+      {/* Surah Cards for Muraja */}
+      <div style={{ fontSize: 13, color: "var(--text)", fontFamily: "'Playfair Display', serif", marginBottom: 14 }}>
+        Pilih Surah untuk Muraja'ah
+      </div>
+
+      {hafalSurahs.length === 0 ? (
+        <div style={{
+          background: "var(--card)", borderRadius: 14, padding: 24, textAlign: "center",
+          border: "1px solid var(--border)",
+        }}>
+          <div style={{ fontSize: 11, color: "var(--muted)", fontFamily: "'DM Sans', sans-serif" }}>
+            Belum ada surah yang dihafal. Mulai dari menu Hafalan.
+          </div>
+        </div>
+      ) : hafalSurahs.map(s => {
+        const d = hafalanData[s.id];
+        const nextDate = d.nextReview ? new Date(d.nextReview).toLocaleDateString("id-ID", { day: "numeric", month: "short" }) : "-";
+        return (
+          <div key={s.id} style={{
+            background: "var(--card)", borderRadius: 14, padding: 16, marginBottom: 10,
+            border: "1px solid var(--border)",
+          }}>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
+              <div>
+                <div style={{ fontSize: 14, color: "var(--text)", fontFamily: "'Playfair Display', serif" }}>{s.name}</div>
+                <div style={{ fontSize: 10, color: "var(--muted)", fontFamily: "'DM Sans', sans-serif", marginTop: 2 }}>
+                  Review ke-{d.repetitions + 1} • Berikutnya: {nextDate}
+                </div>
+              </div>
+              <span style={{ fontSize: 18, color: "var(--gold)" }}>{s.arabic}</span>
+            </div>
+            <div style={{ display: "flex", gap: 8 }}>
+              <button onClick={() => markMuraja(s.id, "lancar")} style={{
+                flex: 1, padding: "9px 0",
+                background: "linear-gradient(135deg, var(--green)22, var(--green-dark)22)",
+                border: "1px solid var(--green)44", borderRadius: 10,
+                color: "var(--green)", fontSize: 10, cursor: "pointer",
+                fontFamily: "'DM Sans', sans-serif", fontWeight: 600, letterSpacing: "0.08em",
+              }}>✓ LANCAR</button>
+              <button onClick={() => markMuraja(s.id, "perlu")} style={{
+                flex: 1, padding: "9px 0",
+                background: "var(--gold)11", border: "1px solid var(--gold)33", borderRadius: 10,
+                color: "var(--gold)", fontSize: 10, cursor: "pointer",
+                fontFamily: "'DM Sans', sans-serif", fontWeight: 600, letterSpacing: "0.08em",
+              }}>⟳ PERLU ULANG</button>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+};
+
 export default function QuranHafalanApp() {
   const [screen, setScreen] = useState("dashboard");
   const [hafalanData, setHafalanData] = useState(initHafalanData());
@@ -994,1563 +2564,8 @@ export default function QuranHafalanApp() {
     }
   };
 
+
   // ===== UI SCREENS =====
-
-  // ===== TOAST UNDO NOTIFIKASI =====
-  const Toast = () => {
-    if (!toast) return null;
-    const label = toast.status === "hafal" ? "Ditandai Hafal" : toast.status === "proses" ? "Mulai Hafalan" : "Diubah";
-    return (
-      <div style={{
-        position: "fixed", bottom: 110, left: "50%", transform: "translateX(-50%)",
-        zIndex: 200, maxWidth: 360, width: "calc(100% - 40px)",
-        background: "var(--border)", border: "1px solid var(--gold)44",
-        borderRadius: 14, padding: "12px 16px",
-        display: "flex", alignItems: "center", gap: 12,
-        boxShadow: "0 8px 32px rgba(0,0,0,0.5)",
-        animation: "slideUp 0.25s ease",
-      }}>
-        <style>{`@keyframes slideUp { from { transform: translateX(-50%) translateY(20px); opacity:0; } to { transform: translateX(-50%) translateY(0); opacity:1; } }`}</style>
-        <div style={{ flex: 1 }}>
-          <div style={{ fontSize: 12, color: "var(--text)", fontFamily: "'DM Sans', sans-serif", fontWeight: 600 }}>
-            {label}: <span style={{ color: "var(--gold)" }}>{toast.surahName}</span>
-          </div>
-          <div style={{ fontSize: 10, color: "var(--muted)", fontFamily: "'DM Sans', sans-serif", marginTop: 2 }}>
-            Tap Batalkan jika salah klik
-          </div>
-        </div>
-        <button onClick={undoMarkStatus} style={{
-          background: "linear-gradient(135deg, var(--gold), var(--gold-dark))",
-          border: "none", borderRadius: 9, padding: "7px 14px",
-          color: "var(--bg)", fontSize: 11, fontWeight: 700,
-          cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
-          letterSpacing: "0.08em", whiteSpace: "nowrap", flexShrink: 0,
-        }}>↩ Batalkan</button>
-      </div>
-    );
-  };
-
-  const NavBar = () => (
-    <nav style={{
-      position: "fixed", bottom: 0, left: 0, right: 0,
-      background: "linear-gradient(180deg, transparent 0%, var(--bg) 15%)",
-      display: "flex", flexDirection: "column",
-      zIndex: 100, backdropFilter: "blur(12px)",
-    }}>
-      {/* Nav buttons */}
-      <div style={{ display: "flex", justifyContent: "space-around", padding: "10px 0 6px" }}>
-        {[
-          { id: "dashboard", icon: "⌂", label: "Beranda" },
-          { id: "hafalan", icon: "◈", label: "Hafalan" },
-          { id: "muraja", icon: "⟳", label: "Muraja'ah" },
-          { id: "jadwal", icon: "◷", label: "Jadwal" },
-          { id: "doa", icon: "🤲", label: "Dzikir" },
-          { id: "sholat", icon: "🕌", label: "Sholat" },
-        ].map(nav => (
-          <button key={nav.id} onClick={() => { setScreen(nav.id); setSelectedSurahDetail(null); }} style={{
-            background: "none", border: "none", cursor: "pointer",
-            display: "flex", flexDirection: "column", alignItems: "center", gap: 3,
-            color: (screen === nav.id || (nav.id === 'hafalan' && selectedSurahDetail)) ? "var(--gold)" : "var(--muted)",
-            transition: "color 0.2s", padding: "4px 10px",
-          }}>
-            <span style={{ fontSize: 22, lineHeight: 1 }}>{nav.icon}</span>
-            <span style={{ fontSize: 10, fontFamily: "'DM Sans', sans-serif", letterSpacing: "0.08em", fontWeight: 500 }}>{nav.label}</span>
-          </button>
-        ))}
-      </div>
-      {/* Footer copyright */}
-      <div style={{
-        textAlign: "center",
-        padding: "6px 0 calc(10px + env(safe-area-inset-bottom, 8px))",
-        borderTop: "1px solid var(--border-soft)",
-      }}>
-        <span style={{
-          fontSize: 9, color: "var(--muted-deep)", fontFamily: "'DM Sans', sans-serif",
-          letterSpacing: "0.12em", fontWeight: 600,
-        }}>B.O.A. INDONESIA © 2026</span>
-      </div>
-    </nav>
-  );
-
-  // DASHBOARD
-  const Dashboard = () => (
-    <div style={{ padding: "0 20px 140px" }}>
-      {/* Header */}
-      <div style={{ padding: "56px 0 32px", position: "relative" }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-          <div>
-            <div style={{ fontSize: 11, letterSpacing: "0.2em", color: "var(--muted)", fontFamily: "'DM Sans', sans-serif", marginBottom: 8 }}>
-              بِسْمِ اللهِ الرَّحْمَنِ الرَّحِيمِ
-            </div>
-            <h1 style={{ fontSize: 28, fontFamily: "'Playfair Display', Georgia, serif", color: "var(--text)", fontWeight: 700, margin: 0, lineHeight: 1.2 }}>
-              Hafalan<br /><span style={{ color: "var(--gold)" }}>Al-Qur'an</span>
-            </h1>
-            <div style={{ fontSize: 10, color: "var(--muted)", marginTop: 8, fontFamily: "'DM Sans', sans-serif", letterSpacing: "0.1em" }}>
-              BERBASIS NEUROSAINS • UNTUK ORANG DEWASA
-            </div>
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 8, paddingTop: 4 }}>
-            {syncing && (
-              <div style={{ fontSize: 9, color: "var(--blue)", fontFamily: "'DM Sans', sans-serif", letterSpacing: "0.1em" }}>
-                ⟳ SYNCING...
-              </div>
-            )}
-            <div style={{ fontSize: 9, color: "var(--gold)88", fontFamily: "'DM Sans', sans-serif", maxWidth: 100, textAlign: "right", letterSpacing: "0.05em" }}>
-              {user.email?.split("@")[0]}
-            </div>
-            <div style={{ display: "flex", gap: 6 }}>
-              <button onClick={() => setScreen("panduan")} style={{
-                background: "var(--gold)22", border: "1px solid var(--gold)44", borderRadius: 8,
-                color: "var(--gold)", fontSize: 9, padding: "5px 10px", cursor: "pointer",
-                fontFamily: "'DM Sans', sans-serif", letterSpacing: "0.08em", fontWeight: 700,
-              }}>? PANDUAN</button>
-              <button onClick={() => setTheme(t => t === "dark" ? "light" : "dark")} title={theme === "dark" ? "Mode Terang" : "Mode Gelap"} style={{
-                background: "var(--border)", border: "1px solid var(--border-mid)", borderRadius: 8,
-                color: "var(--text-dim)", fontSize: 15, padding: "3px 9px", cursor: "pointer",
-                lineHeight: 1, display: "flex", alignItems: "center", justifyContent: "center",
-              }}>{theme === "dark" ? "☀" : "☾"}</button>
-              <button onClick={handleLogout} style={{
-                background: "var(--border)", border: "1px solid var(--border-mid)", borderRadius: 8,
-                color: "var(--muted)", fontSize: 9, padding: "5px 10px", cursor: "pointer",
-                fontFamily: "'DM Sans', sans-serif", letterSpacing: "0.08em",
-              }}>KELUAR</button>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Stats Ring */}
-      <div style={{
-        background: "linear-gradient(135deg, var(--card) 0%, var(--bg-deeper) 100%)",
-        borderRadius: 20, padding: 24, marginBottom: 20,
-        border: "1px solid var(--border)",
-        display: "flex", alignItems: "center", gap: 24,
-      }}>
-        <div style={{ position: "relative", width: 90, height: 90, flexShrink: 0 }}>
-          <svg width="90" height="90" style={{ transform: "rotate(-90deg)" }}>
-            <circle cx="45" cy="45" r="38" fill="none" stroke="var(--border)" strokeWidth="6" />
-            <circle cx="45" cy="45" r="38" fill="none" stroke="var(--gold)" strokeWidth="6"
-              strokeDasharray={`${(stats.hafal / stats.total) * 239} 239`}
-              strokeLinecap="round" />
-          </svg>
-          <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
-            <span style={{ fontSize: 20, fontWeight: 700, color: "var(--gold)", fontFamily: "'Playfair Display', serif" }}>{stats.hafal}</span>
-            <span style={{ fontSize: 9, color: "var(--muted)", letterSpacing: "0.1em" }}>SURAH</span>
-          </div>
-        </div>
-        <div style={{ flex: 1 }}>
-          <div style={{ color: "var(--text)", fontSize: 15, fontFamily: "'Playfair Display', serif", marginBottom: 12 }}>Progress Hafalan</div>
-          {[
-            { label: "Hafal", value: stats.hafal, color: "var(--gold)" },
-            { label: "Dalam Proses", value: stats.proses, color: "var(--blue)" },
-            { label: "Belum Mulai", value: stats.total - stats.hafal - stats.proses, color: "var(--border-mid)" },
-          ].map(s => (
-            <div key={s.label} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
-              <div style={{ width: 8, height: 8, borderRadius: 2, background: s.color, flexShrink: 0 }} />
-              <span style={{ fontSize: 11, color: "var(--text-dim)", flex: 1, fontFamily: "'DM Sans', sans-serif" }}>{s.label}</span>
-              <span style={{ fontSize: 12, color: "var(--text)", fontWeight: 600 }}>{s.value}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Today's Tasks */}
-      <div style={{ marginBottom: 20 }}>
-        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
-          <span style={{ fontSize: 13, color: "var(--text)", fontFamily: "'Playfair Display', serif", letterSpacing: "0.02em" }}>Agenda Hari Ini</span>
-          <span style={{ fontSize: 10, color: "var(--gold)", fontFamily: "'DM Sans', sans-serif", letterSpacing: "0.12em" }}>
-            {todayDone} SELESAI
-          </span>
-        </div>
-
-        {dueToday.length > 0 ? dueToday.slice(0, 3).map(s => (
-          <div key={s.id} style={{
-            background: "var(--card)", borderRadius: 14, padding: "14px 16px",
-            marginBottom: 10, border: "1px solid var(--border)",
-            display: "flex", alignItems: "center", gap: 14,
-          }}>
-            <div style={{
-              width: 40, height: 40, borderRadius: 12,
-              background: "linear-gradient(135deg, var(--blue), var(--blue-dark))",
-              display: "flex", alignItems: "center", justifyContent: "center",
-              fontSize: 18, color: "#fff", flexShrink: 0,
-            }}>⟳</div>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 13, color: "var(--text)", fontFamily: "'Playfair Display', serif" }}>{s.name}</div>
-              <div style={{ fontSize: 10, color: "var(--muted)", fontFamily: "'DM Sans', sans-serif", marginTop: 2 }}>Muraja'ah terjadwal</div>
-            </div>
-            <button onClick={() => { setSelectedSurah(s); setSelectedSurahDetail(null); setScreen("muraja"); }} style={{
-              background: "var(--border)", border: "1px solid var(--border-mid)", borderRadius: 8,
-              color: "var(--blue)", fontSize: 10, padding: "6px 12px", cursor: "pointer",
-              fontFamily: "'DM Sans', sans-serif", letterSpacing: "0.08em",
-            }}>MULAI</button>
-          </div>
-        )) : (
-          <div style={{
-            background: "var(--card)", borderRadius: 14, padding: 20, textAlign: "center",
-            border: "1px solid var(--border)",
-          }}>
-            <div style={{ fontSize: 28, marginBottom: 8 }}>✦</div>
-            <div style={{ fontSize: 12, color: "var(--gold)", fontFamily: "'DM Sans', sans-serif" }}>Tidak ada muraja'ah terjadwal hari ini</div>
-            <div style={{ fontSize: 10, color: "var(--muted)", marginTop: 4 }}>Mulai hafalan baru atau tambah waktu belajar</div>
-          </div>
-        )}
-      </div>
-
-      {/* Method Highlight */}
-      <div style={{ marginBottom: 20 }}>
-        <div style={{ fontSize: 13, color: "var(--text)", fontFamily: "'Playfair Display', serif", marginBottom: 14 }}>
-          Metode Ilmiah Aktif
-        </div>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-          {METHODS.slice(0, 4).map(m => (
-            <div key={m.id} onClick={() => { setSelectedMethod(m.id); setScreen("metode"); }}
-              style={{
-                background: "var(--card)", borderRadius: 14, padding: 14,
-                border: `1px solid ${m.color}22`, cursor: "pointer",
-              }}>
-              <div style={{ fontSize: 24, marginBottom: 6 }}>{m.icon}</div>
-              <div style={{ fontSize: 11, color: m.color, fontFamily: "'DM Sans', sans-serif", fontWeight: 600 }}>{m.name}</div>
-              <div style={{ fontSize: 9, color: "var(--muted)", marginTop: 4, fontFamily: "'DM Sans', sans-serif", lineHeight: 1.4 }}>{m.ref}</div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Quick Start */}
-      <button onClick={() => { setScreen("hafalan"); setSelectedSurahDetail(null); }} style={{
-        width: "100%", padding: "16px 0",
-        background: "linear-gradient(135deg, var(--gold), var(--gold-dark))",
-        border: "none", borderRadius: 16, cursor: "pointer",
-        color: "var(--bg)", fontSize: 13, fontWeight: 700,
-        fontFamily: "'DM Sans', sans-serif", letterSpacing: "0.1em",
-      }}>
-        ✦ MULAI SESI HAFALAN
-      </button>
-    </div>
-  );
-
-  // HAFALAN SCREEN — 114 Surah lengkap
-  const HafalanScreen = () => {
-    // Filter by status tab
-    let filtered = activeTab === "semua" ? SURAHS
-      : activeTab === "proses" ? SURAHS.filter(s => hafalanData[s.id].status === "proses")
-        : activeTab === "hafal" ? SURAHS.filter(s => hafalanData[s.id].status === "hafal")
-          : SURAHS.filter(s => hafalanData[s.id].status === "belum");
-
-    // Filter by search
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      filtered = filtered.filter(s =>
-        s.name.toLowerCase().includes(q) ||
-        s.arabic.includes(q) ||
-        String(s.id).includes(q)
-      );
-    }
-
-    // Filter by juz
-    if (activeJuz > 0) {
-      filtered = filtered.filter(s => s.juz === activeJuz);
-    }
-
-    // Group by juz for display
-    const grouped = filtered.reduce((acc, s) => {
-      const j = s.juz;
-      if (!acc[j]) acc[j] = [];
-      acc[j].push(s);
-      return acc;
-    }, {});
-    const juzKeys = Object.keys(grouped).map(Number).sort((a, b) => a - b);
-
-    // Progress per juz
-    const juzProgress = (juz) => {
-      const inJuz = SURAHS.filter(s => s.juz === juz);
-      const done = inJuz.filter(s => hafalanData[s.id].status === "hafal").length;
-      return { done, total: inJuz.length };
-    };
-
-    return (
-      <div style={{ padding: "0 20px 140px" }}>
-        <div style={{ padding: "52px 0 16px" }}>
-          <h2 style={{ fontSize: 24, fontFamily: "'Playfair Display', serif", color: "var(--text)", margin: 0 }}>
-            114 <span style={{ color: "var(--gold)" }}>Surah</span>
-          </h2>
-          <div style={{ fontSize: 10, color: "var(--muted)", marginTop: 4, fontFamily: "'DM Sans', sans-serif" }}>
-            {stats.hafal} hafal • {stats.proses} proses • {stats.total - stats.hafal - stats.proses} belum
-          </div>
-        </div>
-
-        {/* Search Bar */}
-        <div style={{ position: "relative", marginBottom: 14 }}>
-          <span style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", fontSize: 14, color: "var(--muted)" }}>⌕</span>
-          <input
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-            placeholder="Cari nama surah..."
-            style={{
-              width: "100%", boxSizing: "border-box",
-              background: "var(--card)", border: "1px solid var(--border)", borderRadius: 12,
-              padding: "11px 14px 11px 36px", color: "var(--text)", fontSize: 13,
-              fontFamily: "'DM Sans', sans-serif", outline: "none",
-            }}
-          />
-          {searchQuery && (
-            <button onClick={() => setSearchQuery("")} style={{
-              position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)",
-              background: "none", border: "none", color: "var(--muted)", cursor: "pointer", fontSize: 16,
-            }}>×</button>
-          )}
-        </div>
-
-        {/* Status Tabs */}
-        <div style={{ display: "flex", gap: 7, marginBottom: 12, overflowX: "auto", paddingBottom: 2 }}>
-          {["semua", "proses", "hafal", "belum"].map(tab => (
-            <button key={tab} onClick={() => setActiveTab(tab)} style={{
-              background: activeTab === tab ? "var(--gold)" : "var(--card)",
-              border: `1px solid ${activeTab === tab ? "var(--gold)" : "var(--border)"}`,
-              borderRadius: 20, padding: "6px 14px", cursor: "pointer",
-              color: activeTab === tab ? "var(--bg)" : "var(--text-dim)",
-              fontSize: 10, fontFamily: "'DM Sans', sans-serif",
-              fontWeight: 700, letterSpacing: "0.08em", whiteSpace: "nowrap",
-            }}>{tab.toUpperCase()}</button>
-          ))}
-        </div>
-
-        {/* Juz Filter Strip */}
-        <div style={{ display: "flex", gap: 6, marginBottom: 18, overflowX: "auto", paddingBottom: 4 }}>
-          <button onClick={() => setActiveJuz(0)} style={{
-            background: activeJuz === 0 ? "var(--blue)" : "var(--card)",
-            border: `1px solid ${activeJuz === 0 ? "var(--blue)" : "var(--border)"}`,
-            borderRadius: 20, padding: "5px 14px", cursor: "pointer",
-            color: activeJuz === 0 ? "var(--bg)" : "var(--text-dim)",
-            fontSize: 10, fontFamily: "'DM Sans', sans-serif", fontWeight: 700, whiteSpace: "nowrap",
-          }}>ALL JUZ</button>
-          {Array.from({ length: 30 }, (_, i) => i + 1).map(juz => {
-            const p = juzProgress(juz);
-            const done = p.done === p.total && p.total > 0;
-            return (
-              <button key={juz} onClick={() => setActiveJuz(juz)} style={{
-                background: activeJuz === juz ? "var(--blue)" : done ? "var(--blue)22" : "var(--card)",
-                border: `1px solid ${activeJuz === juz ? "var(--blue)" : done ? "var(--blue)44" : "var(--border)"}`,
-                borderRadius: 20, padding: "5px 12px", cursor: "pointer",
-                color: activeJuz === juz ? "var(--bg)" : done ? "var(--blue)" : "var(--text-dim)",
-                fontSize: 10, fontFamily: "'DM Sans', sans-serif", fontWeight: 700, whiteSpace: "nowrap",
-              }}>{juz}</button>
-            );
-          })}
-        </div>
-
-        {/* Results count */}
-        {(searchQuery || activeJuz > 0) && (
-          <div style={{ fontSize: 10, color: "var(--muted)", marginBottom: 12, fontFamily: "'DM Sans', sans-serif" }}>
-            {filtered.length} surah ditemukan
-            {activeJuz > 0 && ` di Juz ${activeJuz}`}
-          </div>
-        )}
-
-        {/* Grouped Surah List */}
-        {filtered.length === 0 ? (
-          <div style={{ background: "var(--card)", borderRadius: 14, padding: 24, textAlign: "center", border: "1px solid var(--border)" }}>
-            <div style={{ fontSize: 24, color: "var(--muted)", marginBottom: 8 }}>◈</div>
-            <div style={{ fontSize: 12, color: "var(--muted)", fontFamily: "'DM Sans', sans-serif" }}>Tidak ada surah yang cocok</div>
-          </div>
-        ) : juzKeys.map(juz => (
-          <div key={juz}>
-            {/* Juz Header */}
-            {(activeJuz === 0 && !searchQuery) && (
-              <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10, marginTop: 6 }}>
-                <div style={{
-                  background: "var(--blue)18", border: "1px solid var(--blue)33", borderRadius: 8,
-                  padding: "4px 12px", fontSize: 10, color: "var(--blue)", fontFamily: "'DM Sans', sans-serif", fontWeight: 700,
-                }}>JUZ {juz}</div>
-                <div style={{ flex: 1, height: 1, background: "var(--border)" }} />
-                <div style={{ fontSize: 9, color: "var(--muted)", fontFamily: "'DM Sans', sans-serif" }}>
-                  {juzProgress(juz).done}/{juzProgress(juz).total} hafal
-                </div>
-              </div>
-            )}
-
-            {grouped[juz].map(s => {
-              const d = hafalanData[s.id];
-              return (
-                <div key={s.id}
-                  style={{
-                    background: "var(--card)", borderRadius: 14, padding: "13px 14px",
-                    marginBottom: 8, border: "1px solid var(--border)",
-                    display: "flex", alignItems: "center", gap: 12, cursor: "pointer",
-                  }}
-                  onClick={(e) => { if (!e.target.closest("button")) { setSelectedSurahDetail(s); } }}
-                >
-                  {/* Nomor */}
-                  <div style={{
-                    width: 40, height: 40, borderRadius: 10, flexShrink: 0,
-                    background: d.status === "hafal" ? "linear-gradient(135deg, var(--gold), var(--gold-dark))"
-                      : d.status === "proses" ? "linear-gradient(135deg, var(--blue), var(--blue-dark))"
-                        : "var(--border)",
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    fontSize: 12, color: d.status === "belum" ? "var(--muted)" : "#fff",
-                    fontFamily: "'Playfair Display', serif", fontWeight: 700,
-                  }}>{s.id}</div>
-
-                  {/* Info */}
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                      <span style={{ fontSize: 13, color: "var(--text)", fontFamily: "'Playfair Display', serif" }}>{s.name}</span>
-                      <span style={{ fontSize: 15, color: "var(--gold)88", fontFamily: "serif" }}>{s.arabic}</span>
-                    </div>
-                    <div style={{ fontSize: 9, color: "var(--muted)", marginTop: 2, fontFamily: "'DM Sans', sans-serif" }}>
-                      {s.ayat} ayat • Juz {s.juz}
-                      {d.status !== "belum" && ` • ${d.repetitions}× ulang`}
-                      <span style={{ color: "var(--gold)55", marginLeft: 4 }}>• Tap untuk baca ›</span>
-                    </div>
-                    {d.status !== "belum" && (
-                      <div style={{ marginTop: 5, height: 2, background: "var(--border)", borderRadius: 2 }}>
-                        <div style={{ height: "100%", width: `${d.progress}%`, background: d.status === "hafal" ? "var(--gold)" : "var(--blue)", borderRadius: 2, transition: "width 0.4s" }} />
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Action Buttons */}
-                  <div style={{ display: "flex", flexDirection: "column", gap: 5, flexShrink: 0 }}>
-                    {d.status !== "hafal" && (
-                      <button onClick={() => markStatus(s.id, "hafal")} style={{
-                        background: "var(--gold)18", border: "1px solid var(--gold)44",
-                        borderRadius: 7, color: "var(--gold)", fontSize: 9,
-                        padding: "5px 9px", cursor: "pointer",
-                        fontFamily: "'DM Sans', sans-serif", fontWeight: 700,
-                      }}>HAFAL ✓</button>
-                    )}
-                    {d.status === "belum" && (
-                      <button onClick={() => markStatus(s.id, "proses")} style={{
-                        background: "var(--blue)18", border: "1px solid var(--blue)44",
-                        borderRadius: 7, color: "var(--blue)", fontSize: 9,
-                        padding: "5px 9px", cursor: "pointer",
-                        fontFamily: "'DM Sans', sans-serif", fontWeight: 700,
-                      }}>MULAI</button>
-                    )}
-                    {d.status === "hafal" && (
-                      <button onClick={() => resetStatus(s.id)} style={{
-                        background: "var(--gold)12", border: "1px solid var(--gold)33",
-                        borderRadius: 7, color: "var(--gold)88", fontSize: 9,
-                        padding: "5px 9px", cursor: "pointer",
-                        fontFamily: "'DM Sans', sans-serif", fontWeight: 700,
-                      }}>↩ RESET</button>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        ))}
-      </div>
-    );
-  };
-
-  // MURAJA'AH SCREEN
-  const MurajaScreen = () => {
-    const hafalSurahs = SURAHS.filter(s => hafalanData[s.id].status === "hafal" || hafalanData[s.id].status === "proses");
-
-    return (
-      <div style={{ padding: "0 20px 140px" }}>
-        <div style={{ padding: "56px 0 24px" }}>
-          <h2 style={{ fontSize: 24, fontFamily: "'Playfair Display', serif", color: "var(--text)", margin: 0 }}>
-            Muraja'ah <span style={{ color: "var(--blue)" }}>& Ujian</span>
-          </h2>
-          <div style={{ fontSize: 11, color: "var(--muted)", marginTop: 6, fontFamily: "'DM Sans', sans-serif" }}>
-            Retrieval Practice — Karpicke & Roediger (2008)
-          </div>
-        </div>
-
-        {/* Timer Card */}
-        <div style={{
-          background: "linear-gradient(135deg, var(--card), var(--bg-deeper))", borderRadius: 20,
-          padding: 24, marginBottom: 20, border: "1px solid var(--border)", textAlign: "center",
-        }}>
-          <div style={{ fontSize: 48, fontFamily: "'Playfair Display', serif", color: "var(--gold)", letterSpacing: 4, marginBottom: 16 }}>
-            {formatTime(timer)}
-          </div>
-          <div style={{ display: "flex", gap: 12, justifyContent: "center" }}>
-            <button onClick={() => setTimerActive(!timerActive)} style={{
-              background: timerActive ? "var(--gold)22" : "linear-gradient(135deg, var(--gold), var(--gold-dark))",
-              border: timerActive ? "1px solid var(--gold)" : "none",
-              borderRadius: 12, padding: "10px 24px",
-              color: timerActive ? "var(--gold)" : "var(--bg)",
-              fontSize: 12, fontWeight: 700, cursor: "pointer",
-              fontFamily: "'DM Sans', sans-serif", letterSpacing: "0.1em",
-            }}>{timerActive ? "⏸ JEDA" : "▶ MULAI"}</button>
-            <button onClick={() => { setTimer(0); setTimerActive(false); }} style={{
-              background: "var(--border)", border: "1px solid var(--border-mid)", borderRadius: 12,
-              padding: "10px 20px", color: "var(--text-dim)", fontSize: 12,
-              cursor: "pointer", fontFamily: "'DM Sans', sans-serif",
-            }}>RESET</button>
-          </div>
-        </div>
-
-        {/* Method: 7-3-2-1 */}
-        <div style={{
-          background: "var(--card)", borderRadius: 16, padding: 18, marginBottom: 20,
-          border: "1px solid var(--purple)22",
-        }}>
-          <div style={{ fontSize: 12, color: "var(--purple)", fontFamily: "'DM Sans', sans-serif", fontWeight: 600, marginBottom: 10, letterSpacing: "0.1em" }}>
-            ◎ TEKNIK 7-3-2-1 (Spaced Repetition)
-          </div>
-          {[
-            { day: "Hari 1", times: 7, color: "var(--gold)" },
-            { day: "Hari 2", times: 3, color: "var(--purple)" },
-            { day: "Hari 3", times: 2, color: "var(--blue)" },
-            { day: "Hari 7", times: 1, color: "var(--green)" },
-          ].map(r => (
-            <div key={r.day} style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 8 }}>
-              <span style={{ fontSize: 10, color: "var(--muted)", width: 48, fontFamily: "'DM Sans', sans-serif" }}>{r.day}</span>
-              <div style={{ flex: 1, height: 6, background: "var(--border)", borderRadius: 3 }}>
-                <div style={{ height: "100%", width: `${(r.times / 7) * 100}%`, background: r.color, borderRadius: 3 }} />
-              </div>
-              <span style={{ fontSize: 11, color: r.color, fontWeight: 700, width: 24, textAlign: "right" }}>{r.times}×</span>
-            </div>
-          ))}
-        </div>
-
-        {/* Surah Cards for Muraja */}
-        <div style={{ fontSize: 13, color: "var(--text)", fontFamily: "'Playfair Display', serif", marginBottom: 14 }}>
-          Pilih Surah untuk Muraja'ah
-        </div>
-
-        {hafalSurahs.length === 0 ? (
-          <div style={{
-            background: "var(--card)", borderRadius: 14, padding: 24, textAlign: "center",
-            border: "1px solid var(--border)",
-          }}>
-            <div style={{ fontSize: 11, color: "var(--muted)", fontFamily: "'DM Sans', sans-serif" }}>
-              Belum ada surah yang dihafal. Mulai dari menu Hafalan.
-            </div>
-          </div>
-        ) : hafalSurahs.map(s => {
-          const d = hafalanData[s.id];
-          const nextDate = d.nextReview ? new Date(d.nextReview).toLocaleDateString("id-ID", { day: "numeric", month: "short" }) : "-";
-          return (
-            <div key={s.id} style={{
-              background: "var(--card)", borderRadius: 14, padding: 16, marginBottom: 10,
-              border: "1px solid var(--border)",
-            }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
-                <div>
-                  <div style={{ fontSize: 14, color: "var(--text)", fontFamily: "'Playfair Display', serif" }}>{s.name}</div>
-                  <div style={{ fontSize: 10, color: "var(--muted)", fontFamily: "'DM Sans', sans-serif", marginTop: 2 }}>
-                    Review ke-{d.repetitions + 1} • Berikutnya: {nextDate}
-                  </div>
-                </div>
-                <span style={{ fontSize: 18, color: "var(--gold)" }}>{s.arabic}</span>
-              </div>
-              <div style={{ display: "flex", gap: 8 }}>
-                <button onClick={() => markMuraja(s.id, "lancar")} style={{
-                  flex: 1, padding: "9px 0",
-                  background: "linear-gradient(135deg, var(--green)22, var(--green-dark)22)",
-                  border: "1px solid var(--green)44", borderRadius: 10,
-                  color: "var(--green)", fontSize: 10, cursor: "pointer",
-                  fontFamily: "'DM Sans', sans-serif", fontWeight: 600, letterSpacing: "0.08em",
-                }}>✓ LANCAR</button>
-                <button onClick={() => markMuraja(s.id, "perlu")} style={{
-                  flex: 1, padding: "9px 0",
-                  background: "var(--gold)11", border: "1px solid var(--gold)33", borderRadius: 10,
-                  color: "var(--gold)", fontSize: 10, cursor: "pointer",
-                  fontFamily: "'DM Sans', sans-serif", fontWeight: 600, letterSpacing: "0.08em",
-                }}>⟳ PERLU ULANG</button>
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    );
-  };
-
-  // JADWAL SCREEN — Jadwal Hafalan Harian
-  const JadwalScreen = () => {
-    const days = ["Sen", "Sel", "Rab", "Kam", "Jum", "Sab", "Min"];
-    const sessions = [
-      { timeKey: "Subuh", label: "Subuh", desc: "Hafalan baru — otak paling segar (Neuroplasticity peak)", icon: "☽", color: "var(--gold)", reminderKey: "subuh" },
-      { timeKey: null, label: "Pagi", desc: "Review cepat — working memory consolidation", icon: "◎", color: "var(--blue)", reminderKey: "pagi", staticTime: "08:00" },
-      { timeKey: "Ashar", label: "Ashar", desc: "Muraja'ah — retrieval practice (Karpicke, 2008)", icon: "⟳", color: "var(--purple)", reminderKey: "ashar" },
-      { timeKey: "Isya", label: "Isya", desc: "Pra-tidur — memory consolidation selama tidur", icon: "✦", color: "var(--green)", reminderKey: "isya" },
-    ];
-
-    const handleToggleReminder = async (key) => {
-      const newVal = !reminders[key];
-      setReminders(r => ({ ...r, [key]: newVal }));
-      if (user) {
-        try { await upsertReminder(user.id, key, newVal); }
-        catch (e) { console.error(e); }
-      }
-    };
-
-    const toMins = (str) => {
-      if (!str) return -1;
-      const [h, m] = str.split(":").map(Number);
-      return h * 60 + m;
-    };
-    const nowMins = currentTime.getHours() * 60 + currentTime.getMinutes();
-
-    return (
-      <div style={{ padding: "0 20px 140px" }}>
-        {/* Header */}
-        <div style={{ padding: "56px 0 20px" }}>
-          <h2 style={{ fontSize: 24, fontFamily: "'Playfair Display', serif", color: "var(--text)", margin: 0 }}>
-            Jadwal <span style={{ color: "var(--green)" }}>Hafalan</span>
-          </h2>
-          <div style={{ fontSize: 11, color: "var(--muted)", marginTop: 6, fontFamily: "'DM Sans', sans-serif" }}>
-            Adult Learning Theory — Knowles (1980) + Park & Bischof (2013)
-          </div>
-        </div>
-
-        {/* Shortcut ke jadwal sholat */}
-        <div onClick={() => setScreen("sholat")} style={{
-          background: "var(--green)12", border: "1px solid var(--green)33",
-          borderRadius: 14, padding: "12px 16px", marginBottom: 20,
-          display: "flex", alignItems: "center", gap: 12, cursor: "pointer",
-        }}>
-          <span style={{ fontSize: 22 }}>🕌</span>
-          <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 12, color: "var(--green)", fontFamily: "'DM Sans', sans-serif", fontWeight: 700 }}>Lihat Jadwal Sholat</div>
-            <div style={{ fontSize: 10, color: "var(--muted)", fontFamily: "'DM Sans', sans-serif", marginTop: 2 }}>
-              {prayerLocation ? `📍 ${prayerLocation.city} — Tap untuk detail` : "Tap untuk deteksi waktu sholat otomatis"}
-            </div>
-          </div>
-          <span style={{ color: "var(--border-mid)", fontSize: 18 }}>›</span>
-        </div>
-
-        {/* Week Strip */}
-        <div style={{ display: "flex", gap: 6, marginBottom: 20 }}>
-          {days.map((d, i) => {
-            const isToday = i === new Date().getDay() - 1;
-            return (
-              <div key={d} style={{
-                flex: 1, background: isToday ? "var(--gold)" : "var(--card)",
-                borderRadius: 10, padding: "8px 4px", textAlign: "center",
-                border: `1px solid ${isToday ? "var(--gold)" : "var(--border)"}`,
-              }}>
-                <div style={{ fontSize: 9, color: isToday ? "var(--bg)" : "var(--muted)", fontFamily: "'DM Sans', sans-serif", marginBottom: 4 }}>{d}</div>
-                <div style={{ fontSize: 14, color: isToday ? "var(--bg)" : "var(--border-mid)" }}>◆</div>
-              </div>
-            );
-          })}
-        </div>
-
-        {/* Sesi Belajar */}
-        <div style={{ fontSize: 13, color: "var(--text)", fontFamily: "'Playfair Display', serif", marginBottom: 14 }}>
-          Sesi Belajar Harian
-        </div>
-
-        {sessions.map((s) => {
-          const prayTime = s.timeKey && prayerTimes ? prayerTimes[s.timeKey] : s.staticTime || null;
-          const displayTime = prayTime || "—";
-          const isNow = s.timeKey && prayerTimes
-            ? Math.abs(toMins(prayerTimes[s.timeKey]) - nowMins) < 30
-            : false;
-          return (
-            <div key={s.label} style={{
-              background: isNow ? `${s.color}0E` : "var(--card)",
-              borderRadius: 16, padding: 16, marginBottom: 12,
-              border: `1px solid ${isNow ? s.color + "44" : s.color + "22"}`,
-              display: "flex", alignItems: "center", gap: 14,
-            }}>
-              <div style={{
-                width: 48, height: 48, borderRadius: 14, flexShrink: 0,
-                background: `${s.color}22`, border: `1px solid ${s.color}44`,
-                display: "flex", alignItems: "center", justifyContent: "center",
-                fontSize: 20, color: s.color,
-              }}>{s.icon}</div>
-              <div style={{ flex: 1 }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                  <span style={{ fontSize: 14, color: "var(--text)", fontFamily: "'Playfair Display', serif" }}>{s.label}</span>
-                  <span style={{ fontSize: 11, color: s.color, fontFamily: "'DM Sans', sans-serif", fontWeight: 700 }}>
-                    {displayTime}
-                    {s.timeKey && prayerTimes && <span style={{ fontSize: 9, opacity: 0.6, marginLeft: 3 }}>(sholat)</span>}
-                  </span>
-                </div>
-                <div style={{ fontSize: 10, color: "var(--muted)", marginTop: 4, fontFamily: "'DM Sans', sans-serif", lineHeight: 1.5 }}>{s.desc}</div>
-                {isNow && (
-                  <div style={{ fontSize: 9, color: s.color, marginTop: 4, fontWeight: 700, letterSpacing: "0.08em" }}>● WAKTU SHOLAT SEKARANG</div>
-                )}
-              </div>
-              <button onClick={() => handleToggleReminder(s.reminderKey)} style={{
-                width: 36, height: 20, borderRadius: 10, border: "none", cursor: "pointer",
-                background: reminders[s.reminderKey] ? s.color : "var(--border)",
-                position: "relative", flexShrink: 0, transition: "background 0.2s",
-              }}>
-                <div style={{
-                  width: 16, height: 16, borderRadius: 8, background: "#fff",
-                  position: "absolute", top: 2,
-                  left: reminders[s.reminderKey] ? 18 : 2, transition: "left 0.2s",
-                }} />
-              </button>
-            </div>
-          );
-        })}
-
-        {/* Neuroscience tip */}
-        <div style={{
-          background: "linear-gradient(135deg, var(--gold)11, var(--gold-dark)0A)", borderRadius: 16,
-          padding: 18, border: "1px solid var(--gold)22", marginTop: 4,
-        }}>
-          <div style={{ fontSize: 11, color: "var(--gold)", fontFamily: "'DM Sans', sans-serif", fontWeight: 600, marginBottom: 8, letterSpacing: "0.1em" }}>
-            ✦ TIPS NEUROSAINS
-          </div>
-          <div style={{ fontSize: 11, color: "var(--text-secondary)", fontFamily: "'DM Sans', sans-serif", lineHeight: 1.7 }}>
-            Otak orang dewasa mencapai puncak plastisitas neural 60–90 menit setelah bangun tidur. Waktu subuh adalah waktu terbaik untuk hafalan baru — memori jangka panjang dikonsolidasi saat tidur malam.
-          </div>
-        </div>
-      </div>
-    );
-  };
-
-  // SHOLAT SCREEN — Jadwal Waktu Sholat
-  const SholatScreen = () => {
-    const toMins = (str) => {
-      if (!str) return -1;
-      const [h, m] = str.split(":").map(Number);
-      return h * 60 + m;
-    };
-    const nowMins = currentTime.getHours() * 60 + currentTime.getMinutes();
-    const prayerKeys = prayerTimes ? ["Subuh", "Terbit", "Dzuhur", "Ashar", "Maghrib", "Isya"] : [];
-    const mainKeys = ["Subuh", "Dzuhur", "Ashar", "Maghrib", "Isya"];
-    const nextPrayer = prayerTimes
-      ? mainKeys.find(k => toMins(prayerTimes[k]) > nowMins) || "Subuh"
-      : null;
-    const nextMins = prayerTimes && nextPrayer
-      ? (toMins(prayerTimes[nextPrayer]) - nowMins + 1440) % 1440
-      : null;
-    const formatCountdown = (mins) => {
-      if (mins === null) return "";
-      const h = Math.floor(mins / 60), m = mins % 60;
-      return h > 0 ? `${h} jam ${m} mnt` : `${m} menit lagi`;
-    };
-
-    const prayerMeta = {
-      Subuh: { icon: "☽", color: "var(--gold)", desc: "Fajar — waktu terbaik hafalan baru" },
-      Terbit: { icon: "◇", color: "var(--text-dim)", desc: "Matahari terbit — waktu larangan sholat" },
-      Dzuhur: { icon: "◉", color: "var(--blue)", desc: "Tengah hari — review cepat setelah sholat" },
-      Ashar: { icon: "⟳", color: "var(--purple)", desc: "Sore — muraja'ah & retrieval practice" },
-      Maghrib: { icon: "◐", color: "var(--red)", desc: "Magrib — istirahat sejenak, banyak dzikir" },
-      Isya: { icon: "✦", color: "var(--green)", desc: "Malam — pra-tidur, konsolidasi memori" },
-    };
-
-    return (
-      <div style={{ padding: "0 20px 140px" }}>
-        {/* Header */}
-        <div style={{ padding: "56px 0 20px" }}>
-          <h2 style={{ fontSize: 24, fontFamily: "'Playfair Display', serif", color: "var(--text)", margin: 0 }}>
-            Waktu <span style={{ color: "var(--green)" }}>Sholat</span>
-          </h2>
-          <div style={{ fontSize: 11, color: "var(--muted)", marginTop: 6, fontFamily: "'DM Sans', sans-serif" }}>
-            Otomatis sesuai lokasi GPS smartphone
-          </div>
-        </div>
-
-        {/* Clock + Lokasi Card */}
-        <div style={{
-          background: "linear-gradient(135deg, var(--card) 0%, var(--bg-deeper) 100%)",
-          borderRadius: 20, padding: 20, marginBottom: 20,
-          border: "1px solid var(--green)33",
-        }}>
-          <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
-            <div>
-              <div style={{ fontSize: 36, color: "var(--text)", fontFamily: "'Playfair Display', serif", fontWeight: 700, letterSpacing: 2, lineHeight: 1 }}>
-                {currentTime.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })}
-              </div>
-              <div style={{ fontSize: 11, color: "var(--muted)", fontFamily: "'DM Sans', sans-serif", marginTop: 6 }}>
-                {currentTime.toLocaleDateString("id-ID", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
-              </div>
-              {prayerLocation && (
-                <div style={{ fontSize: 11, color: "var(--green)", fontFamily: "'DM Sans', sans-serif", marginTop: 4, fontWeight: 700 }}>
-                  📍 {prayerLocation.city}
-                </div>
-              )}
-            </div>
-            <button onClick={fetchPrayerTimes} disabled={prayerLoading} style={{
-              background: prayerLoading ? "var(--border)" : "linear-gradient(135deg, var(--green), var(--green-dark))",
-              border: "none", borderRadius: 12, padding: "10px 14px",
-              color: prayerLoading ? "var(--muted)" : "var(--bg)",
-              fontSize: 10, fontWeight: 700, cursor: prayerLoading ? "not-allowed" : "pointer",
-              fontFamily: "'DM Sans', sans-serif", letterSpacing: "0.08em", textAlign: "center", lineHeight: 1.5,
-            }}>
-              {prayerLoading ? "⟳" : "📍"}<br />{prayerLoading ? "Memuat..." : "Deteksi Lokasi"}
-            </button>
-          </div>
-
-          {/* Error */}
-          {prayerError && (
-            <div style={{
-              background: "var(--red)15", border: "1px solid var(--red)33", borderRadius: 12,
-              padding: "10px 14px", fontSize: 11, color: "var(--red)",
-              fontFamily: "'DM Sans', sans-serif", lineHeight: 1.5, marginBottom: 12,
-            }}>⚠️ {prayerError}</div>
-          )}
-
-          {/* Next prayer highlight */}
-          {prayerTimes && nextPrayer && (
-            <div style={{
-              background: "var(--green)15", border: "1px solid var(--green)44",
-              borderRadius: 14, padding: "14px 16px",
-              display: "flex", justifyContent: "space-between", alignItems: "center",
-            }}>
-              <div>
-                <div style={{ fontSize: 10, color: "var(--muted)", fontFamily: "'DM Sans', sans-serif", letterSpacing: "0.08em" }}>SHOLAT BERIKUTNYA</div>
-                <div style={{ fontSize: 20, color: "var(--green)", fontFamily: "'Playfair Display', serif", fontWeight: 700, marginTop: 4 }}>
-                  {prayerMeta[nextPrayer]?.icon} {nextPrayer}
-                </div>
-                <div style={{ fontSize: 13, color: "var(--text)", fontFamily: "'Playfair Display', serif", marginTop: 2 }}>
-                  {prayerTimes[nextPrayer]}
-                </div>
-              </div>
-              <div style={{ textAlign: "right" }}>
-                <div style={{ fontSize: 18, color: "var(--green)", fontFamily: "'Playfair Display', serif", fontWeight: 700 }}>
-                  {formatCountdown(nextMins)}
-                </div>
-                <div style={{ fontSize: 9, color: "var(--muted)", fontFamily: "'DM Sans', sans-serif", marginTop: 4, maxWidth: 120, lineHeight: 1.4 }}>
-                  {prayerMeta[nextPrayer]?.desc}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Empty state */}
-          {!prayerTimes && !prayerLoading && !prayerError && (
-            <div style={{ textAlign: "center", padding: "20px 0 8px" }}>
-              <div style={{ fontSize: 36, color: "var(--green)33", marginBottom: 12 }}>🕌</div>
-              <div style={{ fontSize: 12, color: "var(--muted)", fontFamily: "'DM Sans', sans-serif", lineHeight: 1.7 }}>
-                Tap <strong style={{ color: "var(--green)" }}>Deteksi Lokasi</strong> untuk menampilkan<br />jadwal sholat wilayah Anda secara otomatis
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Prayer times list — detailed */}
-        {prayerTimes && (
-          <div>
-            <div style={{ fontSize: 13, color: "var(--text)", fontFamily: "'Playfair Display', serif", marginBottom: 14 }}>
-              Waktu Sholat Hari Ini
-            </div>
-            {Object.entries(prayerTimes).map(([name, time]) => {
-              const meta = prayerMeta[name] || { icon: "◇", color: "var(--muted)", desc: "" };
-              const isNext = name === nextPrayer;
-              const isPast = toMins(time) < nowMins && !isNext;
-              const isMain = mainKeys.includes(name);
-              return (
-                <div key={name} style={{
-                  background: isNext ? "var(--green)12" : "var(--card)",
-                  borderRadius: 16, padding: "14px 16px", marginBottom: 10,
-                  border: `1px solid ${isNext ? "var(--green)44" : isPast ? "var(--border-soft)" : "var(--border)"}`,
-                  display: "flex", alignItems: "center", gap: 14,
-                  opacity: isPast && !isMain ? 0.5 : 1,
-                }}>
-                  <div style={{
-                    width: 44, height: 44, borderRadius: 13, flexShrink: 0,
-                    background: isNext ? "var(--green)22" : `${meta.color}18`,
-                    border: `1px solid ${isNext ? "var(--green)44" : meta.color + "33"}`,
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    fontSize: 20, color: isNext ? "var(--green)" : meta.color,
-                  }}>{meta.icon}</div>
-                  <div style={{ flex: 1 }}>
-                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                      <span style={{ fontSize: 15, color: isNext ? "var(--green)" : isPast ? "var(--text-dim)" : "var(--text)", fontFamily: "'Playfair Display', serif", fontWeight: 700 }}>
-                        {name}
-                      </span>
-                      <span style={{ fontSize: 18, color: isNext ? "var(--green)" : isPast ? "var(--muted)" : "var(--text)", fontFamily: "'Playfair Display', serif", fontWeight: 700 }}>
-                        {time}
-                      </span>
-                    </div>
-                    <div style={{ fontSize: 10, color: isNext ? "var(--green)88" : "var(--muted)", fontFamily: "'DM Sans', sans-serif", marginTop: 3 }}>
-                      {meta.desc}
-                      {isPast && <span style={{ color: "var(--muted-alt)", marginLeft: 6 }}>• Sudah lewat</span>}
-                      {isNext && <span style={{ fontWeight: 700, marginLeft: 6 }}>• {formatCountdown(nextMins)}</span>}
-                    </div>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-
-        {/* Info metode kalkulasi */}
-        {prayerTimes && (
-          <div style={{
-            background: "var(--green)0A", border: "1px solid var(--green)22",
-            borderRadius: 14, padding: 14, marginTop: 4,
-          }}>
-            <div style={{ fontSize: 9, color: "var(--green)", fontFamily: "'DM Sans', sans-serif", fontWeight: 700, letterSpacing: "0.1em", marginBottom: 4 }}>
-              ℹ METODE KALKULASI
-            </div>
-            <div style={{ fontSize: 10, color: "var(--muted)", fontFamily: "'DM Sans', sans-serif", lineHeight: 1.6 }}>
-              Menggunakan metode <strong style={{ color: "var(--text)" }}>Kementerian Agama Republik Indonesia</strong> (method=20) via aladhan.com. Waktu disesuaikan otomatis dengan koordinat GPS smartphone Anda.
-            </div>
-          </div>
-        )}
-      </div>
-    );
-  };
-
-  // METODE SCREEN
-  const MetodeScreen = () => {
-    // If in active session mode
-    if (activeMethodSession) {
-      const m = METHODS.find(x => x.id === activeMethodSession.methodId);
-      if (!m) return null;
-      const phase = m.session[activeMethodSession.phaseIdx];
-      const totalPhases = m.session.length;
-      const phaseIdx = activeMethodSession.phaseIdx;
-      const checkedKey = (pi, si) => `${pi}-${si}`;
-      const allChecked = phase.steps.every((_, si) => sessionChecked[checkedKey(phaseIdx, si)]);
-      const isLastPhase = phaseIdx === totalPhases - 1;
-      const donePhases = m.session.filter((_, pi) => pi < phaseIdx).length;
-
-      return (
-        <div style={{ padding: "0 0 120px" }}>
-          {/* Session Header */}
-          <div style={{
-            background: "var(--bg)", padding: "52px 20px 16px",
-            borderBottom: `1px solid ${m.color}33`,
-            position: "sticky", top: 0, zIndex: 10,
-          }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
-              <button onClick={() => { setActiveMethodSession(null); setSessionChecked({}); }} style={{
-                background: "var(--border)", border: "1px solid var(--border-mid)", borderRadius: 10,
-                color: m.color, fontSize: 20, width: 38, height: 38,
-                cursor: "pointer", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center",
-              }}>←</button>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 11, color: m.color, fontFamily: "'DM Sans', sans-serif", fontWeight: 700, letterSpacing: "0.1em" }}>
-                  {m.icon} {m.name.toUpperCase()}
-                </div>
-                <div style={{ fontSize: 10, color: "var(--muted)", fontFamily: "'DM Sans', sans-serif", marginTop: 2 }}>
-                  Fase {phaseIdx + 1} dari {totalPhases}
-                </div>
-              </div>
-              <div style={{ fontSize: 10, color: m.color, fontFamily: "'DM Sans', sans-serif", fontWeight: 700 }}>
-                {phase.time}
-              </div>
-            </div>
-            {/* Progress bar */}
-            <div style={{ height: 4, background: "var(--border)", borderRadius: 2 }}>
-              <div style={{ height: "100%", width: `${((phaseIdx) / totalPhases) * 100}%`, background: m.color, borderRadius: 2, transition: "width 0.4s" }} />
-            </div>
-          </div>
-
-          <div style={{ padding: "24px 20px" }}>
-            {/* Phase title */}
-            <div style={{
-              background: `${m.color}15`, border: `1px solid ${m.color}33`,
-              borderRadius: 16, padding: "16px 18px", marginBottom: 20,
-              display: "flex", alignItems: "center", gap: 14,
-            }}>
-              <div style={{
-                width: 44, height: 44, borderRadius: 12, flexShrink: 0,
-                background: `${m.color}22`, border: `1px solid ${m.color}44`,
-                display: "flex", alignItems: "center", justifyContent: "center",
-                fontSize: 20, color: m.color,
-              }}>{phase.icon}</div>
-              <div>
-                <div style={{ fontSize: 14, color: m.color, fontFamily: "'Playfair Display', serif", fontWeight: 700 }}>
-                  {phase.phase}
-                </div>
-                <div style={{ fontSize: 10, color: "var(--muted)", fontFamily: "'DM Sans', sans-serif", marginTop: 2 }}>
-                  Estimasi waktu: {phase.time}
-                </div>
-              </div>
-            </div>
-
-            {/* Checklist steps */}
-            <div style={{ marginBottom: 24 }}>
-              {phase.steps.map((step, si) => {
-                const key = checkedKey(phaseIdx, si);
-                const checked = !!sessionChecked[key];
-                return (
-                  <div key={si}
-                    onClick={() => setSessionChecked(prev => ({ ...prev, [key]: !checked }))}
-                    style={{
-                      display: "flex", gap: 14, padding: "14px 16px", marginBottom: 10,
-                      background: checked ? `${m.color}12` : "var(--card)",
-                      border: `1px solid ${checked ? m.color + "44" : "var(--border)"}`,
-                      borderRadius: 14, cursor: "pointer", alignItems: "flex-start",
-                      transition: "all 0.2s",
-                    }}>
-                    <div style={{
-                      width: 24, height: 24, borderRadius: 7, flexShrink: 0,
-                      background: checked ? m.color : "var(--border)",
-                      border: `1px solid ${checked ? m.color : "var(--border-mid)"}`,
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                      fontSize: 13, color: checked ? "var(--bg)" : "var(--muted)",
-                      transition: "all 0.2s", marginTop: 1,
-                    }}>{checked ? "✓" : si + 1}</div>
-                    <span style={{
-                      fontSize: 12, color: checked ? "var(--text-dim)" : "var(--text-warm)",
-                      fontFamily: "'DM Sans', sans-serif", lineHeight: 1.6,
-                      textDecoration: checked ? "line-through" : "none",
-                      transition: "all 0.2s",
-                    }}>{step}</span>
-                  </div>
-                );
-              })}
-            </div>
-
-            {/* Navigation */}
-            <div style={{ display: "flex", gap: 10 }}>
-              {phaseIdx > 0 && (
-                <button onClick={() => setActiveMethodSession(prev => ({ ...prev, phaseIdx: prev.phaseIdx - 1 }))} style={{
-                  flex: 1, padding: "13px 0", background: "var(--card)",
-                  border: "1px solid var(--border)", borderRadius: 14,
-                  color: "var(--text-dim)", fontSize: 12, cursor: "pointer",
-                  fontFamily: "'DM Sans', sans-serif", fontWeight: 600,
-                }}>← Sebelumnya</button>
-              )}
-              {!isLastPhase ? (
-                <button
-                  onClick={() => allChecked && setActiveMethodSession(prev => ({ ...prev, phaseIdx: prev.phaseIdx + 1 }))}
-                  style={{
-                    flex: 2, padding: "13px 0",
-                    background: allChecked ? `linear-gradient(135deg, ${m.color}, ${m.color}CC)` : "var(--border)",
-                    border: "none", borderRadius: 14,
-                    color: allChecked ? "var(--bg)" : "var(--muted)",
-                    fontSize: 12, cursor: allChecked ? "pointer" : "not-allowed",
-                    fontFamily: "'DM Sans', sans-serif", fontWeight: 700, letterSpacing: "0.06em",
-                  }}>
-                  {allChecked ? "Fase Berikutnya →" : `Centang semua (${phase.steps.filter((_, si) => sessionChecked[checkedKey(phaseIdx, si)]).length}/${phase.steps.length})`}
-                </button>
-              ) : (
-                <button
-                  onClick={() => { if (allChecked) { setActiveMethodSession(null); setSessionChecked({}); setScreen("hafalan"); setSelectedSurahDetail(null); } }}
-                  style={{
-                    flex: 2, padding: "13px 0",
-                    background: allChecked ? "linear-gradient(135deg, var(--green), var(--green-dark))" : "var(--border)",
-                    border: "none", borderRadius: 14,
-                    color: allChecked ? "var(--bg)" : "var(--muted)",
-                    fontSize: 12, cursor: allChecked ? "pointer" : "not-allowed",
-                    fontFamily: "'DM Sans', sans-serif", fontWeight: 700, letterSpacing: "0.06em",
-                  }}>
-                  {allChecked ? "✦ Sesi Selesai! Mulai Hafal →" : `Centang semua dulu (${phase.steps.filter((_, si) => sessionChecked[checkedKey(phaseIdx, si)]).length}/${phase.steps.length})`}
-                </button>
-              )}
-            </div>
-
-            {/* Phase overview mini */}
-            <div style={{ display: "flex", gap: 6, marginTop: 20, justifyContent: "center" }}>
-              {m.session.map((ph, pi) => (
-                <div key={pi} style={{
-                  width: pi === phaseIdx ? 24 : 8, height: 8, borderRadius: 4,
-                  background: pi < phaseIdx ? m.color : pi === phaseIdx ? m.color : "var(--border)",
-                  opacity: pi < phaseIdx ? 0.5 : 1,
-                  transition: "width 0.3s",
-                }} />
-              ))}
-            </div>
-          </div>
-        </div>
-      );
-    }
-
-    // Default: method list view
-    return (
-      <div style={{ padding: "0 20px 140px" }}>
-        <div style={{ padding: "56px 0 20px" }}>
-          <h2 style={{ fontSize: 24, fontFamily: "'Playfair Display', serif", color: "var(--text)", margin: 0 }}>
-            Metode <span style={{ color: "var(--purple)" }}>Ilmiah</span>
-          </h2>
-          <div style={{ fontSize: 11, color: "var(--muted)", marginTop: 6, fontFamily: "'DM Sans', sans-serif" }}>
-            4 metode berbasis neurosains • Panduan sesi interaktif
-          </div>
-        </div>
-
-        {/* Intro card */}
-        <div style={{
-          background: "linear-gradient(135deg, var(--purple)11, var(--purple-dark)11)", borderRadius: 16,
-          padding: 18, marginBottom: 20, border: "1px solid var(--purple)33",
-        }}>
-          <div style={{ fontSize: 12, color: "var(--purple)", fontWeight: 700, fontFamily: "'DM Sans', sans-serif", marginBottom: 8, letterSpacing: "0.08em" }}>
-            ◎ MENGAPA METODE INI UNTUK ORANG DEWASA?
-          </div>
-          <div style={{ fontSize: 11, color: "var(--text-secondary)", fontFamily: "'DM Sans', sans-serif", lineHeight: 1.8 }}>
-            Otak dewasa berbeda dari anak-anak. Prefrontal cortex sudah matang — kita lebih kuat di <span style={{ color: "var(--text)" }}>memori bermakna</span> dan lebih lemah di <span style={{ color: "var(--text)" }}>hafalan mekanis</span>. Keempat metode ini dirancang memanfaatkan kekuatan unik otak dewasa.
-          </div>
-        </div>
-
-        {/* Methods list */}
-        {METHODS.map(m => (
-          <div key={m.id} style={{
-            background: "var(--card)", borderRadius: 16, marginBottom: 14,
-            border: `1px solid ${m.color}33`, overflow: "hidden",
-          }}>
-            {/* Collapsed header */}
-            <div onClick={() => setShowMethodDetail(showMethodDetail === m.id ? null : m.id)}
-              style={{ padding: 18, display: "flex", alignItems: "center", gap: 14, cursor: "pointer" }}>
-              <div style={{
-                width: 52, height: 52, borderRadius: 14, flexShrink: 0,
-                background: `${m.color}22`, border: `1px solid ${m.color}44`,
-                display: "flex", alignItems: "center", justifyContent: "center",
-                fontSize: 26, color: m.color,
-              }}>{m.icon}</div>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 14, color: "var(--text)", fontFamily: "'Playfair Display', serif" }}>{m.name}</div>
-                <div style={{ fontSize: 10, color: m.color, fontFamily: "'DM Sans', sans-serif", marginTop: 3, fontStyle: "italic" }}>"{m.tagline}"</div>
-                <div style={{ fontSize: 9, color: "var(--muted)", fontFamily: "'DM Sans', sans-serif", marginTop: 3, letterSpacing: "0.04em" }}>
-                  ⏱ {m.duration} • {m.bestFor}
-                </div>
-              </div>
-              <span style={{ color: "var(--muted)", fontSize: 16, flexShrink: 0 }}>{showMethodDetail === m.id ? "▲" : "▼"}</span>
-            </div>
-
-            {/* Expanded detail */}
-            {showMethodDetail === m.id && (
-              <div style={{ padding: "0 18px 18px" }}>
-                {/* Why this works */}
-                <div style={{
-                  background: `${m.color}0D`, border: `1px solid ${m.color}22`,
-                  borderRadius: 12, padding: "12px 14px", marginBottom: 16,
-                }}>
-                  <div style={{ fontSize: 9, color: m.color, fontFamily: "'DM Sans', sans-serif", fontWeight: 700, letterSpacing: "0.1em", marginBottom: 6 }}>
-                    🧠 MENGAPA INI BEKERJA UNTUK OTAK DEWASA
-                  </div>
-                  <div style={{ fontSize: 11, color: "var(--text-secondary)", fontFamily: "'DM Sans', sans-serif", lineHeight: 1.7 }}>
-                    {m.why}
-                  </div>
-                  <div style={{ fontSize: 9, color: "var(--muted)", fontFamily: "'DM Sans', sans-serif", marginTop: 8, fontStyle: "italic" }}>
-                    📚 {m.ref}
-                  </div>
-                </div>
-
-                {/* Session phases overview */}
-                <div style={{ fontSize: 11, color: m.color, fontFamily: "'DM Sans', sans-serif", fontWeight: 700, marginBottom: 10, letterSpacing: "0.08em" }}>
-                  ALUR SESI ({m.session.length} FASE):
-                </div>
-                {m.session.map((phase, pi) => (
-                  <div key={pi} style={{ display: "flex", gap: 12, marginBottom: 8, alignItems: "center" }}>
-                    <div style={{
-                      width: 28, height: 28, borderRadius: 8, flexShrink: 0,
-                      background: `${m.color}22`, border: `1px solid ${m.color}44`,
-                      display: "flex", alignItems: "center", justifyContent: "center",
-                      fontSize: 13, color: m.color,
-                    }}>{phase.icon}</div>
-                    <div style={{ flex: 1 }}>
-                      <span style={{ fontSize: 11, color: "var(--text)", fontFamily: "'DM Sans', sans-serif", fontWeight: 600 }}>{phase.phase}</span>
-                      <span style={{ fontSize: 10, color: "var(--muted)", fontFamily: "'DM Sans', sans-serif" }}> — {phase.time}</span>
-                    </div>
-                  </div>
-                ))}
-
-                {/* Start session button */}
-                <button onClick={() => { setActiveMethodSession({ methodId: m.id, phaseIdx: 0 }); setSessionChecked({}); }} style={{
-                  marginTop: 14, width: "100%", padding: "14px 0",
-                  background: `linear-gradient(135deg, ${m.color}, ${m.color}CC)`,
-                  border: "none", borderRadius: 12,
-                  color: "var(--bg)", fontSize: 12, cursor: "pointer",
-                  fontFamily: "'DM Sans', sans-serif", fontWeight: 800, letterSpacing: "0.1em",
-                }}>▶ MULAI SESI PANDUAN INTERAKTIF</button>
-              </div>
-            )}
-          </div>
-        ))}
-
-        {/* Science refs */}
-        <div style={{ background: "var(--card)", borderRadius: 16, padding: 18, border: "1px solid var(--border)" }}>
-          <div style={{ fontSize: 11, color: "var(--gold)", fontFamily: "'DM Sans', sans-serif", fontWeight: 600, marginBottom: 12, letterSpacing: "0.1em" }}>
-            ◈ 40 REFERENSI ILMIAH — RECITATION ACADEMY
-          </div>
-          {[
-            { cat: "Prefrontal Cortex", refs: "Arain, Petanjek, Rosch, Somerville" },
-            { cat: "Working Memory", refs: "Funahashi, Baddeley, D'Esposito" },
-            { cat: "Method of Loci", refs: "Dresler, Wagner, Maguire, Legge" },
-            { cat: "Spatial Memory", refs: "O'Keefe, Maguire, Konishi" },
-            { cat: "Levels of Processing", refs: "Craik & Lockhart, Tulving, Galli" },
-            { cat: "Multi-Sensory", refs: "Paivio, Shams, Mayer" },
-            { cat: "Spaced Repetition", refs: "Ebbinghaus, Cepeda, Karpicke, Roediger" },
-            { cat: "Adult Learning", refs: "Knowles, Kolb, Draganski, Park" },
-            { cat: "Chunking", refs: "Miller (7±2), Gobet" },
-            { cat: "Cognitive Neuroscience", refs: "Squire, Tulving, Atkinson, D'Esposito" },
-          ].map(r => (
-            <div key={r.cat} style={{ display: "flex", gap: 10, marginBottom: 7, alignItems: "flex-start" }}>
-              <div style={{ width: 4, height: 4, borderRadius: 1, background: "var(--gold)55", flexShrink: 0, marginTop: 6 }} />
-              <div>
-                <span style={{ fontSize: 10, color: "var(--text)", fontFamily: "'DM Sans', sans-serif" }}>{r.cat}</span>
-                <span style={{ fontSize: 9, color: "var(--muted)", fontFamily: "'DM Sans', sans-serif" }}> — {r.refs}</span>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    );
-  };
-
-
-  // ===== PANDUAN SCREEN =====
-  const PanduanScreen = () => {
-    const [activeSection, setActiveSection] = useState(null);
-
-    const PANDUAN_SECTIONS = [
-      {
-        id: "mulai",
-        icon: "✦",
-        color: "var(--gold)",
-        title: "Cara Memulai Hafalan",
-        subtitle: "Untuk pemula — langkah 1 s.d. selesai",
-        steps: [
-          {
-            n: "1", title: "Pilih Surah Target",
-            body: "Buka menu Hafalan → pilih surah yang ingin dihafal. Untuk pemula, mulai dari surah pendek di Juz 30 (An-Nas, Al-Falaq, Al-Ikhlas). Tap kartu surah untuk melihat teks Arab lengkap.",
-            tips: "Jangan langsung pilih surah panjang. Bangun kepercayaan diri dulu dengan 3–5 surah pendek.",
-            icon: "◈",
-          },
-          {
-            n: "2", title: "Pilih Metode Hafalan",
-            body: "Buka menu Panduan → Metode Hafalan → pilih salah satu dari 4 metode. Untuk pemula, disarankan mulai dengan Chunking + Snowball karena paling sistematis dan cocok untuk otak dewasa.",
-            tips: "Konsisten dengan 1 metode dulu selama 2 minggu sebelum mencoba metode lain.",
-            icon: "◎",
-          },
-          {
-            n: "3", title: "Jalankan Sesi Interaktif",
-            body: "Di halaman Metode, tap ▶ MULAI SESI PANDUAN INTERAKTIF. Ikuti setiap fase dan centang langkah yang sudah dikerjakan. Tombol Fase Berikutnya hanya aktif jika semua langkah sudah dicentang.",
-            tips: "Satu sesi = 30–45 menit. Jangan terburu. Kualitas lebih penting dari kuantitas.",
-            icon: "▶",
-          },
-          {
-            n: "4", title: "Tandai Status Hafalan",
-            body: "Setelah berhasil menghafal surah, kembali ke menu Hafalan → tap kartu surah → tap HAFAL ✓ atau buka halaman detail surah → tap TANDAI HAFAL. Status akan berubah ke emas.",
-            tips: "Tandai PROSES jika masih belajar, HAFAL hanya jika sudah bisa recite tanpa lihat 3 kali berturut-turut.",
-            icon: "✓",
-          },
-          {
-            n: "5", title: "Lakukan Muraja'ah Terjadwal",
-            body: "Buka menu Muraja'ah → pilih surah yang sudah dihafal → tap ✓ LANCAR atau ⟳ PERLU ULANG. App akan otomatis menjadwalkan kapan harus review lagi berdasarkan sistem 7-3-2-1.",
-            tips: "Muraja'ah adalah kunci. Hafalan tanpa review akan hilang dalam 3–7 hari.",
-            icon: "⟳",
-          },
-        ],
-      },
-      {
-        id: "alur",
-        icon: "◷",
-        color: "var(--blue)",
-        title: "Rutinitas Harian yang Ideal",
-        subtitle: "Jadwal belajar berbasis neurosains otak dewasa",
-        steps: [
-          {
-            n: "☽", title: "Subuh (05:00–06:00) — Hafalan Baru",
-            body: "Ini waktu terbaik untuk menghafal materi baru. Otak mencapai puncak neuroplastisitas 60–90 menit setelah bangun tidur. Gunakan sesi 30–45 menit dengan metode pilihan Anda.",
-            tips: "Setelah sholat Subuh, langsung mulai. Jangan cek HP dulu — distraksi memecah fokus prefrontal cortex.",
-            icon: "☽",
-          },
-          {
-            n: "◎", title: "Pagi (08:00–08:30) — Review Cepat",
-            body: "Review singkat hafalan kemarin. Cukup recite 3–5 kali tanpa lihat mushaf. Ini fase konsolidasi working memory yang terjadi setelah tidur malam.",
-            tips: "Jika ada yang terlupa, jangan panik. Itu normal dan justru penanda otak sedang memperkuat jalur memori.",
-            icon: "◎",
-          },
-          {
-            n: "⟳", title: "Ashar (15:00–15:30) — Muraja'ah",
-            body: "Buka menu Muraja'ah di app. Kerjakan semua surah yang terjadwal hari ini. Tandai LANCAR atau PERLU ULANG secara jujur. Sesi ini memanfaatkan retrieval practice — efek testing.",
-            tips: "Gunakan timer di menu Muraja'ah untuk mendisiplinkan diri. 20–25 menit cukup untuk 2–3 surah.",
-            icon: "⟳",
-          },
-          {
-            n: "✦", title: "Isya (20:00–20:30) — Pra-Tidur",
-            body: "Recite seluruh hafalan dalam sholat atau setelahnya. Otak akan mengkonsolidasi memori ini selama tidur malam. Ini salah satu mekanisme terkuat dalam neurosains memori.",
-            tips: "Jangan langsung tidur setelah recite — beri jeda 10–15 menit. Tidur terlalu cepat setelah belajar bisa mengganggu konsolidasi.",
-            icon: "✦",
-          },
-        ],
-      },
-      {
-        id: "fitur",
-        icon: "◈",
-        color: "var(--purple)",
-        title: "Panduan Fitur App",
-        subtitle: "Semua yang bisa dilakukan di app ini",
-        steps: [
-          {
-            n: "⌂", title: "Beranda — Dashboard Progress",
-            body: "Tampilkan ringkasan: jumlah surah hafal/proses/belum, agenda muraja'ah hari ini, dan shortcut ke metode ilmiah. Progress ring berubah seiring hafalan bertambah.",
-            tips: "Jika ada surah terjadwal di agenda, selesaikan dulu sebelum hafalan baru.",
-            icon: "⌂",
-          },
-          {
-            n: "◈", title: "Hafalan — 114 Surah Lengkap",
-            body: "Daftar 114 surah dengan status & progress. Tap kartu surah → baca teks Arab Madinah (Uthmani) + terjemahan Indonesia. Gunakan filter Juz & tab Status untuk navigasi cepat.",
-            tips: "Tap ayat untuk highlight. Gunakan toggle Terjemahan untuk fokus ke teks Arab saja saat menghafal.",
-            icon: "◈",
-          },
-          {
-            n: "⟳", title: "Muraja'ah — Sistem Review Otomatis",
-            body: "Setelah hafal surah, gunakan menu ini untuk review berkala. Timer bawaan untuk mengukur durasi sesi. Tandai LANCAR atau PERLU ULANG — app otomatis atur jadwal review berikutnya.",
-            tips: "Pilih PERLU ULANG dengan jujur. App akan jadwalkan lebih sering — ini lebih baik dari menandai LANCAR padahal masih ragu.",
-            icon: "⟳",
-          },
-          {
-            n: "◷", title: "Jadwal — Waktu Sholat & Sesi Belajar",
-            body: "Tap Deteksi Lokasi untuk jadwal sholat otomatis sesuai GPS. Aktifkan toggle pengingat di setiap sesi belajar. Waktu sholat Subuh/Ashar/Isya otomatis tersambung ke jadwal belajar.",
-            tips: "Aktifkan izin lokasi di browser/app agar fitur jadwal sholat berfungsi.",
-            icon: "◷",
-          },
-          {
-            n: "◎", title: "Metode — Panduan Sesi Interaktif",
-            body: "4 metode ilmiah dengan panduan langkah demi langkah. Bisa diakses dari menu Panduan → Metode Hafalan. Setiap metode punya sesi interaktif dengan checklist yang harus diselesaikan per fase.",
-            tips: "Selesaikan seluruh fase dalam satu duduk jika memungkinkan untuk hasil terbaik.",
-            icon: "◎",
-          },
-          {
-            n: "↩", title: "Undo & Reset Status",
-            body: "Salah tap Hafal? Ada 3 cara batalkan: (1) Toast 'Batalkan' yang muncul 5 detik setelah tap, (2) Tombol ↩ RESET di kartu surah, (3) Tombol ↩ BATALKAN HAFAL di halaman detail surah.",
-            tips: "Toast undo hanya muncul 5 detik — segera tap jika salah klik.",
-            icon: "↩",
-          },
-        ],
-      },
-      {
-        id: "faq",
-        icon: "◐",
-        color: "var(--green)",
-        title: "Pertanyaan Umum (FAQ)",
-        subtitle: "Jawaban untuk pertanyaan yang sering muncul",
-        steps: [
-          {
-            n: "Q", title: "Berapa ayat yang wajar dihafal per hari?",
-            body: "Untuk orang dewasa: 3–5 ayat per sesi adalah optimal (Miller, 1956). Lebih dari itu justru menurunkan kualitas hafalan. Konsistensi harian 3 ayat lebih baik dari 20 ayat sehari lalu berhenti 3 hari.",
-            tips: "Motto: 'Sedikit tapi istiqomah mengalahkan banyak tapi putus.'",
-            icon: "◐",
-          },
-          {
-            n: "Q", title: "Kenapa saya cepat lupa padahal sudah hafal?",
-            body: "Ini normal — disebut Forgetting Curve (Ebbinghaus). Otak dewasa melupakan 70% dalam 24 jam jika tidak direview. Solusinya bukan hafal lebih keras, tapi review lebih teratur dengan Spaced Repetition.",
-            tips: "Buka menu Muraja'ah setiap hari. Itulah kunci hafalan jangka panjang.",
-            icon: "◐",
-          },
-          {
-            n: "Q", title: "Metode mana yang cocok untuk saya?",
-            body: "Chunking + Snowball → cocok untuk semua, terutama pemula. Spaced Repetition → untuk menjaga hafalan yang sudah ada. Multi-Sensory VAKT → jika Anda tipe visual/auditory atau suka mendengar murattal. Semantic → jika Anda ingin pahami makna sebelum hafal.",
-            tips: "Tidak ada yang salah — coba keduanya selama 1 minggu, pilih yang lebih nyaman.",
-            icon: "◐",
-          },
-          {
-            n: "Q", title: "Bagaimana jika tidak punya banyak waktu?",
-            body: "Cukup 2 sesi: Subuh (15 menit hafal baru) + Ashar (10 menit muraja'ah). Total 25 menit/hari. Penelitian Park & Bischof (2013): otak dewasa lebih efektif dengan sesi pendek & sering daripada maraton hafalan.",
-            tips: "Set alarm 2 kali sehari. Konsistensi jadwal = kunci neuroplastisitas otak dewasa.",
-            icon: "◐",
-          },
-          {
-            n: "Q", title: "Apakah data saya tersimpan jika ganti HP?",
-            body: "Ya. Semua progress hafalan, status surah, dan pengaturan pengingat tersimpan di cloud (Supabase) dan terhubung ke akun email Anda. Login dengan email yang sama di HP baru dan data akan langsung muncul.",
-            tips: "Pastikan selalu login sebelum mulai sesi agar data tersinkronisasi.",
-            icon: "◐",
-          },
-        ],
-      },
-    ];
-
-    // If section is open, show it full
-    if (activeSection) {
-      const sec = PANDUAN_SECTIONS.find(s => s.id === activeSection);
-      return (
-        <div style={{ paddingBottom: 120 }}>
-          {/* Sticky header */}
-          <div style={{
-            background: "var(--bg)", padding: "52px 20px 16px",
-            borderBottom: `1px solid ${sec.color}33`,
-            position: "sticky", top: 0, zIndex: 10,
-          }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-              <button onClick={() => setActiveSection(null)} style={{
-                background: "var(--border)", border: "1px solid var(--border-mid)", borderRadius: 10,
-                color: sec.color, fontSize: 20, width: 38, height: 38,
-                cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
-              }}>←</button>
-              <div>
-                <div style={{ fontSize: 16, color: "var(--text)", fontFamily: "'Playfair Display', serif", fontWeight: 700 }}>
-                  {sec.title}
-                </div>
-                <div style={{ fontSize: 10, color: "var(--muted)", fontFamily: "'DM Sans', sans-serif", marginTop: 2 }}>
-                  {sec.subtitle}
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div style={{ padding: "20px 20px" }}>
-            {sec.steps.map((step, idx) => (
-              <div key={idx} style={{
-                background: "var(--card)", borderRadius: 16, padding: 18,
-                marginBottom: 14, border: `1px solid ${sec.color}22`,
-                position: "relative", overflow: "hidden",
-              }}>
-                {/* Number badge */}
-                <div style={{
-                  position: "absolute", top: 14, right: 14,
-                  width: 32, height: 32, borderRadius: 10,
-                  background: `${sec.color}22`, border: `1px solid ${sec.color}44`,
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                  fontSize: 16, color: sec.color,
-                }}>{step.icon}</div>
-
-                {/* Step number */}
-                <div style={{
-                  display: "inline-block",
-                  background: sec.color, borderRadius: 7,
-                  padding: "2px 10px", fontSize: 10, color: "var(--bg)",
-                  fontFamily: "'DM Sans', sans-serif", fontWeight: 800,
-                  letterSpacing: "0.08em", marginBottom: 10,
-                }}>LANGKAH {step.n}</div>
-
-                <div style={{ fontSize: 14, color: "var(--text)", fontFamily: "'Playfair Display', serif", marginBottom: 10, paddingRight: 40 }}>
-                  {step.title}
-                </div>
-                <div style={{ fontSize: 12, color: "var(--text-secondary)", fontFamily: "'DM Sans', sans-serif", lineHeight: 1.8, marginBottom: 12 }}>
-                  {step.body}
-                </div>
-
-                {/* Tips box */}
-                <div style={{
-                  background: `${sec.color}10`, border: `1px solid ${sec.color}22`,
-                  borderRadius: 10, padding: "10px 12px",
-                  display: "flex", gap: 8, alignItems: "flex-start",
-                }}>
-                  <span style={{ fontSize: 12, color: sec.color, flexShrink: 0 }}>💡</span>
-                  <div style={{ fontSize: 11, color: `${sec.color}CC`, fontFamily: "'DM Sans', sans-serif", lineHeight: 1.6 }}>
-                    {step.tips}
-                  </div>
-                </div>
-              </div>
-            ))}
-
-            {/* CTA at bottom of section */}
-            {activeSection === "mulai" && (
-              <button onClick={() => { setActiveSection(null); setScreen("metode"); }} style={{
-                width: "100%", padding: "15px 0", marginTop: 6,
-                background: "linear-gradient(135deg, var(--gold), var(--gold-dark))",
-                border: "none", borderRadius: 14, cursor: "pointer",
-                color: "var(--bg)", fontSize: 13, fontWeight: 800,
-                fontFamily: "'DM Sans', sans-serif", letterSpacing: "0.1em",
-              }}>▶ MULAI — BUKA METODE HAFALAN</button>
-            )}
-            {activeSection === "alur" && (
-              <button onClick={() => { setActiveSection(null); setScreen("sholat"); }} style={{
-                width: "100%", padding: "15px 0", marginTop: 6,
-                background: "linear-gradient(135deg, var(--blue), var(--blue-dark))",
-                border: "none", borderRadius: 14, cursor: "pointer",
-                color: "var(--bg)", fontSize: 13, fontWeight: 800,
-                fontFamily: "'DM Sans', sans-serif", letterSpacing: "0.1em",
-              }}>◷ ATUR JADWAL SHOLAT & BELAJAR</button>
-            )}
-            {activeSection === "fitur" && (
-              <button onClick={() => { setActiveSection(null); setScreen("hafalan"); }} style={{
-                width: "100%", padding: "15px 0", marginTop: 6,
-                background: "linear-gradient(135deg, var(--purple), var(--purple-dark))",
-                border: "none", borderRadius: 14, cursor: "pointer",
-                color: "#fff", fontSize: 13, fontWeight: 800,
-                fontFamily: "'DM Sans', sans-serif", letterSpacing: "0.1em",
-              }}>◈ BUKA DAFTAR SURAH</button>
-            )}
-          </div>
-        </div>
-      );
-    }
-
-    // Landing page
-    return (
-      <div style={{ padding: "0 20px 140px" }}>
-        {/* Header */}
-        <div style={{ padding: "56px 0 24px" }}>
-          <h2 style={{ fontSize: 26, fontFamily: "'Playfair Display', serif", color: "var(--text)", margin: 0, lineHeight: 1.2 }}>
-            Panduan <span style={{ color: "var(--gold)" }}>Penggunaan</span>
-          </h2>
-          <div style={{ fontSize: 11, color: "var(--muted)", marginTop: 8, fontFamily: "'DM Sans', sans-serif", lineHeight: 1.6 }}>
-            Mulai dari sini — semua yang perlu diketahui untuk menghafal Al-Qur'an secara sistematis
-          </div>
-        </div>
-
-        {/* Hero start card */}
-        <div style={{
-          background: "linear-gradient(135deg, var(--gold)22 0%, var(--gold-dark)0A 100%)",
-          borderRadius: 20, padding: 20, marginBottom: 24,
-          border: "1px solid var(--gold)44",
-        }}>
-          <div style={{ fontSize: 28, marginBottom: 12 }}>🕌</div>
-          <div style={{ fontSize: 18, color: "var(--text)", fontFamily: "'Playfair Display', serif", fontWeight: 700, marginBottom: 8 }}>
-            Selamat Datang
-          </div>
-          <div style={{ fontSize: 12, color: "var(--text-secondary)", fontFamily: "'DM Sans', sans-serif", lineHeight: 1.8, marginBottom: 16 }}>
-            App ini menggunakan <span style={{ color: "var(--gold)" }}>40 penelitian neurosains</span> untuk membantu orang dewasa menghafal Al-Qur'an secara efektif. Ikuti panduan ini untuk hasil terbaik.
-          </div>
-          <button onClick={() => setActiveSection("mulai")} style={{
-            width: "100%", padding: "13px 0",
-            background: "linear-gradient(135deg, var(--gold), var(--gold-dark))",
-            border: "none", borderRadius: 12, cursor: "pointer",
-            color: "var(--bg)", fontSize: 12, fontWeight: 800,
-            fontFamily: "'DM Sans', sans-serif", letterSpacing: "0.1em",
-          }}>✦ CARA MEMULAI HAFALAN →</button>
-        </div>
-
-        {/* Section cards */}
-        {PANDUAN_SECTIONS.map(sec => (
-          <div key={sec.id}
-            onClick={() => setActiveSection(sec.id)}
-            style={{
-              background: "var(--card)", borderRadius: 16, padding: "16px 18px",
-              marginBottom: 12, border: `1px solid ${sec.color}33`,
-              display: "flex", alignItems: "center", gap: 16, cursor: "pointer",
-            }}>
-            <div style={{
-              width: 52, height: 52, borderRadius: 15, flexShrink: 0,
-              background: `${sec.color}22`, border: `1px solid ${sec.color}44`,
-              display: "flex", alignItems: "center", justifyContent: "center",
-              fontSize: 24, color: sec.color,
-            }}>{sec.icon}</div>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 14, color: "var(--text)", fontFamily: "'Playfair Display', serif", fontWeight: 700 }}>
-                {sec.title}
-              </div>
-              <div style={{ fontSize: 10, color: "var(--muted)", fontFamily: "'DM Sans', sans-serif", marginTop: 4, lineHeight: 1.4 }}>
-                {sec.subtitle}
-              </div>
-              <div style={{ fontSize: 9, color: `${sec.color}88`, fontFamily: "'DM Sans', sans-serif", marginTop: 4 }}>
-                {sec.steps.length} {sec.id === "faq" ? "pertanyaan" : "langkah"} →
-              </div>
-            </div>
-            <span style={{ color: "var(--border-mid)", fontSize: 20 }}>›</span>
-          </div>
-        ))}
-
-        {/* Quick access to Metode */}
-        <div style={{
-          background: "var(--card)", borderRadius: 16, padding: "16px 18px",
-          marginBottom: 12, border: "1px solid var(--purple)33",
-          display: "flex", alignItems: "center", gap: 16, cursor: "pointer",
-        }} onClick={() => setScreen("metode")}>
-          <div style={{
-            width: 52, height: 52, borderRadius: 15, flexShrink: 0,
-            background: "var(--purple)22", border: "1px solid var(--purple)44",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            fontSize: 24, color: "var(--purple)",
-          }}>◎</div>
-          <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 14, color: "var(--text)", fontFamily: "'Playfair Display', serif", fontWeight: 700 }}>
-              Metode Hafalan Ilmiah
-            </div>
-            <div style={{ fontSize: 10, color: "var(--muted)", fontFamily: "'DM Sans', sans-serif", marginTop: 4 }}>
-              4 metode dengan sesi panduan interaktif
-            </div>
-            <div style={{ fontSize: 9, color: "var(--purple)88", fontFamily: "'DM Sans', sans-serif", marginTop: 4 }}>
-              Chunking • Spaced Repetition • Multi-Sensory • Semantic →
-            </div>
-          </div>
-          <span style={{ color: "var(--border-mid)", fontSize: 20 }}>›</span>
-        </div>
-
-        {/* Version info */}
-        <div style={{ textAlign: "center", padding: "16px 0 4px" }}>
-          <div style={{ fontSize: 9, color: "var(--border)", fontFamily: "'DM Sans', sans-serif", letterSpacing: "0.15em" }}>
-            HAFALAN AL-QUR'AN v1.2 • B.O.A. INDONESIA © 2026
-          </div>
-          <div style={{ fontSize: 9, color: "var(--border)", fontFamily: "'DM Sans', sans-serif", marginTop: 4 }}>
-            Berdasarkan 40 Referensi Ilmiah • recitationacademy.com
-          </div>
-        </div>
-      </div>
-    );
-  };
 
   // ===== RENDER =====
   return (
@@ -2594,6 +2609,12 @@ export default function QuranHafalanApp() {
         ::-webkit-scrollbar { display: none; }
         input { -webkit-appearance: none; }
       `}</style>
+      <NavBar
+        screen={screen}
+        setScreen={setScreen}
+        setSelectedSurahDetail={setSelectedSurahDetail}
+        selectedSurahDetail={selectedSurahDetail}
+      />
 
       <div style={{
         position: "fixed", inset: 0, pointerEvents: "none", zIndex: 0,
@@ -2601,8 +2622,40 @@ export default function QuranHafalanApp() {
       }} />
 
       <div style={{ position: "relative", zIndex: 1 }}>
-        {screen === "dashboard" && <Dashboard />}
-        {screen === "hafalan" && !selectedSurahDetail && <HafalanScreen />}
+        {screen === "dashboard" && (
+          <Dashboard
+            user={user}
+            syncing={syncing}
+            theme={theme}
+            setTheme={setTheme}
+            handleLogout={handleLogout}
+            stats={stats}
+            todayDone={todayDone}
+            dueToday={dueToday}
+            setScreen={setScreen}
+            setSelectedSurah={setSelectedSurah}
+            setSelectedSurahDetail={setSelectedSurahDetail}
+            formatTime={formatTime}
+            timerActive={timerActive}
+            setTimerActive={setTimerActive}
+            setTimer={setTimer}
+          />
+        )}
+        {screen === "hafalan" && !selectedSurahDetail && (
+          <HafalanScreen
+            activeJuz={activeJuz}
+            setActiveJuz={setActiveJuz}
+            activeTab={activeTab}
+            setActiveTab={setActiveTab}
+            searchQuery={searchQuery}
+            setSearchQuery={setSearchQuery}
+            hafalanData={hafalanData}
+            stats={stats}
+            markStatus={markStatus}
+            resetStatus={resetStatus}
+            setSelectedSurahDetail={setSelectedSurahDetail}
+          />
+        )}
         {screen === "hafalan" && selectedSurahDetail && (
           <SurahDetailScreen
             surah={selectedSurahDetail}
@@ -2612,16 +2665,56 @@ export default function QuranHafalanApp() {
             onBack={() => setSelectedSurahDetail(null)}
           />
         )}
-        {screen === "muraja" && <MurajaScreen />}
-        {screen === "jadwal" && <JadwalScreen />}
+        {screen === "muraja" && (
+          <MurajaScreen
+            hafalanData={hafalanData}
+            timer={timer}
+            setTimer={setTimer}
+            timerActive={timerActive}
+            setTimerActive={setTimerActive}
+            formatTime={formatTime}
+            markMuraja={markMuraja}
+            setSelectedSurah={setSelectedSurah}
+            setSelectedSurahDetail={setSelectedSurahDetail}
+            setScreen={setScreen}
+          />
+        )}
+        {screen === "jadwal" && (
+          <JadwalScreen
+            reminders={reminders}
+            setReminders={setReminders}
+            user={user}
+            currentTime={currentTime}
+            prayerTimes={prayerTimes}
+            prayerLocation={prayerLocation}
+            setScreen={setScreen}
+          />
+        )}
         {screen === "doa" && <DoaScreen />}
-        {screen === "metode" && <MetodeScreen />}
-        {screen === "sholat" && <SholatScreen />}
-        {screen === "panduan" && <PanduanScreen />}
+        {screen === "metode" && (
+          <MetodeScreen
+            activeMethodSession={activeMethodSession}
+            setActiveMethodSession={setActiveMethodSession}
+            sessionChecked={sessionChecked}
+            setSessionChecked={setSessionChecked}
+            setScreen={setScreen}
+            setSelectedSurahDetail={setSelectedSurahDetail}
+          />
+        )}
+        {screen === "sholat" && (
+          <SholatScreen
+            currentTime={currentTime}
+            prayerTimes={prayerTimes}
+            prayerLocation={prayerLocation}
+            prayerLoading={prayerLoading}
+            prayerError={prayerError}
+            fetchPrayerTimes={fetchPrayerTimes}
+          />
+        )}
+        {screen === "panduan" && <PanduanScreen setScreen={setScreen} />}
       </div>
 
-      <Toast />
-      <NavBar />
+      <Toast toast={toast} undoMarkStatus={undoMarkStatus} />
     </div>
   );
 }
