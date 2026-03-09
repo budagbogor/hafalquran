@@ -36,18 +36,6 @@ export const upsertHafalan = async (userId, surahId, payload) => {
   const { error } = await supabase.from('hafalan').upsert({
     user_id: userId, surah_id: surahId, ...payload, updated_at: new Date().toISOString(),
   }, { onConflict: 'user_id,surah_id' })
-
-  if (error && (error.code === '23503' || error.message?.includes('profiles'))) {
-    console.warn("Auto-recovering profile for hafalan...", error);
-    const { data: ud } = await supabase.auth.getUser();
-    const { error: pErr } = await supabase.from('profiles').upsert({ id: userId, email: ud?.user?.email || 'user@local.id', nama: 'Pengguna Lama' });
-    if (pErr) console.error("Auto-recovery profile failed:", pErr);
-    const retry = await supabase.from('hafalan').upsert({
-      user_id: userId, surah_id: surahId, ...payload, updated_at: new Date().toISOString(),
-    }, { onConflict: 'user_id,surah_id' });
-    if (retry.error) throw retry.error;
-    return;
-  }
   if (error) throw error
 }
 
@@ -55,18 +43,6 @@ export const insertMurajaLog = async (userId, surahId, quality, durationSeconds 
   const { error } = await supabase.from('muraja_log').insert({
     user_id: userId, surah_id: surahId, quality, duration_seconds: durationSeconds,
   })
-  if (error && (error.code === '23503' || error.message?.includes('profiles'))) {
-    console.warn("Auto-recovering profile for muraja...", error);
-    const { data: ud } = await supabase.auth.getUser();
-    const { error: pErr } = await supabase.from('profiles').upsert({ id: userId, email: ud?.user?.email || 'user@local.id', nama: 'Pengguna Lama' });
-    if (pErr) console.error("Auto-recovery profile failed:", pErr);
-
-    const retry = await supabase.from('muraja_log').insert({
-      user_id: userId, surah_id: surahId, quality, duration_seconds: durationSeconds,
-    });
-    if (retry.error) throw retry.error;
-    return;
-  }
   if (error) throw error
 }
 
@@ -80,17 +56,5 @@ export const upsertReminder = async (userId, sesi, aktif) => {
   const { error } = await supabase.from('jadwal_reminder').upsert({
     user_id: userId, sesi, aktif, updated_at: new Date().toISOString(),
   }, { onConflict: 'user_id,sesi' })
-
-  if (error && (error.code === '23503' || error.message?.includes('profiles'))) {
-    console.warn("Auto-recovering profile for jadwal...", error);
-    const { data: ud } = await supabase.auth.getUser();
-    const { error: pErr } = await supabase.from('profiles').upsert({ id: userId, email: ud?.user?.email || 'user@local.id', nama: 'Pengguna Lama' });
-    if (pErr) console.error("Auto-recovery profile failed:", pErr);
-    const retry = await supabase.from('jadwal_reminder').upsert({
-      user_id: userId, sesi, aktif, updated_at: new Date().toISOString(),
-    }, { onConflict: 'user_id,sesi' });
-    if (retry.error) throw retry.error;
-    return;
-  }
   if (error) throw error
 }

@@ -1,123 +1,122 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { supabase, signIn, signUp, signOut, loadHafalan, upsertHafalan, insertMurajaLog, loadReminders, upsertReminder } from "./supabase.js";
-import { dzikirData } from "./data/dzikir.js";
 
 // ===== DATA & CONSTANTS =====
 const SURAHS = [
-  { id: 1, name: "Al-Fatihah", arabic: "الْفَاتِحَة", ayat: 7, juz: 1 },
-  { id: 2, name: "Al-Baqarah", arabic: "الْبَقَرَة", ayat: 286, juz: 1 },
-  { id: 3, name: "Ali Imran", arabic: "آلِ عِمْرَان", ayat: 200, juz: 3 },
-  { id: 4, name: "An-Nisa", arabic: "النِّسَاء", ayat: 176, juz: 4 },
-  { id: 5, name: "Al-Maidah", arabic: "الْمَائِدَة", ayat: 120, juz: 6 },
-  { id: 6, name: "Al-An'am", arabic: "الْأَنْعَام", ayat: 165, juz: 7 },
-  { id: 7, name: "Al-A'raf", arabic: "الْأَعْرَاف", ayat: 206, juz: 8 },
-  { id: 8, name: "Al-Anfal", arabic: "الْأَنْفَال", ayat: 75, juz: 9 },
-  { id: 9, name: "At-Taubah", arabic: "التَّوْبَة", ayat: 129, juz: 10 },
-  { id: 10, name: "Yunus", arabic: "يُونُس", ayat: 109, juz: 11 },
-  { id: 11, name: "Hud", arabic: "هُود", ayat: 123, juz: 11 },
-  { id: 12, name: "Yusuf", arabic: "يُوسُف", ayat: 111, juz: 12 },
-  { id: 13, name: "Ar-Ra'd", arabic: "الرَّعْد", ayat: 43, juz: 13 },
-  { id: 14, name: "Ibrahim", arabic: "إِبْرَاهِيم", ayat: 52, juz: 13 },
-  { id: 15, name: "Al-Hijr", arabic: "الْحِجْر", ayat: 99, juz: 14 },
-  { id: 16, name: "An-Nahl", arabic: "النَّحْل", ayat: 128, juz: 14 },
-  { id: 17, name: "Al-Isra", arabic: "الْإِسْرَاء", ayat: 111, juz: 15 },
-  { id: 18, name: "Al-Kahfi", arabic: "الْكَهْف", ayat: 110, juz: 15 },
-  { id: 19, name: "Maryam", arabic: "مَرْيَم", ayat: 98, juz: 16 },
-  { id: 20, name: "Taha", arabic: "طه", ayat: 135, juz: 16 },
-  { id: 21, name: "Al-Anbiya", arabic: "الْأَنْبِيَاء", ayat: 112, juz: 17 },
-  { id: 22, name: "Al-Hajj", arabic: "الْحَجّ", ayat: 78, juz: 17 },
-  { id: 23, name: "Al-Mu'minun", arabic: "الْمُؤْمِنُون", ayat: 118, juz: 18 },
-  { id: 24, name: "An-Nur", arabic: "النُّور", ayat: 64, juz: 18 },
-  { id: 25, name: "Al-Furqan", arabic: "الْفُرْقَان", ayat: 77, juz: 18 },
-  { id: 26, name: "Asy-Syu'ara", arabic: "الشُّعَرَاء", ayat: 227, juz: 19 },
-  { id: 27, name: "An-Naml", arabic: "النَّمْل", ayat: 93, juz: 19 },
-  { id: 28, name: "Al-Qasas", arabic: "الْقَصَص", ayat: 88, juz: 20 },
-  { id: 29, name: "Al-Ankabut", arabic: "الْعَنْكَبُوت", ayat: 69, juz: 20 },
-  { id: 30, name: "Ar-Rum", arabic: "الرُّوم", ayat: 60, juz: 21 },
-  { id: 31, name: "Luqman", arabic: "لُقْمَان", ayat: 34, juz: 21 },
-  { id: 32, name: "As-Sajdah", arabic: "السَّجْدَة", ayat: 30, juz: 21 },
-  { id: 33, name: "Al-Ahzab", arabic: "الْأَحْزَاب", ayat: 73, juz: 21 },
-  { id: 34, name: "Saba", arabic: "سَبَأ", ayat: 54, juz: 22 },
-  { id: 35, name: "Fatir", arabic: "فَاطِر", ayat: 45, juz: 22 },
-  { id: 36, name: "Yasin", arabic: "يس", ayat: 83, juz: 22 },
-  { id: 37, name: "As-Saffat", arabic: "الصَّافَّات", ayat: 182, juz: 23 },
-  { id: 38, name: "Sad", arabic: "ص", ayat: 88, juz: 23 },
-  { id: 39, name: "Az-Zumar", arabic: "الزُّمَر", ayat: 75, juz: 23 },
-  { id: 40, name: "Gafir", arabic: "غَافِر", ayat: 85, juz: 24 },
-  { id: 41, name: "Fussilat", arabic: "فُصِّلَت", ayat: 54, juz: 24 },
-  { id: 42, name: "Asy-Syura", arabic: "الشُّورَى", ayat: 53, juz: 25 },
-  { id: 43, name: "Az-Zukhruf", arabic: "الزُّخْرُف", ayat: 89, juz: 25 },
-  { id: 44, name: "Ad-Dukhan", arabic: "الدُّخَان", ayat: 59, juz: 25 },
-  { id: 45, name: "Al-Jasiyah", arabic: "الْجَاثِيَة", ayat: 37, juz: 25 },
-  { id: 46, name: "Al-Ahqaf", arabic: "الْأَحْقَاف", ayat: 35, juz: 26 },
-  { id: 47, name: "Muhammad", arabic: "مُحَمَّد", ayat: 38, juz: 26 },
-  { id: 48, name: "Al-Fath", arabic: "الْفَتْح", ayat: 29, juz: 26 },
-  { id: 49, name: "Al-Hujurat", arabic: "الْحُجُرَات", ayat: 18, juz: 26 },
-  { id: 50, name: "Qaf", arabic: "ق", ayat: 45, juz: 26 },
-  { id: 51, name: "Az-Zariyat", arabic: "الذَّارِيَات", ayat: 60, juz: 26 },
-  { id: 52, name: "At-Tur", arabic: "الطُّور", ayat: 49, juz: 27 },
-  { id: 53, name: "An-Najm", arabic: "النَّجْم", ayat: 62, juz: 27 },
-  { id: 54, name: "Al-Qamar", arabic: "الْقَمَر", ayat: 55, juz: 27 },
-  { id: 55, name: "Ar-Rahman", arabic: "الرَّحْمَن", ayat: 78, juz: 27 },
-  { id: 56, name: "Al-Waqi'ah", arabic: "الْوَاقِعَة", ayat: 96, juz: 27 },
-  { id: 57, name: "Al-Hadid", arabic: "الْحَدِيد", ayat: 29, juz: 27 },
-  { id: 58, name: "Al-Mujadilah", arabic: "الْمُجَادِلَة", ayat: 22, juz: 28 },
-  { id: 59, name: "Al-Hasyr", arabic: "الْحَشْر", ayat: 24, juz: 28 },
-  { id: 60, name: "Al-Mumtahanah", arabic: "الْمُمْتَحَنَة", ayat: 13, juz: 28 },
-  { id: 61, name: "As-Saf", arabic: "الصَّف", ayat: 14, juz: 28 },
-  { id: 62, name: "Al-Jumu'ah", arabic: "الْجُمُعَة", ayat: 11, juz: 28 },
-  { id: 63, name: "Al-Munafiqun", arabic: "الْمُنَافِقُون", ayat: 11, juz: 28 },
-  { id: 64, name: "At-Tagabun", arabic: "التَّغَابُن", ayat: 18, juz: 28 },
-  { id: 65, name: "At-Talaq", arabic: "الطَّلَاق", ayat: 12, juz: 28 },
-  { id: 66, name: "At-Tahrim", arabic: "التَّحْرِيم", ayat: 12, juz: 28 },
-  { id: 67, name: "Al-Mulk", arabic: "الْمُلْك", ayat: 30, juz: 29 },
-  { id: 68, name: "Al-Qalam", arabic: "الْقَلَم", ayat: 52, juz: 29 },
-  { id: 69, name: "Al-Haqqah", arabic: "الْحَاقَّة", ayat: 52, juz: 29 },
-  { id: 70, name: "Al-Ma'arij", arabic: "الْمَعَارِج", ayat: 44, juz: 29 },
-  { id: 71, name: "Nuh", arabic: "نُوح", ayat: 28, juz: 29 },
-  { id: 72, name: "Al-Jin", arabic: "الْجِن", ayat: 28, juz: 29 },
-  { id: 73, name: "Al-Muzzammil", arabic: "الْمُزَّمِّل", ayat: 20, juz: 29 },
-  { id: 74, name: "Al-Muddassir", arabic: "الْمُدَّثِّر", ayat: 56, juz: 29 },
-  { id: 75, name: "Al-Qiyamah", arabic: "الْقِيَامَة", ayat: 40, juz: 29 },
-  { id: 76, name: "Al-Insan", arabic: "الْإِنْسَان", ayat: 31, juz: 29 },
-  { id: 77, name: "Al-Mursalat", arabic: "الْمُرْسَلَات", ayat: 50, juz: 29 },
-  { id: 78, name: "An-Naba", arabic: "النَّبَأ", ayat: 40, juz: 30 },
-  { id: 79, name: "An-Nazi'at", arabic: "النَّازِعَات", ayat: 46, juz: 30 },
-  { id: 80, name: "'Abasa", arabic: "عَبَسَ", ayat: 42, juz: 30 },
-  { id: 81, name: "At-Takwir", arabic: "التَّكْوِير", ayat: 29, juz: 30 },
-  { id: 82, name: "Al-Infitar", arabic: "الْإِنْفِطَار", ayat: 19, juz: 30 },
-  { id: 83, name: "Al-Mutaffifin", arabic: "الْمُطَفِّفِين", ayat: 36, juz: 30 },
-  { id: 84, name: "Al-Insyiqaq", arabic: "الِانْشِقَاق", ayat: 25, juz: 30 },
-  { id: 85, name: "Al-Buruj", arabic: "الْبُرُوج", ayat: 22, juz: 30 },
-  { id: 86, name: "At-Tariq", arabic: "الطَّارِق", ayat: 17, juz: 30 },
-  { id: 87, name: "Al-A'la", arabic: "الْأَعْلَى", ayat: 19, juz: 30 },
-  { id: 88, name: "Al-Gasyiyah", arabic: "الْغَاشِيَة", ayat: 26, juz: 30 },
-  { id: 89, name: "Al-Fajr", arabic: "الْفَجْر", ayat: 30, juz: 30 },
-  { id: 90, name: "Al-Balad", arabic: "الْبَلَد", ayat: 20, juz: 30 },
-  { id: 91, name: "Asy-Syams", arabic: "الشَّمْس", ayat: 15, juz: 30 },
-  { id: 92, name: "Al-Lail", arabic: "اللَّيْل", ayat: 21, juz: 30 },
-  { id: 93, name: "Ad-Duha", arabic: "الضُّحَى", ayat: 11, juz: 30 },
-  { id: 94, name: "Asy-Syarh", arabic: "الشَّرْح", ayat: 8, juz: 30 },
-  { id: 95, name: "At-Tin", arabic: "التِّين", ayat: 8, juz: 30 },
-  { id: 96, name: "Al-'Alaq", arabic: "الْعَلَق", ayat: 19, juz: 30 },
-  { id: 97, name: "Al-Qadr", arabic: "الْقَدْر", ayat: 5, juz: 30 },
-  { id: 98, name: "Al-Bayyinah", arabic: "الْبَيِّنَة", ayat: 8, juz: 30 },
-  { id: 99, name: "Az-Zalzalah", arabic: "الزَّلْزَلَة", ayat: 8, juz: 30 },
-  { id: 100, name: "Al-Adiyat", arabic: "الْعَادِيَات", ayat: 11, juz: 30 },
-  { id: 101, name: "Al-Qariah", arabic: "الْقَارِعَة", ayat: 11, juz: 30 },
-  { id: 102, name: "At-Takasur", arabic: "التَّكَاثُر", ayat: 8, juz: 30 },
-  { id: 103, name: "Al-Asr", arabic: "الْعَصْر", ayat: 3, juz: 30 },
-  { id: 104, name: "Al-Humazah", arabic: "الْهُمَزَة", ayat: 9, juz: 30 },
-  { id: 105, name: "Al-Fil", arabic: "الْفِيل", ayat: 5, juz: 30 },
-  { id: 106, name: "Quraisy", arabic: "قُرَيْش", ayat: 4, juz: 30 },
-  { id: 107, name: "Al-Maun", arabic: "الْمَاعُون", ayat: 7, juz: 30 },
-  { id: 108, name: "Al-Kautsar", arabic: "الْكَوْثَر", ayat: 3, juz: 30 },
-  { id: 109, name: "Al-Kafirun", arabic: "الْكَافِرُون", ayat: 6, juz: 30 },
-  { id: 110, name: "An-Nasr", arabic: "النَّصْر", ayat: 3, juz: 30 },
-  { id: 111, name: "Al-Masad", arabic: "الْمَسَد", ayat: 5, juz: 30 },
-  { id: 112, name: "Al-Ikhlas", arabic: "الْإِخْلَاص", ayat: 4, juz: 30 },
-  { id: 113, name: "Al-Falaq", arabic: "الْفَلَق", ayat: 5, juz: 30 },
-  { id: 114, name: "An-Nas", arabic: "النَّاس", ayat: 6, juz: 30 },
+  { id: 1,   name: "Al-Fatihah",    arabic: "الْفَاتِحَة",      ayat: 7,   juz: 1  },
+  { id: 2,   name: "Al-Baqarah",    arabic: "الْبَقَرَة",       ayat: 286, juz: 1  },
+  { id: 3,   name: "Ali Imran",     arabic: "آلِ عِمْرَان",     ayat: 200, juz: 3  },
+  { id: 4,   name: "An-Nisa",       arabic: "النِّسَاء",        ayat: 176, juz: 4  },
+  { id: 5,   name: "Al-Maidah",     arabic: "الْمَائِدَة",      ayat: 120, juz: 6  },
+  { id: 6,   name: "Al-An'am",      arabic: "الْأَنْعَام",      ayat: 165, juz: 7  },
+  { id: 7,   name: "Al-A'raf",      arabic: "الْأَعْرَاف",      ayat: 206, juz: 8  },
+  { id: 8,   name: "Al-Anfal",      arabic: "الْأَنْفَال",      ayat: 75,  juz: 9  },
+  { id: 9,   name: "At-Taubah",     arabic: "التَّوْبَة",       ayat: 129, juz: 10 },
+  { id: 10,  name: "Yunus",         arabic: "يُونُس",           ayat: 109, juz: 11 },
+  { id: 11,  name: "Hud",           arabic: "هُود",             ayat: 123, juz: 11 },
+  { id: 12,  name: "Yusuf",         arabic: "يُوسُف",           ayat: 111, juz: 12 },
+  { id: 13,  name: "Ar-Ra'd",       arabic: "الرَّعْد",         ayat: 43,  juz: 13 },
+  { id: 14,  name: "Ibrahim",       arabic: "إِبْرَاهِيم",      ayat: 52,  juz: 13 },
+  { id: 15,  name: "Al-Hijr",       arabic: "الْحِجْر",         ayat: 99,  juz: 14 },
+  { id: 16,  name: "An-Nahl",       arabic: "النَّحْل",         ayat: 128, juz: 14 },
+  { id: 17,  name: "Al-Isra",       arabic: "الْإِسْرَاء",      ayat: 111, juz: 15 },
+  { id: 18,  name: "Al-Kahfi",      arabic: "الْكَهْف",         ayat: 110, juz: 15 },
+  { id: 19,  name: "Maryam",        arabic: "مَرْيَم",          ayat: 98,  juz: 16 },
+  { id: 20,  name: "Taha",          arabic: "طه",               ayat: 135, juz: 16 },
+  { id: 21,  name: "Al-Anbiya",     arabic: "الْأَنْبِيَاء",    ayat: 112, juz: 17 },
+  { id: 22,  name: "Al-Hajj",       arabic: "الْحَجّ",          ayat: 78,  juz: 17 },
+  { id: 23,  name: "Al-Mu'minun",   arabic: "الْمُؤْمِنُون",    ayat: 118, juz: 18 },
+  { id: 24,  name: "An-Nur",        arabic: "النُّور",          ayat: 64,  juz: 18 },
+  { id: 25,  name: "Al-Furqan",     arabic: "الْفُرْقَان",      ayat: 77,  juz: 18 },
+  { id: 26,  name: "Asy-Syu'ara",   arabic: "الشُّعَرَاء",      ayat: 227, juz: 19 },
+  { id: 27,  name: "An-Naml",       arabic: "النَّمْل",         ayat: 93,  juz: 19 },
+  { id: 28,  name: "Al-Qasas",      arabic: "الْقَصَص",         ayat: 88,  juz: 20 },
+  { id: 29,  name: "Al-Ankabut",    arabic: "الْعَنْكَبُوت",    ayat: 69,  juz: 20 },
+  { id: 30,  name: "Ar-Rum",        arabic: "الرُّوم",          ayat: 60,  juz: 21 },
+  { id: 31,  name: "Luqman",        arabic: "لُقْمَان",         ayat: 34,  juz: 21 },
+  { id: 32,  name: "As-Sajdah",     arabic: "السَّجْدَة",       ayat: 30,  juz: 21 },
+  { id: 33,  name: "Al-Ahzab",      arabic: "الْأَحْزَاب",      ayat: 73,  juz: 21 },
+  { id: 34,  name: "Saba",          arabic: "سَبَأ",            ayat: 54,  juz: 22 },
+  { id: 35,  name: "Fatir",         arabic: "فَاطِر",           ayat: 45,  juz: 22 },
+  { id: 36,  name: "Yasin",         arabic: "يس",               ayat: 83,  juz: 22 },
+  { id: 37,  name: "As-Saffat",     arabic: "الصَّافَّات",      ayat: 182, juz: 23 },
+  { id: 38,  name: "Sad",           arabic: "ص",                ayat: 88,  juz: 23 },
+  { id: 39,  name: "Az-Zumar",      arabic: "الزُّمَر",         ayat: 75,  juz: 23 },
+  { id: 40,  name: "Gafir",         arabic: "غَافِر",           ayat: 85,  juz: 24 },
+  { id: 41,  name: "Fussilat",      arabic: "فُصِّلَت",         ayat: 54,  juz: 24 },
+  { id: 42,  name: "Asy-Syura",     arabic: "الشُّورَى",        ayat: 53,  juz: 25 },
+  { id: 43,  name: "Az-Zukhruf",    arabic: "الزُّخْرُف",       ayat: 89,  juz: 25 },
+  { id: 44,  name: "Ad-Dukhan",     arabic: "الدُّخَان",        ayat: 59,  juz: 25 },
+  { id: 45,  name: "Al-Jasiyah",    arabic: "الْجَاثِيَة",      ayat: 37,  juz: 25 },
+  { id: 46,  name: "Al-Ahqaf",      arabic: "الْأَحْقَاف",      ayat: 35,  juz: 26 },
+  { id: 47,  name: "Muhammad",      arabic: "مُحَمَّد",         ayat: 38,  juz: 26 },
+  { id: 48,  name: "Al-Fath",       arabic: "الْفَتْح",         ayat: 29,  juz: 26 },
+  { id: 49,  name: "Al-Hujurat",    arabic: "الْحُجُرَات",      ayat: 18,  juz: 26 },
+  { id: 50,  name: "Qaf",           arabic: "ق",                ayat: 45,  juz: 26 },
+  { id: 51,  name: "Az-Zariyat",    arabic: "الذَّارِيَات",     ayat: 60,  juz: 26 },
+  { id: 52,  name: "At-Tur",        arabic: "الطُّور",          ayat: 49,  juz: 27 },
+  { id: 53,  name: "An-Najm",       arabic: "النَّجْم",         ayat: 62,  juz: 27 },
+  { id: 54,  name: "Al-Qamar",      arabic: "الْقَمَر",         ayat: 55,  juz: 27 },
+  { id: 55,  name: "Ar-Rahman",     arabic: "الرَّحْمَن",       ayat: 78,  juz: 27 },
+  { id: 56,  name: "Al-Waqi'ah",    arabic: "الْوَاقِعَة",      ayat: 96,  juz: 27 },
+  { id: 57,  name: "Al-Hadid",      arabic: "الْحَدِيد",        ayat: 29,  juz: 27 },
+  { id: 58,  name: "Al-Mujadilah",  arabic: "الْمُجَادِلَة",    ayat: 22,  juz: 28 },
+  { id: 59,  name: "Al-Hasyr",      arabic: "الْحَشْر",         ayat: 24,  juz: 28 },
+  { id: 60,  name: "Al-Mumtahanah", arabic: "الْمُمْتَحَنَة",   ayat: 13,  juz: 28 },
+  { id: 61,  name: "As-Saf",        arabic: "الصَّف",           ayat: 14,  juz: 28 },
+  { id: 62,  name: "Al-Jumu'ah",    arabic: "الْجُمُعَة",       ayat: 11,  juz: 28 },
+  { id: 63,  name: "Al-Munafiqun",  arabic: "الْمُنَافِقُون",   ayat: 11,  juz: 28 },
+  { id: 64,  name: "At-Tagabun",    arabic: "التَّغَابُن",      ayat: 18,  juz: 28 },
+  { id: 65,  name: "At-Talaq",      arabic: "الطَّلَاق",        ayat: 12,  juz: 28 },
+  { id: 66,  name: "At-Tahrim",     arabic: "التَّحْرِيم",      ayat: 12,  juz: 28 },
+  { id: 67,  name: "Al-Mulk",       arabic: "الْمُلْك",         ayat: 30,  juz: 29 },
+  { id: 68,  name: "Al-Qalam",      arabic: "الْقَلَم",         ayat: 52,  juz: 29 },
+  { id: 69,  name: "Al-Haqqah",     arabic: "الْحَاقَّة",       ayat: 52,  juz: 29 },
+  { id: 70,  name: "Al-Ma'arij",    arabic: "الْمَعَارِج",      ayat: 44,  juz: 29 },
+  { id: 71,  name: "Nuh",           arabic: "نُوح",             ayat: 28,  juz: 29 },
+  { id: 72,  name: "Al-Jin",        arabic: "الْجِن",           ayat: 28,  juz: 29 },
+  { id: 73,  name: "Al-Muzzammil",  arabic: "الْمُزَّمِّل",     ayat: 20,  juz: 29 },
+  { id: 74,  name: "Al-Muddassir",  arabic: "الْمُدَّثِّر",     ayat: 56,  juz: 29 },
+  { id: 75,  name: "Al-Qiyamah",    arabic: "الْقِيَامَة",      ayat: 40,  juz: 29 },
+  { id: 76,  name: "Al-Insan",      arabic: "الْإِنْسَان",      ayat: 31,  juz: 29 },
+  { id: 77,  name: "Al-Mursalat",   arabic: "الْمُرْسَلَات",    ayat: 50,  juz: 29 },
+  { id: 78,  name: "An-Naba",       arabic: "النَّبَأ",         ayat: 40,  juz: 30 },
+  { id: 79,  name: "An-Nazi'at",    arabic: "النَّازِعَات",     ayat: 46,  juz: 30 },
+  { id: 80,  name: "'Abasa",        arabic: "عَبَسَ",           ayat: 42,  juz: 30 },
+  { id: 81,  name: "At-Takwir",     arabic: "التَّكْوِير",      ayat: 29,  juz: 30 },
+  { id: 82,  name: "Al-Infitar",    arabic: "الْإِنْفِطَار",    ayat: 19,  juz: 30 },
+  { id: 83,  name: "Al-Mutaffifin", arabic: "الْمُطَفِّفِين",   ayat: 36,  juz: 30 },
+  { id: 84,  name: "Al-Insyiqaq",   arabic: "الِانْشِقَاق",     ayat: 25,  juz: 30 },
+  { id: 85,  name: "Al-Buruj",      arabic: "الْبُرُوج",        ayat: 22,  juz: 30 },
+  { id: 86,  name: "At-Tariq",      arabic: "الطَّارِق",        ayat: 17,  juz: 30 },
+  { id: 87,  name: "Al-A'la",       arabic: "الْأَعْلَى",       ayat: 19,  juz: 30 },
+  { id: 88,  name: "Al-Gasyiyah",   arabic: "الْغَاشِيَة",      ayat: 26,  juz: 30 },
+  { id: 89,  name: "Al-Fajr",       arabic: "الْفَجْر",         ayat: 30,  juz: 30 },
+  { id: 90,  name: "Al-Balad",      arabic: "الْبَلَد",         ayat: 20,  juz: 30 },
+  { id: 91,  name: "Asy-Syams",     arabic: "الشَّمْس",         ayat: 15,  juz: 30 },
+  { id: 92,  name: "Al-Lail",       arabic: "اللَّيْل",         ayat: 21,  juz: 30 },
+  { id: 93,  name: "Ad-Duha",       arabic: "الضُّحَى",         ayat: 11,  juz: 30 },
+  { id: 94,  name: "Asy-Syarh",     arabic: "الشَّرْح",         ayat: 8,   juz: 30 },
+  { id: 95,  name: "At-Tin",        arabic: "التِّين",          ayat: 8,   juz: 30 },
+  { id: 96,  name: "Al-'Alaq",      arabic: "الْعَلَق",         ayat: 19,  juz: 30 },
+  { id: 97,  name: "Al-Qadr",       arabic: "الْقَدْر",         ayat: 5,   juz: 30 },
+  { id: 98,  name: "Al-Bayyinah",   arabic: "الْبَيِّنَة",      ayat: 8,   juz: 30 },
+  { id: 99,  name: "Az-Zalzalah",   arabic: "الزَّلْزَلَة",     ayat: 8,   juz: 30 },
+  { id: 100, name: "Al-Adiyat",     arabic: "الْعَادِيَات",     ayat: 11,  juz: 30 },
+  { id: 101, name: "Al-Qariah",     arabic: "الْقَارِعَة",      ayat: 11,  juz: 30 },
+  { id: 102, name: "At-Takasur",    arabic: "التَّكَاثُر",      ayat: 8,   juz: 30 },
+  { id: 103, name: "Al-Asr",        arabic: "الْعَصْر",         ayat: 3,   juz: 30 },
+  { id: 104, name: "Al-Humazah",    arabic: "الْهُمَزَة",       ayat: 9,   juz: 30 },
+  { id: 105, name: "Al-Fil",        arabic: "الْفِيل",          ayat: 5,   juz: 30 },
+  { id: 106, name: "Quraisy",       arabic: "قُرَيْش",          ayat: 4,   juz: 30 },
+  { id: 107, name: "Al-Maun",       arabic: "الْمَاعُون",       ayat: 7,   juz: 30 },
+  { id: 108, name: "Al-Kautsar",    arabic: "الْكَوْثَر",       ayat: 3,   juz: 30 },
+  { id: 109, name: "Al-Kafirun",    arabic: "الْكَافِرُون",     ayat: 6,   juz: 30 },
+  { id: 110, name: "An-Nasr",       arabic: "النَّصْر",         ayat: 3,   juz: 30 },
+  { id: 111, name: "Al-Masad",      arabic: "الْمَسَد",         ayat: 5,   juz: 30 },
+  { id: 112, name: "Al-Ikhlas",     arabic: "الْإِخْلَاص",      ayat: 4,   juz: 30 },
+  { id: 113, name: "Al-Falaq",      arabic: "الْفَلَق",         ayat: 5,   juz: 30 },
+  { id: 114, name: "An-Nas",        arabic: "النَّاس",          ayat: 6,   juz: 30 },
 ];
 
 const METHODS = [
@@ -132,42 +131,32 @@ const METHODS = [
     duration: "30–45 menit/sesi",
     bestFor: "Surah baru, ayat panjang, pemula",
     session: [
-      {
-        phase: "PERSIAPAN", time: "5 menit", icon: "◇", color: "var(--gold)88", steps: [
-          "Ambil wudhu & duduk tenang — otak butuh kondisi relaks untuk encoding",
-          "Baca terjemahan seluruh surah/bagian yang akan dihafal — pahami alurnya",
-          "Tentukan target: 3–5 ayat per sesi (jangan lebih)",
-        ]
-      },
-      {
-        phase: "HAFAL AYAT 1", time: "5 menit", icon: "①", color: "var(--gold)", steps: [
-          "Baca ayat 1 dengan tartil sambil melihat → 3 kali",
-          "Tutup mushaf → ucapkan dari ingatan → 3 kali",
-          "Jika salah, buka lagi → ulangi. Jangan lanjut sebelum ayat 1 lancar",
-          "Test terakhir: ucapkan ayat 1 tanpa lihat 2 kali berturut-turut ✓",
-        ]
-      },
-      {
-        phase: "HAFAL AYAT 2 + SNOWBALL", time: "7 menit", icon: "②", color: "var(--gold)", steps: [
-          "Hafal ayat 2 dengan cara sama (lihat 3x → tutup 3x)",
-          "SNOWBALL: Ucapkan Ayat 1 + Ayat 2 berturut-turut tanpa lihat → 3 kali",
-          "Ini kunci metode — menggabung selalu lebih kuat dari hafal terpisah",
-        ]
-      },
-      {
-        phase: "LANJUT HINGGA TARGET", time: "15 menit", icon: "③", color: "var(--gold)", steps: [
-          "Ulangi pola: hafal ayat baru → Snowball dari ayat 1 s.d. ayat terbaru",
-          "Setiap tambah 1 ayat, selalu mulai ulangan dari ayat pertama",
-          "Berhenti saat mencapai target (3–5 ayat). Jangan paksa lebih",
-        ]
-      },
-      {
-        phase: "PENUTUP & KONSOLIDASI", time: "5 menit", icon: "◈", color: "var(--gold)CC", steps: [
-          "Ucapkan seluruh hafalan hari ini dari awal tanpa lihat — 2 kali",
-          "Tandai ayat yang masih ragu untuk diulang besok pagi",
-          "Jadwalkan review: besok pagi (Subuh), 3 hari lagi, 7 hari lagi",
-        ]
-      },
+      { phase: "PERSIAPAN", time: "5 menit", icon: "◇", color: "var(--gold)88", steps: [
+        "Ambil wudhu & duduk tenang — otak butuh kondisi relaks untuk encoding",
+        "Baca terjemahan seluruh surah/bagian yang akan dihafal — pahami alurnya",
+        "Tentukan target: 3–5 ayat per sesi (jangan lebih)",
+      ]},
+      { phase: "HAFAL AYAT 1", time: "5 menit", icon: "①", color: "var(--gold)", steps: [
+        "Baca ayat 1 dengan tartil sambil melihat → 3 kali",
+        "Tutup mushaf → ucapkan dari ingatan → 3 kali",
+        "Jika salah, buka lagi → ulangi. Jangan lanjut sebelum ayat 1 lancar",
+        "Test terakhir: ucapkan ayat 1 tanpa lihat 2 kali berturut-turut ✓",
+      ]},
+      { phase: "HAFAL AYAT 2 + SNOWBALL", time: "7 menit", icon: "②", color: "var(--gold)", steps: [
+        "Hafal ayat 2 dengan cara sama (lihat 3x → tutup 3x)",
+        "SNOWBALL: Ucapkan Ayat 1 + Ayat 2 berturut-turut tanpa lihat → 3 kali",
+        "Ini kunci metode — menggabung selalu lebih kuat dari hafal terpisah",
+      ]},
+      { phase: "LANJUT HINGGA TARGET", time: "15 menit", icon: "③", color: "var(--gold)", steps: [
+        "Ulangi pola: hafal ayat baru → Snowball dari ayat 1 s.d. ayat terbaru",
+        "Setiap tambah 1 ayat, selalu mulai ulangan dari ayat pertama",
+        "Berhenti saat mencapai target (3–5 ayat). Jangan paksa lebih",
+      ]},
+      { phase: "PENUTUP & KONSOLIDASI", time: "5 menit", icon: "◈", color: "var(--gold)CC", steps: [
+        "Ucapkan seluruh hafalan hari ini dari awal tanpa lihat — 2 kali",
+        "Tandai ayat yang masih ragu untuk diulang besok pagi",
+        "Jadwalkan review: besok pagi (Subuh), 3 hari lagi, 7 hari lagi",
+      ]},
     ],
   },
   {
@@ -181,41 +170,31 @@ const METHODS = [
     duration: "10–15 menit/sesi review",
     bestFor: "Menjaga hafalan lama, konsolidasi jangka panjang",
     session: [
-      {
-        phase: "HARI 1 — HAFAL BARU", time: "30–45 menit", icon: "①", color: "var(--blue)", steps: [
-          "Hafal target surah/ayat dengan metode Chunking Snowball",
-          "Di akhir sesi: recite seluruh hafalan baru tanpa lihat — catat berapa kali salah",
-          "Set pengingat: besok pagi review pertama",
-        ]
-      },
-      {
-        phase: "HARI 2 — REVIEW 1 (7×)", time: "10 menit", icon: "②", color: "var(--blue)", steps: [
-          "Sebelum buka mushaf: coba recite dari ingatan dulu — di sinilah penguatan terjadi",
-          "Recite hafalan kemarin 7 kali berturut-turut (boleh sambil melihat di pengulangan 5–7)",
-          "Otak sedang berjuang mengambil memori = memperkuat sinaps",
-          "Tandai: Lancar ✓ atau Perlu Perbaikan ⚠",
-        ]
-      },
-      {
-        phase: "HARI 4 — REVIEW 2 (3×)", time: "7 menit", icon: "③", color: "var(--blue)", steps: [
-          "Tanpa melihat mushaf, recite 3 kali dari awal",
-          "Jika ada yang terlupa: lihat sebentar, lalu tutup dan ulangi bagian itu 3×",
-          "Setelah lancar, recite sekali lagi dari awal sampai akhir",
-        ]
-      },
-      {
-        phase: "HARI 7 — REVIEW 3 (2×)", time: "5 menit", icon: "④", color: "var(--blue)", steps: [
-          "Recite 2 kali tanpa lihat. Jika ada kesalahan, tambah 1 kali lagi",
-          "Ini titik kritis: hafalan yang lolos hari ke-7 biasanya masuk memori jangka panjang",
-        ]
-      },
-      {
-        phase: "HARI 14, 30, 60 — MAINTENANCE", time: "3–5 menit", icon: "⟳", color: "var(--blue)88", steps: [
-          "Cukup recite 1× tanpa lihat di setiap interval",
-          "Jika masih lancar → interval berikutnya. Jika terlupa → kembali ke Hari 2",
-          "Gunakan menu Muraja'ah di app ini untuk tracking otomatis",
-        ]
-      },
+      { phase: "HARI 1 — HAFAL BARU", time: "30–45 menit", icon: "①", color: "var(--blue)", steps: [
+        "Hafal target surah/ayat dengan metode Chunking Snowball",
+        "Di akhir sesi: recite seluruh hafalan baru tanpa lihat — catat berapa kali salah",
+        "Set pengingat: besok pagi review pertama",
+      ]},
+      { phase: "HARI 2 — REVIEW 1 (7×)", time: "10 menit", icon: "②", color: "var(--blue)", steps: [
+        "Sebelum buka mushaf: coba recite dari ingatan dulu — di sinilah penguatan terjadi",
+        "Recite hafalan kemarin 7 kali berturut-turut (boleh sambil melihat di pengulangan 5–7)",
+        "Otak sedang berjuang mengambil memori = memperkuat sinaps",
+        "Tandai: Lancar ✓ atau Perlu Perbaikan ⚠",
+      ]},
+      { phase: "HARI 4 — REVIEW 2 (3×)", time: "7 menit", icon: "③", color: "var(--blue)", steps: [
+        "Tanpa melihat mushaf, recite 3 kali dari awal",
+        "Jika ada yang terlupa: lihat sebentar, lalu tutup dan ulangi bagian itu 3×",
+        "Setelah lancar, recite sekali lagi dari awal sampai akhir",
+      ]},
+      { phase: "HARI 7 — REVIEW 3 (2×)", time: "5 menit", icon: "④", color: "var(--blue)", steps: [
+        "Recite 2 kali tanpa lihat. Jika ada kesalahan, tambah 1 kali lagi",
+        "Ini titik kritis: hafalan yang lolos hari ke-7 biasanya masuk memori jangka panjang",
+      ]},
+      { phase: "HARI 14, 30, 60 — MAINTENANCE", time: "3–5 menit", icon: "⟳", color: "var(--blue)88", steps: [
+        "Cukup recite 1× tanpa lihat di setiap interval",
+        "Jika masih lancar → interval berikutnya. Jika terlupa → kembali ke Hari 2",
+        "Gunakan menu Muraja'ah di app ini untuk tracking otomatis",
+      ]},
     ],
   },
   {
@@ -229,38 +208,30 @@ const METHODS = [
     duration: "40–50 menit/sesi",
     bestFor: "Ayat yang sulit dihafal, cocok untuk tipe belajar visual/auditory",
     session: [
-      {
-        phase: "VISUAL — Lihat & Amati", time: "8 menit", icon: "👁", color: "var(--purple)", steps: [
-          "Buka mushaf, baca ayat target perlahan — perhatikan bentuk huruf dan pola tulisan",
-          "Bayangkan 'foto' teks di kepala: di baris mana, di pojok mana halaman",
-          "Tutup mata → bayangkan teks ada di depan Anda → buka → koreksi",
-          "Ulangi 3× sampai Anda bisa 'melihat' ayat di mata pikiran",
-        ]
-      },
-      {
-        phase: "AUDITORY — Dengar & Ikuti", time: "10 menit", icon: "♪", color: "var(--purple)", steps: [
-          "Cari murattal qari favorit (Mishari Rashid, Mahmoud Khalil, dll.) di YouTube/aplikasi",
-          "Dengarkan ayat target 3× tanpa ikut membaca — resapi irama dan makhraj",
-          "Dengarkan lagi 3× sambil mengikuti dengan bisikan (shadowing)",
-          "Dengarkan 1× terakhir, lalu coba recite sendiri mengikuti irama yang baru didengar",
-        ]
-      },
-      {
-        phase: "KINESTHETIC — Tulis Tangan", time: "12 menit", icon: "✎", color: "var(--purple)", steps: [
-          "Tulis ayat target di kertas dengan tangan — jangan ketik, harus tulis tangan",
-          "Menulis mengaktifkan motor memory — jenis memori berbeda dari auditory",
-          "Tulis 2× sambil melihat, lalu tutup mushaf dan tulis 1× dari ingatan",
-          "Bandingkan tulisan Anda dengan mushaf — perbaiki yang salah",
-        ]
-      },
-      {
-        phase: "RECITE — Gabungkan Semua", time: "10 menit", icon: "◎", color: "var(--purple)CC", steps: [
-          "Recite ayat keras-keras (bukan bisik) sambil membayangkan teks di kepala",
-          "Ucapkan 5× tanpa lihat — gunakan irama murattal yang tadi didengar",
-          "Setiap kali recite, bayangkan MAKNA ayat dalam pikiran — multi-layer encoding",
-          "Test akhir: tutup mata, recite sekali → ini simpan ke long-term memory",
-        ]
-      },
+      { phase: "VISUAL — Lihat & Amati", time: "8 menit", icon: "👁", color: "var(--purple)", steps: [
+        "Buka mushaf, baca ayat target perlahan — perhatikan bentuk huruf dan pola tulisan",
+        "Bayangkan 'foto' teks di kepala: di baris mana, di pojok mana halaman",
+        "Tutup mata → bayangkan teks ada di depan Anda → buka → koreksi",
+        "Ulangi 3× sampai Anda bisa 'melihat' ayat di mata pikiran",
+      ]},
+      { phase: "AUDITORY — Dengar & Ikuti", time: "10 menit", icon: "♪", color: "var(--purple)", steps: [
+        "Cari murattal qari favorit (Mishari Rashid, Mahmoud Khalil, dll.) di YouTube/aplikasi",
+        "Dengarkan ayat target 3× tanpa ikut membaca — resapi irama dan makhraj",
+        "Dengarkan lagi 3× sambil mengikuti dengan bisikan (shadowing)",
+        "Dengarkan 1× terakhir, lalu coba recite sendiri mengikuti irama yang baru didengar",
+      ]},
+      { phase: "KINESTHETIC — Tulis Tangan", time: "12 menit", icon: "✎", color: "var(--purple)", steps: [
+        "Tulis ayat target di kertas dengan tangan — jangan ketik, harus tulis tangan",
+        "Menulis mengaktifkan motor memory — jenis memori berbeda dari auditory",
+        "Tulis 2× sambil melihat, lalu tutup mushaf dan tulis 1× dari ingatan",
+        "Bandingkan tulisan Anda dengan mushaf — perbaiki yang salah",
+      ]},
+      { phase: "RECITE — Gabungkan Semua", time: "10 menit", icon: "◎", color: "var(--purple)CC", steps: [
+        "Recite ayat keras-keras (bukan bisik) sambil membayangkan teks di kepala",
+        "Ucapkan 5× tanpa lihat — gunakan irama murattal yang tadi didengar",
+        "Setiap kali recite, bayangkan MAKNA ayat dalam pikiran — multi-layer encoding",
+        "Test akhir: tutup mata, recite sekali → ini simpan ke long-term memory",
+      ]},
     ],
   },
   {
@@ -274,46 +245,36 @@ const METHODS = [
     duration: "45–60 menit/sesi",
     bestFor: "Ideal untuk orang dewasa, surah yang panjang dan kompleks",
     session: [
-      {
-        phase: "PAHAMI KONTEKS", time: "10 menit", icon: "◇", color: "var(--green)", steps: [
-          "Baca terjemahan seluruh surah/bagian — jangan langsung hafal",
-          "Baca tafsir ringkas (boleh pakai aplikasi) — apa tema utama? Siapa yang dituju?",
-          "Tanyakan pada diri: 'Mengapa ayat ini ada setelah ayat sebelumnya?'",
-          "Catat 1–2 kalimat: 'Ayat ini bicara tentang...'",
-        ]
-      },
-      {
-        phase: "PETA MAKNA AYAT", time: "10 menit", icon: "◐", color: "var(--green)", steps: [
-          "Bagi ayat menjadi 'frasa makna' — setiap frasa punya satu ide",
-          "Contoh: 'الرَّحْمَنِ الرَّحِيمِ' → 'Dua sifat kasih Allah yang berbeda nuansanya'",
-          "Untuk setiap frasa Arab, hafal padanan maknanya dalam bahasa Indonesia",
-          "Ini bukan terjemahan kaku — tapi 'jangkar makna' yang bantu ingat urutan",
-        ]
-      },
-      {
-        phase: "HAFAL DENGAN CERITA MAKNA", time: "15 menit", icon: "①", color: "var(--green)", steps: [
-          "Baca ayat 1 Arab → ucapkan maknanya → baca lagi Arab → tutup → recite",
-          "Setiap kali recite Arab, 'rasakan' makna mengalir — bukan hafal kata, tapi makna",
-          "Jika lupa kata → ingat dulu MAKNANYA → biasanya kata Arab ikut muncul",
-          "Snowball: tambah ayat berikut, selalu gabung dari ayat pertama",
-        ]
-      },
-      {
-        phase: "AJARKAN KE ORANG LAIN (Feynman Technique)", time: "10 menit", icon: "◎", color: "var(--green)", steps: [
-          "Recite hafalan, lalu jelaskan maknanya kepada siapapun (anak, istri, teman, cermin)",
-          "Jika Anda bisa menjelaskan dengan bahasa sederhana → hafalan sudah di long-term memory",
-          "Jika ada yang tidak bisa dijelaskan → itu bagian yang perlu diulang",
-          "Teknik Feynman (Nobel Physicist): 'Jika tidak bisa jelaskan sederhana, berarti belum paham'",
-        ]
-      },
-      {
-        phase: "RETRIEVAL TEST", time: "10 menit", icon: "✓", color: "var(--green)CC", steps: [
-          "Tutup semua referensi. Recite dari awal tanpa lihat",
-          "Jika lupa → jangan langsung lihat. Coba 30 detik recall dulu — perjuangan ini yang memperkuat",
-          "Catat mana yang lancar, mana yang masih ragu",
-          "Baru buka mushaf untuk koreksi — ulangi bagian yang salah 5×",
-        ]
-      },
+      { phase: "PAHAMI KONTEKS", time: "10 menit", icon: "◇", color: "var(--green)", steps: [
+        "Baca terjemahan seluruh surah/bagian — jangan langsung hafal",
+        "Baca tafsir ringkas (boleh pakai aplikasi) — apa tema utama? Siapa yang dituju?",
+        "Tanyakan pada diri: 'Mengapa ayat ini ada setelah ayat sebelumnya?'",
+        "Catat 1–2 kalimat: 'Ayat ini bicara tentang...'",
+      ]},
+      { phase: "PETA MAKNA AYAT", time: "10 menit", icon: "◐", color: "var(--green)", steps: [
+        "Bagi ayat menjadi 'frasa makna' — setiap frasa punya satu ide",
+        "Contoh: 'الرَّحْمَنِ الرَّحِيمِ' → 'Dua sifat kasih Allah yang berbeda nuansanya'",
+        "Untuk setiap frasa Arab, hafal padanan maknanya dalam bahasa Indonesia",
+        "Ini bukan terjemahan kaku — tapi 'jangkar makna' yang bantu ingat urutan",
+      ]},
+      { phase: "HAFAL DENGAN CERITA MAKNA", time: "15 menit", icon: "①", color: "var(--green)", steps: [
+        "Baca ayat 1 Arab → ucapkan maknanya → baca lagi Arab → tutup → recite",
+        "Setiap kali recite Arab, 'rasakan' makna mengalir — bukan hafal kata, tapi makna",
+        "Jika lupa kata → ingat dulu MAKNANYA → biasanya kata Arab ikut muncul",
+        "Snowball: tambah ayat berikut, selalu gabung dari ayat pertama",
+      ]},
+      { phase: "AJARKAN KE ORANG LAIN (Feynman Technique)", time: "10 menit", icon: "◎", color: "var(--green)", steps: [
+        "Recite hafalan, lalu jelaskan maknanya kepada siapapun (anak, istri, teman, cermin)",
+        "Jika Anda bisa menjelaskan dengan bahasa sederhana → hafalan sudah di long-term memory",
+        "Jika ada yang tidak bisa dijelaskan → itu bagian yang perlu diulang",
+        "Teknik Feynman (Nobel Physicist): 'Jika tidak bisa jelaskan sederhana, berarti belum paham'",
+      ]},
+      { phase: "RETRIEVAL TEST", time: "10 menit", icon: "✓", color: "var(--green)CC", steps: [
+        "Tutup semua referensi. Recite dari awal tanpa lihat",
+        "Jika lupa → jangan langsung lihat. Coba 30 detik recall dulu — perjuangan ini yang memperkuat",
+        "Catat mana yang lancar, mana yang masih ragu",
+        "Baru buka mushaf untuk koreksi — ulangi bagian yang salah 5×",
+      ]},
     ],
   },
 ];
@@ -343,6 +304,11 @@ const inputStyle = {
   padding: "13px 16px", color: "var(--text)", fontSize: 13,
   fontFamily: "'DM Sans', sans-serif", outline: "none",
 };
+const inputPlaceholderFix = `
+  input::placeholder { color: var(--muted); opacity: 1; }
+  input:focus { border-color: var(--gold) !important; outline: none; }
+  select { color: var(--text); background: var(--card); }
+`;
 
 function AuthScreen({ onLogin }) {
   const [tab, setTab] = useState("login");
@@ -378,42 +344,10 @@ function AuthScreen({ onLogin }) {
       flexDirection: "column", alignItems: "center", justifyContent: "center",
       padding: "32px 24px", maxWidth: 430, margin: "0 auto",
     }}>
-      <style>{`
-        :root {
-          /* Premium Dark Mode - Midnight Indigo & Muted Gold */
-          --bg: #090B10; --bg-deeper: #05060A; --card: #12151D;
-          --border-soft: #1C212D; --border: #252B3A; --border-mid: #323A4D;
-          --muted-deep: #404B62; --muted: #6B7B96; --gold-disabled: #5E503B;
-          --muted-alt: #8294B2; --blue-dark: #4A81A5; --text-dim: #98A9C6;
-          --text-dim2: #B0BED8; --text-secondary: #C8D4E8; --text-warm: #E6DCCH;
-          --text: #F2EFE9; /* Very Soft Ivory Off-White */
-          --gold: #CBA568; --gold-dark: #A3824A; /* Muted Prestige Gold */
-          --blue: #7DB2D4; --purple: #9F8ECC; --green: #68B091;
-          --green-dark: #458A6D; --purple-dark: #7460A3; --red: #E26666;
-        }
-        :root.light {
-          /* Elegant Light Mode - Warm Sand & Deep Espresso */
-          --bg: #FDFBF7; --bg-deeper: #F5F2EA; --card: #FFFFFF;
-          --border-soft: #EDE8DF; --border: #E2DBCE; --border-mid: #D4CAB7;
-          --muted-deep: #B8AC9A; --muted: #948875; --gold-disabled: #D4BD86;
-          --muted-alt: #A39682; --blue-dark: #487A99; --text-dim: #756A58;
-          --text-dim2: #857A66; --text-secondary: #5E5445; --text-warm: #4A4135;
-          --text: #2D2821; /* Deep Espresso */
-          --gold: #BA9045; --gold-dark: #947132; /* Deep Muted Gold */
-          --blue: #599BC2; --purple: #8367AC; --green: #3F946D;
-          --green-dark: #2A6E4F; --purple-dark: #5C4582; --red: #D64D4D;
-        }
-        * { -webkit-tap-highlight-color: transparent; box-sizing: border-box;
-            transition: background-color 0.4s cubic-bezier(0.4, 0, 0.2, 1), 
-                        color 0.4s cubic-bezier(0.4, 0, 0.2, 1), 
-                        border-color 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
-        html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); }
-        ::-webkit-scrollbar { display: none; }
-        input { -webkit-appearance: none; }
-      `}</style>
       <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+      <style>{inputPlaceholderFix}</style>
       <div style={{ marginBottom: 36, textAlign: "center" }}>
-        <div style={{ fontSize: 18, color: "var(--gold)", opacity: 0.66, fontFamily: "serif", marginBottom: 14, letterSpacing: 3 }}>
+        <div style={{ fontSize: 18, color: "var(--text-dim)", fontFamily: "serif", marginBottom: 14, letterSpacing: 3 }}>
           بِسْمِ اللهِ الرَّحْمَنِ الرَّحِيمِ
         </div>
         <h1 style={{ fontSize: 34, fontFamily: "'Playfair Display', serif", color: "var(--text)", margin: 0, lineHeight: 1.2 }}>
@@ -425,7 +359,7 @@ function AuthScreen({ onLogin }) {
       </div>
 
       <div style={{ display: "flex", marginBottom: 20, background: "var(--card)", borderRadius: 12, padding: 4, width: "100%" }}>
-        {["login", "register"].map(t => (
+        {["login","register"].map(t => (
           <button key={t} onClick={() => { setTab(t); setMsg(""); }} style={{
             flex: 1, padding: "10px 0", border: "none", borderRadius: 9, cursor: "pointer",
             background: tab === t ? "var(--gold)" : "transparent",
@@ -468,7 +402,7 @@ function AuthScreen({ onLogin }) {
         </button>
       </div>
 
-      <div style={{ marginTop: 40, fontSize: 9, color: "var(--muted)", letterSpacing: "0.15em", fontFamily: "'DM Sans', sans-serif" }}>
+      <div style={{ marginTop: 40, fontSize: 9, color: "var(--subtle)", letterSpacing: "0.15em", fontFamily: "'DM Sans', sans-serif" }}>
         B.O.A. INDONESIA © 2026
       </div>
     </div>
@@ -477,237 +411,142 @@ function AuthScreen({ onLogin }) {
 
 
 function SurahDetailScreen({ surah, hafalanData, markStatus, resetStatus, onBack }) {
-  const [ayahs, setAyahs] = useState([]);
-  const [terjemahan, setTerjemahan] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [showTerjemahan, setShowTerjemahan] = useState(true);
-  const [activeAyah, setActiveAyah] = useState(null);
-  const d = hafalanData[surah.id];
+    const [ayahs, setAyahs] = useState([]);
+    const [terjemahan, setTerjemahan] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [showTerjemahan, setShowTerjemahan] = useState(true);
+    const [activeAyah, setActiveAyah] = useState(null);
+    const d = hafalanData[surah.id];
 
-  useEffect(() => {
-    const fetchAyahs = async () => {
-      setLoading(true); setError(null);
-      try {
-        // Menggunakan API Quran.com (Quran Madinah/Uthmani)
-        const [arRes, idRes] = await Promise.all([
-          fetch(`https://api.quran.com/api/v4/quran/verses/uthmani?chapter_number=${surah.id}`),
-          fetch(`https://api.quran.com/api/v4/quran/translations/33?chapter_number=${surah.id}`),
-        ]);
-        const arData = await arRes.json();
-        const idData = await idRes.json();
+    useEffect(() => {
+      const fetchAyahs = async () => {
+        setLoading(true); setError(null);
+        try {
+          const [arRes, idRes] = await Promise.all([
+            fetch(`https://api.alquran.cloud/v1/surah/${surah.id}/quran-uthmani`),
+            fetch(`https://api.alquran.cloud/v1/surah/${surah.id}/id.indonesian`),
+          ]);
+          const arData = await arRes.json();
+          const idData = await idRes.json();
+          if (arData.code === 200) setAyahs(arData.data.ayahs);
+          if (idData.code === 200) setTerjemahan(idData.data.ayahs);
+        } catch (e) {
+          setError("Gagal memuat. Periksa koneksi internet.");
+        } finally { setLoading(false); }
+      };
+      fetchAyahs();
+    }, [surah.id]);
 
-        if (arData.verses) {
-          setAyahs(arData.verses.map((v, i) => ({
-            number: v.id,
-            numberInSurah: i + 1,
-            text: String(v.text_uthmani).trim()
-          })));
-        }
-        if (idData.translations) {
-          setTerjemahan(idData.translations.map(t => ({ text: String(t.text).trim() })));
-        }
-      } catch (e) {
-        setError("Gagal memuat. Periksa koneksi internet.");
-      } finally { setLoading(false); }
-    };
-    fetchAyahs();
-  }, [surah.id]);
-
-  return (
-    <div style={{ paddingBottom: 140 }}>
-      {/* Sticky header */}
-      <div style={{
-        background: "var(--bg)", padding: "52px 20px 16px",
-        borderBottom: "1px solid var(--border)",
-        position: "sticky", top: 0, zIndex: 10,
-      }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 14 }}>
-          <button onClick={onBack} style={{
-            background: "var(--border)", border: "1px solid var(--border-mid)", borderRadius: 10,
-            color: "var(--gold)", fontSize: 20, width: 38, height: 38,
-            cursor: "pointer", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center",
-          }}>←</button>
-          <div style={{ flex: 1 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <span style={{ fontSize: 20, fontFamily: "'Playfair Display', serif", color: "var(--text)" }}>{surah.name}</span>
-              <span style={{ fontSize: 22, color: "var(--gold)", fontFamily: "serif" }}>{surah.arabic}</span>
-            </div>
-            <div style={{ fontSize: 10, color: "var(--muted)", marginTop: 3, fontFamily: "'DM Sans', sans-serif" }}>
-              {surah.ayat} ayat • Juz {surah.juz} •
-              <span style={{ color: d.status === "hafal" ? "var(--gold)" : d.status === "proses" ? "var(--blue)" : "var(--muted)", marginLeft: 4, fontWeight: 700, textTransform: "uppercase" }}>{d.status}</span>
+    return (
+      <div style={{ paddingBottom: 140 }}>
+        {/* Sticky header */}
+        <div style={{
+          background: "var(--bg)", padding: "52px 20px 16px",
+          borderBottom: "1px solid var(--border)",
+          position: "sticky", top: 0, zIndex: 10,
+        }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 14 }}>
+            <button onClick={onBack} style={{
+              background: "var(--border)", border: "1px solid var(--border-mid)", borderRadius: 10,
+              color: "var(--gold)", fontSize: 20, width: 38, height: 38,
+              cursor: "pointer", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center",
+            }}>←</button>
+            <div style={{ flex: 1 }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                <span style={{ fontSize: 20, fontFamily: "'Playfair Display', serif", color: "var(--text)" }}>{surah.name}</span>
+                <span style={{ fontSize: 22, color: "var(--gold)", fontFamily: "serif" }}>{surah.arabic}</span>
+              </div>
+              <div style={{ fontSize: 10, color: "var(--muted)", marginTop: 3, fontFamily: "'DM Sans', sans-serif" }}>
+                {surah.ayat} ayat • Juz {surah.juz} •
+                <span style={{ color: d.status === "hafal" ? "var(--gold)" : d.status === "proses" ? "var(--blue)" : "var(--muted)", marginLeft: 4, fontWeight: 700, textTransform: "uppercase" }}>{d.status}</span>
+              </div>
             </div>
           </div>
-        </div>
-        <div style={{ display: "flex", gap: 8 }}>
-          <button onClick={() => setShowTerjemahan(v => !v)} style={{
-            flex: 1, padding: "8px 0", borderRadius: 10, cursor: "pointer",
-            background: showTerjemahan ? "var(--blue)18" : "var(--card)",
-            border: `1px solid ${showTerjemahan ? "var(--blue)" : "var(--border)"}`,
-            color: showTerjemahan ? "var(--blue)" : "var(--muted)",
-            fontSize: 10, fontWeight: 700, fontFamily: "'DM Sans', sans-serif",
-          }}>◎ TERJEMAHAN</button>
-          {d.status === "belum" && (
-            <button onClick={() => markStatus(surah.id, "proses")} style={{
+          <div style={{ display: "flex", gap: 8 }}>
+            <button onClick={() => setShowTerjemahan(v => !v)} style={{
               flex: 1, padding: "8px 0", borderRadius: 10, cursor: "pointer",
-              background: "var(--blue)18", border: "1px solid var(--blue)55",
-              color: "var(--blue)", fontSize: 10, fontWeight: 700, fontFamily: "'DM Sans', sans-serif",
-            }}>▶ MULAI HAFAL</button>
-          )}
-          {d.status === "proses" && (
-            <button onClick={() => markStatus(surah.id, "hafal")} style={{
-              flex: 1, padding: "8px 0", borderRadius: 10, cursor: "pointer",
-              background: "var(--gold)18", border: "1px solid var(--gold)55",
-              color: "var(--gold)", fontSize: 10, fontWeight: 700, fontFamily: "'DM Sans', sans-serif",
-            }}>✓ TANDAI HAFAL</button>
-          )}
-          {d.status === "hafal" && (
-            <button onClick={() => resetStatus(surah.id)} style={{
-              flex: 1, padding: "8px 0", borderRadius: 10, cursor: "pointer",
-              background: "var(--red)12", border: "1px solid var(--red)33",
-              color: "var(--red)", fontSize: 10, fontWeight: 700, fontFamily: "'DM Sans', sans-serif",
-            }}>↩ BATALKAN HAFAL</button>
-          )}
-        </div>
-      </div>
-
-      {/* Bismillah */}
-      {surah.id !== 9 && surah.id !== 1 && (
-        <div style={{ textAlign: "center", padding: "24px 20px 8px", fontSize: 26, color: "var(--gold)", fontFamily: "'Scheherazade New', serif", direction: "rtl", lineHeight: 2 }}>
-          بِسۡمِ ٱللَّهِ ٱلرَّحۡمَٰنِ ٱلرَّحِيمِ
-        </div>
-      )}
-
-      {loading && (
-        <div style={{ textAlign: "center", padding: "60px 20px", color: "var(--muted)", fontFamily: "'DM Sans', sans-serif", fontSize: 12 }}>
-          <div style={{ fontSize: 32, color: "var(--gold)55", marginBottom: 12 }}>◈</div>
-          Memuat teks Al-Qur'an Madinah...
-        </div>
-      )}
-
-      {error && (
-        <div style={{ margin: 20, background: "var(--red)15", border: "1px solid var(--red)40", borderRadius: 14, padding: 16, fontSize: 12, color: "var(--red)", fontFamily: "'DM Sans', sans-serif" }}>
-          {error}
-        </div>
-      )}
-
-      {!loading && !error && ayahs.map((ayah, idx) => {
-        const tr = terjemahan[idx];
-        const active = activeAyah === ayah.numberInSurah;
-
-        // Remove Bismillah from the first verse (except Al-Fatihah & At-Tawbah) because we already display it as a header
-        let ayahText = ayah.text;
-        if (ayah.numberInSurah === 1 && surah.id !== 1 && surah.id !== 9) {
-          ayahText = ayahText.replace(/^بِسۡمِ ٱللَّهِ ٱلرَّحۡمَٰنِ ٱلرَّحِيمِ\s?/, "")
-            .replace(/^بِسْمِ اللَّهِ الرَّحْمَٰنِ الرَّحِيمِ\s?/, "")
-            .replace(/^بِسْمِ ٱللَّهِ ٱلرَّحْمَٰنِ ٱلرَّحِيمِ\s?/, "");
-        }
-
-        return (
-          <div key={ayah.number} onClick={() => setActiveAyah(active ? null : ayah.numberInSurah)}
-            style={{ padding: "18px 20px", borderBottom: "1px solid var(--card)", background: active ? "var(--gold)08" : "transparent", cursor: "pointer" }}>
-            <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 10 }}>
-              <div style={{
-                width: 26, height: 26, borderRadius: 7,
-                background: active ? "var(--gold)" : "var(--border)",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                fontSize: 10, color: active ? "var(--bg)" : "var(--muted)",
-                fontFamily: "'DM Sans', sans-serif", fontWeight: 700,
-              }}>{ayah.numberInSurah}</div>
-            </div>
-            <div style={{
-              fontSize: 24, fontFamily: "'Scheherazade New', 'Traditional Arabic', serif",
-              color: "var(--text)", direction: "rtl", textAlign: "right", lineHeight: 2.2,
-            }}>
-              {ayahText} <span style={{ color: "var(--gold)88", fontSize: 18 }}>﴿{ayah.numberInSurah}﴾</span>
-            </div>
-            {showTerjemahan && tr && (
-              <div style={{ fontSize: 12, color: "var(--muted-alt)", fontFamily: "'DM Sans', sans-serif", lineHeight: 1.7, borderTop: "1px solid var(--border-soft)", paddingTop: 10, marginTop: 10, fontStyle: "italic" }}>
-                {tr.text}
-              </div>
+              background: showTerjemahan ? "var(--blue)18" : "var(--card)",
+              border: `1px solid ${showTerjemahan ? "var(--blue)" : "var(--border)"}`,
+              color: showTerjemahan ? "var(--blue)" : "var(--muted)",
+              fontSize: 10, fontWeight: 700, fontFamily: "'DM Sans', sans-serif",
+            }}>◎ TERJEMAHAN</button>
+            {d.status === "belum" && (
+              <button onClick={() => markStatus(surah.id, "proses")} style={{
+                flex: 1, padding: "8px 0", borderRadius: 10, cursor: "pointer",
+                background: "var(--blue)18", border: "1px solid var(--blue)55",
+                color: "var(--blue)", fontSize: 10, fontWeight: 700, fontFamily: "'DM Sans', sans-serif",
+              }}>▶ MULAI HAFAL</button>
+            )}
+            {d.status === "proses" && (
+              <button onClick={() => markStatus(surah.id, "hafal")} style={{
+                flex: 1, padding: "8px 0", borderRadius: 10, cursor: "pointer",
+                background: "var(--gold)18", border: "1px solid var(--gold)55",
+                color: "var(--gold)", fontSize: 10, fontWeight: 700, fontFamily: "'DM Sans', sans-serif",
+              }}>✓ TANDAI HAFAL</button>
+            )}
+            {d.status === "hafal" && (
+              <button onClick={() => resetStatus(surah.id)} style={{
+                flex: 1, padding: "8px 0", borderRadius: 10, cursor: "pointer",
+                background: "var(--red)12", border: "1px solid var(--red)33",
+                color: "var(--red)", fontSize: 10, fontWeight: 700, fontFamily: "'DM Sans', sans-serif",
+              }}>↩ BATALKAN HAFAL</button>
             )}
           </div>
-        );
-      })}
-    </div>
-  );
-}
-
-// ===== DOA & DZIKIR SCREEN =====
-const DoaScreen = () => {
-  const [tab, setTab] = useState("hafalan"); // hafalan | pagi | petang | sholat
-
-  const activeData = dzikirData[tab] || [];
-
-  return (
-    <div style={{ padding: "0 20px 140px" }}>
-      <div style={{ padding: "56px 0 24px" }}>
-        <h2 style={{ fontSize: 24, fontFamily: "'Playfair Display', serif", color: "var(--text)", margin: 0 }}>
-          <span style={{ color: "var(--gold)" }}>Doa</span> & Dzikir
-        </h2>
-
-        {/* Sub-Header Tabs */}
-        <div style={{ display: "flex", gap: 8, marginTop: 16, overflowX: "auto", paddingBottom: 8, msOverflowStyle: "none", scrollbarWidth: "none", WebkitOverflowScrolling: "touch" }}>
-          {[
-            { id: "hafalan", label: "Hafalan" },
-            { id: "sholat", label: "Setelah Sholat" },
-            { id: "pagi", label: "Dzikir Pagi" },
-            { id: "petang", label: "Dzikir Petang" }
-          ].map(t => (
-            <button key={t.id} onClick={() => setTab(t.id)} style={{
-              background: tab === t.id ? "var(--gold)" : "var(--card)",
-              color: tab === t.id ? "var(--bg)" : "var(--text-secondary)",
-              border: `1px solid ${tab === t.id ? "var(--gold)" : "var(--border)"}`,
-              padding: "8px 16px", borderRadius: 20, fontSize: 11, fontWeight: 700,
-              fontFamily: "'DM Sans', sans-serif", cursor: "pointer", whiteSpace: "nowrap"
-            }}>
-              {t.label}
-            </button>
-          ))}
         </div>
-      </div>
 
-      <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-        {activeData.map((item, idx) => (
-          <div key={item.id + idx} style={{
-            background: "var(--card)", borderRadius: 16, padding: "20px 24px",
-            border: "1px solid var(--border)", position: "relative"
-          }}>
-            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
-              <div style={{ fontSize: 10, color: "var(--gold)", fontWeight: 700, letterSpacing: "0.1em" }}>
-                {item.sumber || "Dzikir"}
+        {/* Bismillah */}
+        {surah.id !== 9 && surah.id !== 1 && (
+          <div style={{ textAlign: "center", padding: "24px 20px 8px", fontSize: 26, color: "var(--gold)", fontFamily: "'Scheherazade New', serif", direction: "rtl", lineHeight: 2 }}>
+            بِسۡمِ ٱللَّهِ ٱلرَّحۡمَٰنِ ٱلرَّحِيمِ
+          </div>
+        )}
+
+        {loading && (
+          <div style={{ textAlign: "center", padding: "60px 20px", color: "var(--text-dim)", fontFamily: "'DM Sans', sans-serif", fontSize: 12 }}>
+            <div style={{ fontSize: 32, color: "var(--gold)55", marginBottom: 12 }}>◈</div>
+            Memuat teks Al-Qur'an Madinah...
+          </div>
+        )}
+
+        {error && (
+          <div style={{ margin: 20, background: "var(--red)15", border: "1px solid var(--red)40", borderRadius: 14, padding: 16, fontSize: 12, color: "var(--red)", fontFamily: "'DM Sans', sans-serif" }}>
+            {error}
+          </div>
+        )}
+
+        {!loading && !error && ayahs.map((ayah, idx) => {
+          const tr = terjemahan[idx];
+          const active = activeAyah === ayah.numberInSurah;
+          return (
+            <div key={ayah.number} onClick={() => setActiveAyah(active ? null : ayah.numberInSurah)}
+              style={{ padding: "18px 20px", borderBottom: "1px solid var(--card)", background: active ? "var(--gold)08" : "transparent", cursor: "pointer" }}>
+              <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 10 }}>
+                <div style={{
+                  width: 26, height: 26, borderRadius: 7,
+                  background: active ? "var(--gold)" : "var(--border)",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  fontSize: 10, color: active ? "var(--bg)" : "var(--muted)",
+                  fontFamily: "'DM Sans', sans-serif", fontWeight: 700,
+                }}>{ayah.numberInSurah}</div>
               </div>
-              {item.count && (
-                <div style={{ fontSize: 9, background: "var(--gold)22", color: "var(--gold)", padding: "4px 8px", borderRadius: 6, fontWeight: 700 }}>
-                  {item.count}x
+              <div style={{
+                fontSize: 24, fontFamily: "'Scheherazade New', 'Traditional Arabic', serif",
+                color: "var(--text)", direction: "rtl", textAlign: "right", lineHeight: 2.2,
+              }}>
+                {ayah.text} <span style={{ color: "var(--gold)88", fontSize: 18 }}>﴿{ayah.numberInSurah}﴾</span>
+              </div>
+              {showTerjemahan && tr && (
+                <div style={{ fontSize: 12, color: "var(--muted-alt)", fontFamily: "'DM Sans', sans-serif", lineHeight: 1.7, borderTop: "1px solid var(--border-soft)", paddingTop: 10, marginTop: 10, fontStyle: "italic" }}>
+                  {tr.text}
                 </div>
               )}
             </div>
-
-            <div style={{ fontSize: 13, color: "var(--text)", fontFamily: "'Playfair Display', serif", marginBottom: 16 }}>
-              {item.title}
-            </div>
-
-            <div style={{
-              fontSize: 24, color: "var(--gold)", fontFamily: "'Scheherazade New', 'Traditional Arabic', serif",
-              textAlign: "right", direction: "rtl", lineHeight: 2.0, marginBottom: 16
-            }}>
-              {item.arabic}
-            </div>
-
-            <div style={{ fontSize: 11, color: "var(--blue)", fontFamily: "'DM Sans', sans-serif", fontStyle: "italic", marginBottom: 8, lineHeight: 1.6 }}>
-              {item.latin}
-            </div>
-
-            <div style={{ fontSize: 12, color: "var(--muted-alt)", fontFamily: "'DM Sans', sans-serif", lineHeight: 1.7 }}>
-              "{item.terjemahan}"
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
-    </div>
-  );
-};
+    );
+}
 
 
 export default function QuranHafalanApp() {
@@ -782,8 +621,8 @@ export default function QuranHafalanApp() {
       const country = geoData.address?.country_code?.toUpperCase() || "ID";
       // Ambil jadwal sholat via aladhan.com (gratis, no key)
       const today = new Date();
-      const dd = String(today.getDate()).padStart(2, '0');
-      const mm = String(today.getMonth() + 1).padStart(2, '0');
+      const dd = String(today.getDate()).padStart(2,'0');
+      const mm = String(today.getMonth()+1).padStart(2,'0');
       const yyyy = today.getFullYear();
       const prayRes = await fetch(
         `https://api.aladhan.com/v1/timings/${dd}-${mm}-${yyyy}?latitude=${latitude}&longitude=${longitude}&method=20&school=1`
@@ -793,12 +632,12 @@ export default function QuranHafalanApp() {
       if (prayData.code === 200) {
         const t = prayData.data.timings;
         setPrayerTimes({
-          Subuh: t.Fajr,
-          Terbit: t.Sunrise,
-          Dzuhur: t.Dhuhr,
-          Ashar: t.Asr,
+          Subuh:   t.Fajr,
+          Terbit:  t.Sunrise,
+          Dzuhur:  t.Dhuhr,
+          Ashar:   t.Asr,
           Maghrib: t.Maghrib,
-          Isya: t.Isha,
+          Isya:    t.Isha,
         });
         setPrayerLocation({ city, country, lat: latitude, lon: longitude });
       } else {
@@ -866,7 +705,7 @@ export default function QuranHafalanApp() {
   };
 
   const handleLogout = async () => {
-    try { await signOut(); } catch (e) { }
+    try { await signOut(); } catch(e) {}
     setUser(null);
     setHafalanData(initHafalanData());
   };
@@ -884,7 +723,7 @@ export default function QuranHafalanApp() {
     return <AuthScreen onLogin={(u) => { setUser(u); loadUserData(u.id); }} />;
   }
 
-  const formatTime = (s) => `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
+    const formatTime = (s) => `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
 
   const stats = {
     hafal: Object.values(hafalanData).filter(d => d.status === "hafal").length,
@@ -994,7 +833,7 @@ export default function QuranHafalanApp() {
     }
   };
 
-  // ===== UI SCREENS =====
+// ===== UI SCREENS =====
 
   // ===== TOAST UNDO NOTIFIKASI =====
   const Toast = () => {
@@ -1015,7 +854,7 @@ export default function QuranHafalanApp() {
           <div style={{ fontSize: 12, color: "var(--text)", fontFamily: "'DM Sans', sans-serif", fontWeight: 600 }}>
             {label}: <span style={{ color: "var(--gold)" }}>{toast.surahName}</span>
           </div>
-          <div style={{ fontSize: 10, color: "var(--muted)", fontFamily: "'DM Sans', sans-serif", marginTop: 2 }}>
+          <div style={{ fontSize: 10, color: "var(--text-dim)", fontFamily: "'DM Sans', sans-serif", marginTop: 2 }}>
             Tap Batalkan jika salah klik
           </div>
         </div>
@@ -1044,8 +883,7 @@ export default function QuranHafalanApp() {
           { id: "hafalan", icon: "◈", label: "Hafalan" },
           { id: "muraja", icon: "⟳", label: "Muraja'ah" },
           { id: "jadwal", icon: "◷", label: "Jadwal" },
-          { id: "doa", icon: "🤲", label: "Dzikir" },
-          { id: "sholat", icon: "🕌", label: "Sholat" },
+          { id: "doa",     icon: "🤲", label: "Doa" },
         ].map(nav => (
           <button key={nav.id} onClick={() => { setScreen(nav.id); setSelectedSurahDetail(null); }} style={{
             background: "none", border: "none", cursor: "pointer",
@@ -1065,7 +903,7 @@ export default function QuranHafalanApp() {
         borderTop: "1px solid var(--border-soft)",
       }}>
         <span style={{
-          fontSize: 9, color: "var(--muted-deep)", fontFamily: "'DM Sans', sans-serif",
+          fontSize: 9, color: "var(--text-dim)", fontFamily: "'DM Sans', sans-serif",
           letterSpacing: "0.12em", fontWeight: 600,
         }}>B.O.A. INDONESIA © 2026</span>
       </div>
@@ -1079,7 +917,7 @@ export default function QuranHafalanApp() {
       <div style={{ padding: "56px 0 32px", position: "relative" }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
           <div>
-            <div style={{ fontSize: 11, letterSpacing: "0.2em", color: "var(--muted)", fontFamily: "'DM Sans', sans-serif", marginBottom: 8 }}>
+            <div style={{ fontSize: 11, letterSpacing: "0.2em", color: "var(--text-dim)", fontFamily: "'DM Sans', sans-serif", marginBottom: 8 }}>
               بِسْمِ اللهِ الرَّحْمَنِ الرَّحِيمِ
             </div>
             <h1 style={{ fontSize: 28, fontFamily: "'Playfair Display', Georgia, serif", color: "var(--text)", fontWeight: 700, margin: 0, lineHeight: 1.2 }}>
@@ -1104,6 +942,11 @@ export default function QuranHafalanApp() {
                 color: "var(--gold)", fontSize: 9, padding: "5px 10px", cursor: "pointer",
                 fontFamily: "'DM Sans', sans-serif", letterSpacing: "0.08em", fontWeight: 700,
               }}>? PANDUAN</button>
+              <button onClick={() => setScreen("doa")} style={{
+                background: "var(--purple)22", border: "1px solid var(--purple)44", borderRadius: 8,
+                color: "var(--purple)", fontSize: 9, padding: "5px 10px", cursor: "pointer",
+                fontFamily: "'DM Sans', sans-serif", letterSpacing: "0.08em", fontWeight: 700,
+              }}>🤲 DOA</button>
               <button onClick={() => setTheme(t => t === "dark" ? "light" : "dark")} title={theme === "dark" ? "Mode Terang" : "Mode Gelap"} style={{
                 background: "var(--border)", border: "1px solid var(--border-mid)", borderRadius: 8,
                 color: "var(--text-dim)", fontSize: 15, padding: "3px 9px", cursor: "pointer",
@@ -1177,7 +1020,7 @@ export default function QuranHafalanApp() {
             }}>⟳</div>
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: 13, color: "var(--text)", fontFamily: "'Playfair Display', serif" }}>{s.name}</div>
-              <div style={{ fontSize: 10, color: "var(--muted)", fontFamily: "'DM Sans', sans-serif", marginTop: 2 }}>Muraja'ah terjadwal</div>
+              <div style={{ fontSize: 10, color: "var(--text-dim)", fontFamily: "'DM Sans', sans-serif", marginTop: 2 }}>Muraja'ah terjadwal</div>
             </div>
             <button onClick={() => { setSelectedSurah(s); setSelectedSurahDetail(null); setScreen("muraja"); }} style={{
               background: "var(--border)", border: "1px solid var(--border-mid)", borderRadius: 8,
@@ -1235,8 +1078,8 @@ export default function QuranHafalanApp() {
     // Filter by status tab
     let filtered = activeTab === "semua" ? SURAHS
       : activeTab === "proses" ? SURAHS.filter(s => hafalanData[s.id].status === "proses")
-        : activeTab === "hafal" ? SURAHS.filter(s => hafalanData[s.id].status === "hafal")
-          : SURAHS.filter(s => hafalanData[s.id].status === "belum");
+      : activeTab === "hafal" ? SURAHS.filter(s => hafalanData[s.id].status === "hafal")
+      : SURAHS.filter(s => hafalanData[s.id].status === "belum");
 
     // Filter by search
     if (searchQuery.trim()) {
@@ -1352,7 +1195,7 @@ export default function QuranHafalanApp() {
         {filtered.length === 0 ? (
           <div style={{ background: "var(--card)", borderRadius: 14, padding: 24, textAlign: "center", border: "1px solid var(--border)" }}>
             <div style={{ fontSize: 24, color: "var(--muted)", marginBottom: 8 }}>◈</div>
-            <div style={{ fontSize: 12, color: "var(--muted)", fontFamily: "'DM Sans', sans-serif" }}>Tidak ada surah yang cocok</div>
+            <div style={{ fontSize: 12, color: "var(--text-dim)", fontFamily: "'DM Sans', sans-serif" }}>Tidak ada surah yang cocok</div>
           </div>
         ) : juzKeys.map(juz => (
           <div key={juz}>
@@ -1364,7 +1207,7 @@ export default function QuranHafalanApp() {
                   padding: "4px 12px", fontSize: 10, color: "var(--blue)", fontFamily: "'DM Sans', sans-serif", fontWeight: 700,
                 }}>JUZ {juz}</div>
                 <div style={{ flex: 1, height: 1, background: "var(--border)" }} />
-                <div style={{ fontSize: 9, color: "var(--muted)", fontFamily: "'DM Sans', sans-serif" }}>
+                <div style={{ fontSize: 9, color: "var(--text-dim)", fontFamily: "'DM Sans', sans-serif" }}>
                   {juzProgress(juz).done}/{juzProgress(juz).total} hafal
                 </div>
               </div>
@@ -1386,7 +1229,7 @@ export default function QuranHafalanApp() {
                     width: 40, height: 40, borderRadius: 10, flexShrink: 0,
                     background: d.status === "hafal" ? "linear-gradient(135deg, var(--gold), var(--gold-dark))"
                       : d.status === "proses" ? "linear-gradient(135deg, var(--blue), var(--blue-dark))"
-                        : "var(--border)",
+                      : "var(--border)",
                     display: "flex", alignItems: "center", justifyContent: "center",
                     fontSize: 12, color: d.status === "belum" ? "var(--muted)" : "#fff",
                     fontFamily: "'Playfair Display', serif", fontWeight: 700,
@@ -1520,7 +1363,7 @@ export default function QuranHafalanApp() {
             background: "var(--card)", borderRadius: 14, padding: 24, textAlign: "center",
             border: "1px solid var(--border)",
           }}>
-            <div style={{ fontSize: 11, color: "var(--muted)", fontFamily: "'DM Sans', sans-serif" }}>
+            <div style={{ fontSize: 11, color: "var(--text-dim)", fontFamily: "'DM Sans', sans-serif" }}>
               Belum ada surah yang dihafal. Mulai dari menu Hafalan.
             </div>
           </div>
@@ -1535,7 +1378,7 @@ export default function QuranHafalanApp() {
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 12 }}>
                 <div>
                   <div style={{ fontSize: 14, color: "var(--text)", fontFamily: "'Playfair Display', serif" }}>{s.name}</div>
-                  <div style={{ fontSize: 10, color: "var(--muted)", fontFamily: "'DM Sans', sans-serif", marginTop: 2 }}>
+                  <div style={{ fontSize: 10, color: "var(--text-dim)", fontFamily: "'DM Sans', sans-serif", marginTop: 2 }}>
                     Review ke-{d.repetitions + 1} • Berikutnya: {nextDate}
                   </div>
                 </div>
@@ -1567,10 +1410,10 @@ export default function QuranHafalanApp() {
   const JadwalScreen = () => {
     const days = ["Sen", "Sel", "Rab", "Kam", "Jum", "Sab", "Min"];
     const sessions = [
-      { timeKey: "Subuh", label: "Subuh", desc: "Hafalan baru — otak paling segar (Neuroplasticity peak)", icon: "☽", color: "var(--gold)", reminderKey: "subuh" },
-      { timeKey: null, label: "Pagi", desc: "Review cepat — working memory consolidation", icon: "◎", color: "var(--blue)", reminderKey: "pagi", staticTime: "08:00" },
-      { timeKey: "Ashar", label: "Ashar", desc: "Muraja'ah — retrieval practice (Karpicke, 2008)", icon: "⟳", color: "var(--purple)", reminderKey: "ashar" },
-      { timeKey: "Isya", label: "Isya", desc: "Pra-tidur — memory consolidation selama tidur", icon: "✦", color: "var(--green)", reminderKey: "isya" },
+      { timeKey: "Subuh",  label: "Subuh",  desc: "Hafalan baru — otak paling segar (Neuroplasticity peak)",        icon: "☽", color: "var(--gold)",   reminderKey: "subuh" },
+      { timeKey: null,     label: "Pagi",   desc: "Review cepat — working memory consolidation",                    icon: "◎", color: "var(--blue)",   reminderKey: "pagi",  staticTime: "08:00" },
+      { timeKey: "Ashar",  label: "Ashar",  desc: "Muraja'ah — retrieval practice (Karpicke, 2008)",               icon: "⟳", color: "var(--purple)", reminderKey: "ashar" },
+      { timeKey: "Isya",   label: "Isya",   desc: "Pra-tidur — memory consolidation selama tidur",                 icon: "✦", color: "var(--green)",  reminderKey: "isya"  },
     ];
 
     const handleToggleReminder = async (key) => {
@@ -1578,7 +1421,7 @@ export default function QuranHafalanApp() {
       setReminders(r => ({ ...r, [key]: newVal }));
       if (user) {
         try { await upsertReminder(user.id, key, newVal); }
-        catch (e) { console.error(e); }
+        catch(e) { console.error(e); }
       }
     };
 
@@ -1610,7 +1453,7 @@ export default function QuranHafalanApp() {
           <span style={{ fontSize: 22 }}>🕌</span>
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: 12, color: "var(--green)", fontFamily: "'DM Sans', sans-serif", fontWeight: 700 }}>Lihat Jadwal Sholat</div>
-            <div style={{ fontSize: 10, color: "var(--muted)", fontFamily: "'DM Sans', sans-serif", marginTop: 2 }}>
+            <div style={{ fontSize: 10, color: "var(--text-dim)", fontFamily: "'DM Sans', sans-serif", marginTop: 2 }}>
               {prayerLocation ? `📍 ${prayerLocation.city} — Tap untuk detail` : "Tap untuk deteksi waktu sholat otomatis"}
             </div>
           </div>
@@ -1628,7 +1471,7 @@ export default function QuranHafalanApp() {
                 border: `1px solid ${isToday ? "var(--gold)" : "var(--border)"}`,
               }}>
                 <div style={{ fontSize: 9, color: isToday ? "var(--bg)" : "var(--muted)", fontFamily: "'DM Sans', sans-serif", marginBottom: 4 }}>{d}</div>
-                <div style={{ fontSize: 14, color: isToday ? "var(--bg)" : "var(--border-mid)" }}>◆</div>
+                <div style={{ fontSize: 14, color: isToday ? "var(--bg)" : "var(--text-dim)" }}>◆</div>
               </div>
             );
           })}
@@ -1710,8 +1553,8 @@ export default function QuranHafalanApp() {
       return h * 60 + m;
     };
     const nowMins = currentTime.getHours() * 60 + currentTime.getMinutes();
-    const prayerKeys = prayerTimes ? ["Subuh", "Terbit", "Dzuhur", "Ashar", "Maghrib", "Isya"] : [];
-    const mainKeys = ["Subuh", "Dzuhur", "Ashar", "Maghrib", "Isya"];
+    const prayerKeys = prayerTimes ? ["Subuh","Terbit","Dzuhur","Ashar","Maghrib","Isya"] : [];
+    const mainKeys   = ["Subuh","Dzuhur","Ashar","Maghrib","Isya"];
     const nextPrayer = prayerTimes
       ? mainKeys.find(k => toMins(prayerTimes[k]) > nowMins) || "Subuh"
       : null;
@@ -1725,12 +1568,12 @@ export default function QuranHafalanApp() {
     };
 
     const prayerMeta = {
-      Subuh: { icon: "☽", color: "var(--gold)", desc: "Fajar — waktu terbaik hafalan baru" },
-      Terbit: { icon: "◇", color: "var(--text-dim)", desc: "Matahari terbit — waktu larangan sholat" },
-      Dzuhur: { icon: "◉", color: "var(--blue)", desc: "Tengah hari — review cepat setelah sholat" },
-      Ashar: { icon: "⟳", color: "var(--purple)", desc: "Sore — muraja'ah & retrieval practice" },
-      Maghrib: { icon: "◐", color: "var(--red)", desc: "Magrib — istirahat sejenak, banyak dzikir" },
-      Isya: { icon: "✦", color: "var(--green)", desc: "Malam — pra-tidur, konsolidasi memori" },
+      Subuh:   { icon: "☽", color: "var(--gold)",   desc: "Fajar — waktu terbaik hafalan baru" },
+      Terbit:  { icon: "◇", color: "var(--text-dim)", desc: "Matahari terbit — waktu larangan sholat" },
+      Dzuhur:  { icon: "◉", color: "var(--blue)",   desc: "Tengah hari — review cepat setelah sholat" },
+      Ashar:   { icon: "⟳", color: "var(--purple)", desc: "Sore — muraja'ah & retrieval practice" },
+      Maghrib: { icon: "◐", color: "var(--red)",    desc: "Magrib — istirahat sejenak, banyak dzikir" },
+      Isya:    { icon: "✦", color: "var(--green)",  desc: "Malam — pra-tidur, konsolidasi memori" },
     };
 
     return (
@@ -1756,7 +1599,7 @@ export default function QuranHafalanApp() {
               <div style={{ fontSize: 36, color: "var(--text)", fontFamily: "'Playfair Display', serif", fontWeight: 700, letterSpacing: 2, lineHeight: 1 }}>
                 {currentTime.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })}
               </div>
-              <div style={{ fontSize: 11, color: "var(--muted)", fontFamily: "'DM Sans', sans-serif", marginTop: 6 }}>
+              <div style={{ fontSize: 11, color: "var(--text-dim)", fontFamily: "'DM Sans', sans-serif", marginTop: 6 }}>
                 {currentTime.toLocaleDateString("id-ID", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
               </div>
               {prayerLocation && (
@@ -1772,7 +1615,8 @@ export default function QuranHafalanApp() {
               fontSize: 10, fontWeight: 700, cursor: prayerLoading ? "not-allowed" : "pointer",
               fontFamily: "'DM Sans', sans-serif", letterSpacing: "0.08em", textAlign: "center", lineHeight: 1.5,
             }}>
-              {prayerLoading ? "⟳" : "📍"}<br />{prayerLoading ? "Memuat..." : "Deteksi Lokasi"}
+              {prayerLoading ? "⟳" : "📍"}<br/>{prayerLoading ? "Memuat..." : "Deteksi
+Lokasi"}
             </button>
           </div>
 
@@ -1793,7 +1637,7 @@ export default function QuranHafalanApp() {
               display: "flex", justifyContent: "space-between", alignItems: "center",
             }}>
               <div>
-                <div style={{ fontSize: 10, color: "var(--muted)", fontFamily: "'DM Sans', sans-serif", letterSpacing: "0.08em" }}>SHOLAT BERIKUTNYA</div>
+                <div style={{ fontSize: 10, color: "var(--text-dim)", fontFamily: "'DM Sans', sans-serif", letterSpacing: "0.08em" }}>SHOLAT BERIKUTNYA</div>
                 <div style={{ fontSize: 20, color: "var(--green)", fontFamily: "'Playfair Display', serif", fontWeight: 700, marginTop: 4 }}>
                   {prayerMeta[nextPrayer]?.icon} {nextPrayer}
                 </div>
@@ -1805,7 +1649,7 @@ export default function QuranHafalanApp() {
                 <div style={{ fontSize: 18, color: "var(--green)", fontFamily: "'Playfair Display', serif", fontWeight: 700 }}>
                   {formatCountdown(nextMins)}
                 </div>
-                <div style={{ fontSize: 9, color: "var(--muted)", fontFamily: "'DM Sans', sans-serif", marginTop: 4, maxWidth: 120, lineHeight: 1.4 }}>
+                <div style={{ fontSize: 9, color: "var(--text-dim)", fontFamily: "'DM Sans', sans-serif", marginTop: 4, maxWidth: 120, lineHeight: 1.4 }}>
                   {prayerMeta[nextPrayer]?.desc}
                 </div>
               </div>
@@ -1816,8 +1660,8 @@ export default function QuranHafalanApp() {
           {!prayerTimes && !prayerLoading && !prayerError && (
             <div style={{ textAlign: "center", padding: "20px 0 8px" }}>
               <div style={{ fontSize: 36, color: "var(--green)33", marginBottom: 12 }}>🕌</div>
-              <div style={{ fontSize: 12, color: "var(--muted)", fontFamily: "'DM Sans', sans-serif", lineHeight: 1.7 }}>
-                Tap <strong style={{ color: "var(--green)" }}>Deteksi Lokasi</strong> untuk menampilkan<br />jadwal sholat wilayah Anda secara otomatis
+              <div style={{ fontSize: 12, color: "var(--text-dim)", fontFamily: "'DM Sans', sans-serif", lineHeight: 1.7 }}>
+                Tap <strong style={{ color: "var(--green)" }}>Deteksi Lokasi</strong> untuk menampilkan<br/>jadwal sholat wilayah Anda secara otomatis
               </div>
             </div>
           )}
@@ -1879,7 +1723,7 @@ export default function QuranHafalanApp() {
             <div style={{ fontSize: 9, color: "var(--green)", fontFamily: "'DM Sans', sans-serif", fontWeight: 700, letterSpacing: "0.1em", marginBottom: 4 }}>
               ℹ METODE KALKULASI
             </div>
-            <div style={{ fontSize: 10, color: "var(--muted)", fontFamily: "'DM Sans', sans-serif", lineHeight: 1.6 }}>
+            <div style={{ fontSize: 10, color: "var(--text-dim)", fontFamily: "'DM Sans', sans-serif", lineHeight: 1.6 }}>
               Menggunakan metode <strong style={{ color: "var(--text)" }}>Kementerian Agama Republik Indonesia</strong> (method=20) via aladhan.com. Waktu disesuaikan otomatis dengan koordinat GPS smartphone Anda.
             </div>
           </div>
@@ -1920,7 +1764,7 @@ export default function QuranHafalanApp() {
                 <div style={{ fontSize: 11, color: m.color, fontFamily: "'DM Sans', sans-serif", fontWeight: 700, letterSpacing: "0.1em" }}>
                   {m.icon} {m.name.toUpperCase()}
                 </div>
-                <div style={{ fontSize: 10, color: "var(--muted)", fontFamily: "'DM Sans', sans-serif", marginTop: 2 }}>
+                <div style={{ fontSize: 10, color: "var(--text-dim)", fontFamily: "'DM Sans', sans-serif", marginTop: 2 }}>
                   Fase {phaseIdx + 1} dari {totalPhases}
                 </div>
               </div>
@@ -1951,7 +1795,7 @@ export default function QuranHafalanApp() {
                 <div style={{ fontSize: 14, color: m.color, fontFamily: "'Playfair Display', serif", fontWeight: 700 }}>
                   {phase.phase}
                 </div>
-                <div style={{ fontSize: 10, color: "var(--muted)", fontFamily: "'DM Sans', sans-serif", marginTop: 2 }}>
+                <div style={{ fontSize: 10, color: "var(--text-dim)", fontFamily: "'DM Sans', sans-serif", marginTop: 2 }}>
                   Estimasi waktu: {phase.time}
                 </div>
               </div>
@@ -2012,11 +1856,11 @@ export default function QuranHafalanApp() {
                     fontSize: 12, cursor: allChecked ? "pointer" : "not-allowed",
                     fontFamily: "'DM Sans', sans-serif", fontWeight: 700, letterSpacing: "0.06em",
                   }}>
-                  {allChecked ? "Fase Berikutnya →" : `Centang semua (${phase.steps.filter((_, si) => sessionChecked[checkedKey(phaseIdx, si)]).length}/${phase.steps.length})`}
+                  {allChecked ? "Fase Berikutnya →" : `Centang semua (${phase.steps.filter((_,si) => sessionChecked[checkedKey(phaseIdx,si)]).length}/${phase.steps.length})`}
                 </button>
               ) : (
                 <button
-                  onClick={() => { if (allChecked) { setActiveMethodSession(null); setSessionChecked({}); setScreen("hafalan"); setSelectedSurahDetail(null); } }}
+                  onClick={() => { if (allChecked) { setActiveMethodSession(null); setSessionChecked({}); setScreen("hafalan"); setSelectedSurahDetail(null); }}}
                   style={{
                     flex: 2, padding: "13px 0",
                     background: allChecked ? "linear-gradient(135deg, var(--green), var(--green-dark))" : "var(--border)",
@@ -2025,7 +1869,7 @@ export default function QuranHafalanApp() {
                     fontSize: 12, cursor: allChecked ? "pointer" : "not-allowed",
                     fontFamily: "'DM Sans', sans-serif", fontWeight: 700, letterSpacing: "0.06em",
                   }}>
-                  {allChecked ? "✦ Sesi Selesai! Mulai Hafal →" : `Centang semua dulu (${phase.steps.filter((_, si) => sessionChecked[checkedKey(phaseIdx, si)]).length}/${phase.steps.length})`}
+                  {allChecked ? "✦ Sesi Selesai! Mulai Hafal →" : `Centang semua dulu (${phase.steps.filter((_,si) => sessionChecked[checkedKey(phaseIdx,si)]).length}/${phase.steps.length})`}
                 </button>
               )}
             </div>
@@ -2089,7 +1933,7 @@ export default function QuranHafalanApp() {
               <div style={{ flex: 1 }}>
                 <div style={{ fontSize: 14, color: "var(--text)", fontFamily: "'Playfair Display', serif" }}>{m.name}</div>
                 <div style={{ fontSize: 10, color: m.color, fontFamily: "'DM Sans', sans-serif", marginTop: 3, fontStyle: "italic" }}>"{m.tagline}"</div>
-                <div style={{ fontSize: 9, color: "var(--muted)", fontFamily: "'DM Sans', sans-serif", marginTop: 3, letterSpacing: "0.04em" }}>
+                <div style={{ fontSize: 9, color: "var(--text-dim)", fontFamily: "'DM Sans', sans-serif", marginTop: 3, letterSpacing: "0.04em" }}>
                   ⏱ {m.duration} • {m.bestFor}
                 </div>
               </div>
@@ -2110,7 +1954,7 @@ export default function QuranHafalanApp() {
                   <div style={{ fontSize: 11, color: "var(--text-secondary)", fontFamily: "'DM Sans', sans-serif", lineHeight: 1.7 }}>
                     {m.why}
                   </div>
-                  <div style={{ fontSize: 9, color: "var(--muted)", fontFamily: "'DM Sans', sans-serif", marginTop: 8, fontStyle: "italic" }}>
+                  <div style={{ fontSize: 9, color: "var(--text-dim)", fontFamily: "'DM Sans', sans-serif", marginTop: 8, fontStyle: "italic" }}>
                     📚 {m.ref}
                   </div>
                 </div>
@@ -2129,7 +1973,7 @@ export default function QuranHafalanApp() {
                     }}>{phase.icon}</div>
                     <div style={{ flex: 1 }}>
                       <span style={{ fontSize: 11, color: "var(--text)", fontFamily: "'DM Sans', sans-serif", fontWeight: 600 }}>{phase.phase}</span>
-                      <span style={{ fontSize: 10, color: "var(--muted)", fontFamily: "'DM Sans', sans-serif" }}> — {phase.time}</span>
+                      <span style={{ fontSize: 10, color: "var(--text-dim)", fontFamily: "'DM Sans', sans-serif" }}> — {phase.time}</span>
                     </div>
                   </div>
                 ))}
@@ -2168,7 +2012,7 @@ export default function QuranHafalanApp() {
               <div style={{ width: 4, height: 4, borderRadius: 1, background: "var(--gold)55", flexShrink: 0, marginTop: 6 }} />
               <div>
                 <span style={{ fontSize: 10, color: "var(--text)", fontFamily: "'DM Sans', sans-serif" }}>{r.cat}</span>
-                <span style={{ fontSize: 9, color: "var(--muted)", fontFamily: "'DM Sans', sans-serif" }}> — {r.refs}</span>
+                <span style={{ fontSize: 9, color: "var(--text-dim)", fontFamily: "'DM Sans', sans-serif" }}> — {r.refs}</span>
               </div>
             </div>
           ))}
@@ -2362,7 +2206,7 @@ export default function QuranHafalanApp() {
                 <div style={{ fontSize: 16, color: "var(--text)", fontFamily: "'Playfair Display', serif", fontWeight: 700 }}>
                   {sec.title}
                 </div>
-                <div style={{ fontSize: 10, color: "var(--muted)", fontFamily: "'DM Sans', sans-serif", marginTop: 2 }}>
+                <div style={{ fontSize: 10, color: "var(--text-dim)", fontFamily: "'DM Sans', sans-serif", marginTop: 2 }}>
                   {sec.subtitle}
                 </div>
               </div>
@@ -2502,7 +2346,7 @@ export default function QuranHafalanApp() {
               <div style={{ fontSize: 14, color: "var(--text)", fontFamily: "'Playfair Display', serif", fontWeight: 700 }}>
                 {sec.title}
               </div>
-              <div style={{ fontSize: 10, color: "var(--muted)", fontFamily: "'DM Sans', sans-serif", marginTop: 4, lineHeight: 1.4 }}>
+              <div style={{ fontSize: 10, color: "var(--text-dim)", fontFamily: "'DM Sans', sans-serif", marginTop: 4, lineHeight: 1.4 }}>
                 {sec.subtitle}
               </div>
               <div style={{ fontSize: 9, color: `${sec.color}88`, fontFamily: "'DM Sans', sans-serif", marginTop: 4 }}>
@@ -2529,7 +2373,7 @@ export default function QuranHafalanApp() {
             <div style={{ fontSize: 14, color: "var(--text)", fontFamily: "'Playfair Display', serif", fontWeight: 700 }}>
               Metode Hafalan Ilmiah
             </div>
-            <div style={{ fontSize: 10, color: "var(--muted)", fontFamily: "'DM Sans', sans-serif", marginTop: 4 }}>
+            <div style={{ fontSize: 10, color: "var(--text-dim)", fontFamily: "'DM Sans', sans-serif", marginTop: 4 }}>
               4 metode dengan sesi panduan interaktif
             </div>
             <div style={{ fontSize: 9, color: "var(--purple)88", fontFamily: "'DM Sans', sans-serif", marginTop: 4 }}>
@@ -2541,16 +2385,909 @@ export default function QuranHafalanApp() {
 
         {/* Version info */}
         <div style={{ textAlign: "center", padding: "16px 0 4px" }}>
-          <div style={{ fontSize: 9, color: "var(--border)", fontFamily: "'DM Sans', sans-serif", letterSpacing: "0.15em" }}>
+          <div style={{ fontSize: 9, color: "var(--subtle)", fontFamily: "'DM Sans', sans-serif", letterSpacing: "0.15em" }}>
             HAFALAN AL-QUR'AN v1.2 • B.O.A. INDONESIA © 2026
           </div>
-          <div style={{ fontSize: 9, color: "var(--border)", fontFamily: "'DM Sans', sans-serif", marginTop: 4 }}>
+          <div style={{ fontSize: 9, color: "var(--subtle)", fontFamily: "'DM Sans', sans-serif", marginTop: 4 }}>
             Berdasarkan 40 Referensi Ilmiah • recitationacademy.com
           </div>
         </div>
       </div>
     );
   };
+
+
+
+  // ===== DATA DZIKIR PAGI & PETANG =====
+  const DZIKIR_PAGI = [
+    {
+      id: "dz_p1", judul: "Ayat Kursi", ulang: 1,
+      sumber: "HR. An-Nasa'i, shahih",
+      arab: "اللَّهُ لَا إِلَٰهَ إِلَّا هُوَ الْحَيُّ الْقَيُّومُ ۚ لَا تَأْخُذُهُ سِنَةٌ وَلَا نَوْمٌ ۚ لَهُ مَا فِي السَّمَاوَاتِ وَمَا فِي الْأَرْضِ",
+      latin: "Allāhu lā ilāha illā huw, al-ḥayyul-qayyūm, lā ta'khudhuhu sinatuw walā nawm, lahū mā fis-samāwāti wa mā fil-arḍ...",
+      arti: "Allah, tidak ada tuhan selain Dia, Yang Mahahidup, Yang terus menerus mengurus makhluk-Nya, tidak mengantuk dan tidak tidur. Milik-Nya apa yang ada di langit dan di bumi...",
+      faedah: "Siapa yang membaca Ayat Kursi setiap pagi, ia akan senantiasa berada dalam perlindungan Allah hingga petang. (HR. Al-Hakim, shahih)",
+    },
+    {
+      id: "dz_p2", judul: "Surah Al-Ikhlas, Al-Falaq, An-Nas", ulang: 3,
+      sumber: "HR. Abu Dawud & At-Tirmidzi, hasan shahih",
+      arab: "قُلْ هُوَ اللَّهُ أَحَدٌ ۞ قُلْ أَعُوذُ بِرَبِّ الْفَلَقِ ۞ قُلْ أَعُوذُ بِرَبِّ النَّاسِ",
+      latin: "Qul huwallāhu aḥad... Qul a'ūdhu birabbil-falaq... Qul a'ūdhu birabbin-nās...",
+      arti: "Al-Ikhlas, Al-Falaq, dan An-Nas — dibaca masing-masing 3 kali setiap pagi dan petang",
+      faedah: "Nabi ﷺ bersabda: 'Membaca ketiga surah ini tiga kali di pagi dan petang sudah cukup bagimu dari segala sesuatu.' (HR. Abu Dawud, hasan)",
+    },
+    {
+      id: "dz_p3", judul: "Doa Sayyidul Istighfar", ulang: 1,
+      sumber: "HR. Al-Bukhari no. 6306",
+      arab: "اللَّهُمَّ أَنْتَ رَبِّي لَا إِلَهَ إِلَّا أَنْتَ، خَلَقْتَنِي وَأَنَا عَبْدُكَ، وَأَنَا عَلَى عَهْدِكَ وَوَعْدِكَ مَا اسْتَطَعْتُ، أَعُوذُ بِكَ مِنْ شَرِّ مَا صَنَعْتُ، أَبُوءُ لَكَ بِنِعْمَتِكَ عَلَيَّ وَأَبُوءُ بِذَنْبِي فَاغْفِرْ لِي فَإِنَّهُ لَا يَغْفِرُ الذُّنُوبَ إِلَّا أَنْتَ",
+      latin: "Allāhumma anta rabbī lā ilāha illā anta, khalaqtanī wa anā 'abduk, wa anā 'alā 'ahdika wa wa'dika mastatha'tu, a'ūdhu bika min syarri mā ṣana'tu, abū'u laka bini'matika 'alayya wa abū'u bidhanbī faghfir lī fa'innahū lā yaghfirudhdhunūba illā anta",
+      arti: "Ya Allah, Engkau adalah Tuhanku, tiada tuhan selain Engkau. Engkau menciptakanku dan aku adalah hamba-Mu. Aku berada di atas perjanjian-Mu dan janji-Mu semampuku. Aku berlindung kepada-Mu dari kejahatan yang aku perbuat. Aku mengakui nikmat-Mu atasku dan aku mengakui dosaku, maka ampunilah aku karena sesungguhnya tidak ada yang mengampuni dosa kecuali Engkau",
+      faedah: "Nabi ﷺ bersabda: 'Siapa yang mengucapkannya dengan yakin di pagi hari lalu meninggal sebelum petang, ia masuk surga. Begitu pula jika dibaca petang hari.' (HR. Bukhari)",
+    },
+    {
+      id: "dz_p4", judul: "Tasbih, Tahmid, Tahlil, Takbir", ulang: 33,
+      sumber: "HR. Muslim no. 597",
+      arab: "سُبْحَانَ اللهِ ۞ الْحَمْدُ لِلَّهِ ۞ لَا إِلَهَ إِلَّا اللهُ ۞ اللهُ أَكْبَرُ",
+      latin: "Subḥānallāh (33×) • Alḥamdulillāh (33×) • Allāhu Akbar (33×) • Lā ilāha illallāhu waḥdahū lā syarīka lahu, lahul-mulku wa lahul-ḥamdu wa huwa 'alā kulli syay'in qadīr (1×)",
+      arti: "Maha Suci Allah (33×) • Segala puji bagi Allah (33×) • Allah Maha Besar (33×) • Tidak ada tuhan kecuali Allah semata, tidak ada sekutu bagi-Nya, milik-Nya segala kerajaan dan pujian, dan Dia Mahakuasa atas segala sesuatu (1×)",
+      faedah: "Nabi ﷺ bersabda: 'Siapa yang setelah setiap sholat bertasbih 33×, bertahmid 33×, bertakbir 33×... diampuni dosanya meski sebanyak buih lautan.' (HR. Muslim)",
+    },
+    {
+      id: "dz_p5", judul: "Doa Perlindungan Pagi", ulang: 3,
+      sumber: "HR. Abu Dawud no. 5069, shahih",
+      arab: "بِسْمِ اللَّهِ الَّذِي لَا يَضُرُّ مَعَ اسْمِهِ شَيْءٌ فِي الْأَرْضِ وَلَا فِي السَّمَاءِ وَهُوَ السَّمِيعُ الْعَلِيمُ",
+      latin: "Bismillāhil-ladhī lā yaḍurru ma'asmihi syay'un fil-arḍi wa lā fis-samā', wa huwas-samī'ul-'alīm",
+      arti: "Dengan nama Allah yang bersama nama-Nya tidak ada sesuatu pun yang dapat memberi mudarat di bumi maupun di langit, dan Dia Maha Mendengar lagi Maha Mengetahui",
+      faedah: "Nabi ﷺ bersabda: 'Siapa yang mengucapkannya tiga kali di pagi dan petang, tidak ada sesuatu pun yang membahayakannya.' (HR. Abu Dawud, shahih)",
+    },
+    {
+      id: "dz_p6", judul: "Doa Keselamatan & Afiyah", ulang: 3,
+      sumber: "HR. At-Tirmidzi no. 3388, hasan",
+      arab: "اللَّهُمَّ إِنِّي أَسْأَلُكَ الْعَفْوَ وَالْعَافِيَةَ فِي الدُّنْيَا وَالآخِرَةِ، اللَّهُمَّ إِنِّي أَسْأَلُكَ الْعَفْوَ وَالْعَافِيَةَ فِي دِينِي وَدُنْيَايَ وَأَهْلِي وَمَالِي",
+      latin: "Allāhumma innī as'alukal-'afwa wal-'āfiyata fid-dunyā wal-ākhirah. Allāhumma innī as'alukal-'afwa wal-'āfiyata fī dīnī wa dunyāya wa ahlī wa mālī",
+      arti: "Ya Allah, sesungguhnya aku memohon kepada-Mu maaf dan kesehatan di dunia dan akhirat. Ya Allah, aku memohon kepada-Mu maaf dan kesehatan dalam agamaku, duniaku, keluargaku, dan hartaku",
+      faedah: "Ibnu Umar berkata: Nabi ﷺ tidak pernah meninggalkan doa ini setiap pagi dan petang. 'Tidak ada yang lebih baik yang diminta seseorang selain 'afiyah (keselamatan/kesehatan).' (HR. At-Tirmidzi)",
+    },
+    {
+      id: "dz_p7", judul: "Sholawat Ibrahimiyah", ulang: 10,
+      sumber: "HR. Al-Bukhari & Muslim",
+      arab: "اللَّهُمَّ صَلِّ عَلَى مُحَمَّدٍ وَعَلَى آلِ مُحَمَّدٍ كَمَا صَلَّيْتَ عَلَى إِبْرَاهِيمَ وَعَلَى آلِ إِبْرَاهِيمَ، إِنَّكَ حَمِيدٌ مَجِيدٌ",
+      latin: "Allāhumma ṣalli 'alā Muḥammadin wa 'alā āli Muḥammad, kamā ṣallayta 'alā Ibrāhīma wa 'alā āli Ibrāhīm, innaka ḥamīdum majīd",
+      arti: "Ya Allah, limpahkanlah sholawat kepada Muhammad dan keluarga Muhammad, sebagaimana Engkau melimpahkan sholawat kepada Ibrahim dan keluarga Ibrahim. Sesungguhnya Engkau Maha Terpuji lagi Maha Mulia",
+      faedah: "Nabi ﷺ bersabda: 'Siapa yang bersholawat kepadaku 10 kali di pagi hari, Allah akan melindunginya dari segala kejelekan di hari itu.' (HR. An-Nasa'i, hasan)",
+    },
+  ];
+
+  const DZIKIR_PETANG = [
+    {
+      id: "dz_t1", judul: "Ayat Kursi", ulang: 1,
+      sumber: "HR. An-Nasa'i, shahih",
+      arab: "اللَّهُ لَا إِلَٰهَ إِلَّا هُوَ الْحَيُّ الْقَيُّومُ ۚ لَا تَأْخُذُهُ سِنَةٌ وَلَا نَوْمٌ ۚ لَهُ مَا فِي السَّمَاوَاتِ وَمَا فِي الْأَرْضِ",
+      latin: "Allāhu lā ilāha illā huw, al-ḥayyul-qayyūm, lā ta'khudhuhu sinatuw walā nawm, lahū mā fis-samāwāti wa mā fil-arḍ...",
+      arti: "Allah, tidak ada tuhan selain Dia, Yang Mahahidup, Yang terus menerus mengurus makhluk-Nya, tidak mengantuk dan tidak tidur. Milik-Nya apa yang ada di langit dan di bumi...",
+      faedah: "Siapa yang membaca Ayat Kursi setiap petang, ia akan senantiasa berada dalam perlindungan Allah hingga pagi. (HR. Al-Hakim)",
+    },
+    {
+      id: "dz_t2", judul: "Surah Al-Ikhlas, Al-Falaq, An-Nas", ulang: 3,
+      sumber: "HR. Abu Dawud & At-Tirmidzi, hasan shahih",
+      arab: "قُلْ هُوَ اللَّهُ أَحَدٌ ۞ قُلْ أَعُوذُ بِرَبِّ الْفَلَقِ ۞ قُلْ أَعُوذُ بِرَبِّ النَّاسِ",
+      latin: "Qul huwallāhu aḥad... Qul a'ūdhu birabbil-falaq... Qul a'ūdhu birabbin-nās...",
+      arti: "Dibaca masing-masing 3 kali setiap petang — perlindungan dari segala kejahatan makhluk, kegelapan, sihir, dan bisikan setan",
+      faedah: "Imam Ibnu Qayyim: ketiga surah ini adalah 'perisai qalbu' yang melindungi dari segala gangguan lahir dan batin.",
+    },
+    {
+      id: "dz_t3", judul: "Doa Memasuki Petang", ulang: 1,
+      sumber: "HR. Abu Dawud no. 5068, shahih",
+      arab: "أَمْسَيْنَا وَأَمْسَى الْمُلْكُ لِلَّهِ، وَالْحَمْدُ لِلَّهِ، لَا إِلَهَ إِلَّا اللَّهُ وَحْدَهُ لَا شَرِيكَ لَهُ، لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ وَهُوَ عَلَى كُلِّ شَيْءٍ قَدِيرٌ",
+      latin: "Amsaynā wa amsal-mulku lillāh, walḥamdulillāh, lā ilāha illallāhu waḥdahū lā syarīka lah, lahul-mulku wa lahul-ḥamdu wa huwa 'alā kulli syay'in qadīr",
+      arti: "Kami memasuki waktu petang dan kerajaan hanya milik Allah. Segala puji bagi Allah. Tidak ada tuhan kecuali Allah semata, tidak ada sekutu bagi-Nya. Milik-Nya segala kerajaan dan pujian, dan Dia Mahakuasa atas segala sesuatu",
+      faedah: "Lafaz ini adalah pengakuan tauhid yang memperbarui ikatan seorang hamba dengan Tuhannya di setiap pergantian siang dan malam.",
+    },
+    {
+      id: "dz_t4", judul: "Doa Sayyidul Istighfar", ulang: 1,
+      sumber: "HR. Al-Bukhari no. 6306",
+      arab: "اللَّهُمَّ أَنْتَ رَبِّي لَا إِلَهَ إِلَّا أَنْتَ، خَلَقْتَنِي وَأَنَا عَبْدُكَ، وَأَنَا عَلَى عَهْدِكَ وَوَعْدِكَ مَا اسْتَطَعْتُ، أَعُوذُ بِكَ مِنْ شَرِّ مَا صَنَعْتُ، أَبُوءُ لَكَ بِنِعْمَتِكَ عَلَيَّ وَأَبُوءُ بِذَنْبِي فَاغْفِرْ لِي فَإِنَّهُ لَا يَغْفِرُ الذُّنُوبَ إِلَّا أَنْتَ",
+      latin: "Allāhumma anta rabbī lā ilāha illā anta, khalaqtanī wa anā 'abduk...",
+      arti: "Ya Allah, Engkau adalah Tuhanku, tiada tuhan selain Engkau. Engkau menciptakanku dan aku adalah hamba-Mu... (lihat lengkapnya di tab Doa Sebelum Hafal)",
+      faedah: "Siapa yang membaca ini di petang hari dengan penuh keyakinan lalu meninggal malam itu, maka ia masuk surga. (HR. Bukhari)",
+    },
+    {
+      id: "dz_t5", judul: "Doa Perlindungan dari Keburukan Malam", ulang: 3,
+      sumber: "HR. At-Tirmidzi no. 3391, hasan shahih",
+      arab: "أَعُوذُ بِكَلِمَاتِ اللَّهِ التَّامَّاتِ مِنْ شَرِّ مَا خَلَقَ",
+      latin: "A'ūdhu bikalimātillāhit-tāmmāti min syarri mā khalaq",
+      arti: "Aku berlindung dengan kalimat-kalimat Allah yang sempurna dari kejahatan apa yang Dia ciptakan",
+      faedah: "Nabi ﷺ bersabda: 'Siapa yang mengucapkannya ketika singgah di suatu tempat, tidak ada sesuatu pun yang membahayakannya sampai ia meninggalkan tempat itu.' (HR. Muslim)",
+    },
+    {
+      id: "dz_t6", judul: "Doa Mohon Ampun & Taubat", ulang: 3,
+      sumber: "HR. At-Tirmidzi no. 3397, hasan",
+      arab: "أَسْتَغْفِرُ اللَّهَ الْعَظِيمَ الَّذِي لَا إِلَهَ إِلَّا هُوَ الْحَيُّ الْقَيُّومُ وَأَتُوبُ إِلَيْهِ",
+      latin: "Astaghfirullāhal-'aẓīmal-ladhī lā ilāha illā huwal-ḥayyul-qayyūmu wa atūbu ilaih",
+      arti: "Aku memohon ampun kepada Allah Yang Maha Agung, yang tidak ada tuhan selain Dia, Yang Mahahidup lagi Maha Berdiri Sendiri, dan aku bertaubat kepada-Nya",
+      faedah: "Nabi ﷺ bersabda: 'Siapa yang membacanya, diampuni dosanya meski sebesar buih lautan.' (HR. At-Tirmidzi, hasan)",
+    },
+    {
+      id: "dz_t7", judul: "Tasbih, Tahmid, Tahlil, Takbir", ulang: 33,
+      sumber: "HR. Muslim no. 597",
+      arab: "سُبْحَانَ اللهِ ۞ الْحَمْدُ لِلَّهِ ۞ لَا إِلَهَ إِلَّا اللهُ ۞ اللهُ أَكْبَرُ",
+      latin: "Subḥānallāh (33×) • Alḥamdulillāh (33×) • Allāhu Akbar (33×) • Lā ilāha illallāhu waḥdahū lā syarīka lahu, lahul-mulku wa lahul-ḥamdu wa huwa 'alā kulli syay'in qadīr (1×)",
+      arti: "Maha Suci Allah (33×) • Segala puji bagi Allah (33×) • Allah Maha Besar (33×) • Tidak ada tuhan kecuali Allah semata... (1×)",
+      faedah: "Menutup hari dengan kalimat tasbih adalah sunnah yang sangat dianjurkan. Diampuni dosanya meski sebanyak buih lautan. (HR. Muslim)",
+    },
+    {
+      id: "dz_t8", judul: "Doa Sebelum Tidur (Penutup Petang)", ulang: 1,
+      sumber: "HR. Al-Bukhari no. 6313",
+      arab: "بِاسْمِكَ اللَّهُمَّ أَمُوتُ وَأَحْيَا",
+      latin: "Bismikallāhumma amūtu wa aḥyā",
+      arti: "Dengan menyebut nama-Mu ya Allah, aku mati dan aku hidup",
+      faedah: "Dibaca saat berbaring hendak tidur. Nabi ﷺ mengajarkan kalimat ini sebagai penutup hari — penyerahan diri total kepada Allah antara hidup dan mati setiap malam.",
+    },
+  ];
+  const DZIKIR_SHOLAT = [
+    {
+      id: "ds_1",
+      judul: "Istighfar 3×",
+      urutan: 1,
+      waktu: "Langsung setelah salam",
+      color: "var(--green)",
+      arab: "أَسْتَغْفِرُ اللهَ",
+      latin: "Astaghfirullāh (3×)",
+      arti: "Aku memohon ampun kepada Allah (dibaca 3 kali)",
+      sumber: "HR. Muslim no. 591",
+      faedah: "Nabi ﷺ membaca istighfar 3× langsung setelah salam sebelum berpindah posisi. Ibnu Rajab Al-Hanbali: istighfar setelah ibadah adalah mengakui kekurangan dalam beribadah kepada Allah yang Mahasempurna.",
+    },
+    {
+      id: "ds_2",
+      judul: "Doa Setelah Salam",
+      urutan: 2,
+      waktu: "Setelah istighfar 3×",
+      color: "var(--green)",
+      arab: "اللَّهُمَّ أَنْتَ السَّلَامُ وَمِنْكَ السَّلَامُ، تَبَارَكْتَ يَا ذَا الْجَلَالِ وَالْإِكْرَامِ",
+      latin: "Allāhumma antas-salāmu wa minkas-salām, tabārakta yā dhal-jalāli wal-ikrām",
+      arti: "Ya Allah, Engkau adalah As-Salam (Maha Sejahtera) dan dari-Mulah kesejahteraan itu. Maha Berkah Engkau wahai Dzat yang memiliki keagungan dan kemuliaan",
+      sumber: "HR. Muslim no. 592 dari Tsauban radhiyallahu 'anhu",
+      faedah: "Imam An-Nawawi: salam dalam doa ini adalah nama Allah yang mengandung makna keselamatan yang sempurna. Nabi ﷺ tidak pernah meninggalkan doa ini setelah setiap sholat fardhu.",
+    },
+    {
+      id: "ds_3",
+      judul: "Tasbih, Tahmid, Takbir — 33×",
+      urutan: 3,
+      waktu: "Setelah doa salam",
+      color: "var(--blue)",
+      arab: "سُبْحَانَ اللهِ ۞ الْحَمْدُ لِلَّهِ ۞ اللهُ أَكْبَرُ",
+      latin: "Subḥānallāh (33×) — Alḥamdulillāh (33×) — Allāhu Akbar (33×)\n\nPenutup: Lā ilāha illallāhu waḥdahū lā syarīka lah, lahul-mulku wa lahul-ḥamdu wa huwa 'alā kulli syay'in qadīr (1×)",
+      arti: "Maha Suci Allah 33× • Segala puji bagi Allah 33× • Allah Maha Besar 33× • Penutup: Tidak ada tuhan kecuali Allah semata, tidak ada sekutu bagi-Nya, milik-Nya segala kerajaan dan pujian, Dia Mahakuasa atas segala sesuatu (1×)",
+      sumber: "HR. Muslim no. 597 dari Abu Hurairah radhiyallahu 'anhu",
+      faedah: "Nabi ﷺ bersabda: 'Siapa yang bertasbih 33×, bertahmid 33×, bertakbir 33× setelah setiap sholat... diampuni dosanya meski sebanyak buih lautan.' Ini adalah dzikir paling utama setelah sholat.",
+    },
+    {
+      id: "ds_4",
+      judul: "Ayat Kursi",
+      urutan: 4,
+      waktu: "Setelah tasbih-tahmid-takbir",
+      color: "var(--gold)",
+      arab: "اللَّهُ لَا إِلَٰهَ إِلَّا هُوَ الْحَيُّ الْقَيُّومُ ۚ لَا تَأْخُذُهُ سِنَةٌ وَلَا نَوْمٌ ۚ لَهُ مَا فِي السَّمَاوَاتِ وَمَا فِي الْأَرْضِ ۗ مَنْ ذَا الَّذِي يَشْفَعُ عِنْدَهُ إِلَّا بِإِذْنِهِ ۚ يَعْلَمُ مَا بَيْنَ أَيْدِيهِمْ وَمَا خَلْفَهُمْ ۖ وَلَا يُحِيطُونَ بِشَيْءٍ مِنْ عِلْمِهِ إِلَّا بِمَا شَاءَ ۚ وَسِعَ كُرْسِيُّهُ السَّمَاوَاتِ وَالْأَرْضَ ۖ وَلَا يَئُودُهُ حِفْظُهُمَا ۚ وَهُوَ الْعَلِيُّ الْعَظِيمُ",
+      latin: "Allāhu lā ilāha illā huw, al-ḥayyul-qayyūm, lā ta'khudhuhu sinatuw walā nawm, lahū mā fis-samāwāti wa mā fil-arḍ, man dhallladhī yasyfa'u 'indahū illā bi'idhnih, ya'lamu mā bayna aydīhim wa mā khalfahum, wa lā yuḥīṭūna bisyay'im min 'ilmihī illā bimā syā', wasi'a kursiyyuhus-samāwāti wal-arḍ, wa lā ya'ūduhū ḥifẓuhumā, wa huwal-'aliyyul-'aẓīm",
+      arti: "Allah — tidak ada tuhan selain Dia — Yang Mahahidup, Yang terus-menerus mengurus makhluk-Nya. Tidak mengantuk dan tidak tidur. Milik-Nya apa yang ada di langit dan di bumi. Tidak ada yang dapat memberi syafaat di sisi-Nya tanpa izin-Nya. Dia mengetahui apa yang ada di hadapan dan di belakang mereka. Mereka tidak mengetahui sesuatu pun dari ilmu-Nya kecuali yang Dia kehendaki. Kursi-Nya meliputi langit dan bumi. Dia tidak merasa berat memelihara keduanya. Dan Dia Mahatinggi lagi Maha Agung. (QS. Al-Baqarah: 255)",
+      sumber: "HR. An-Nasa'i, Ibnu Hibban — shahih",
+      faedah: "Nabi ﷺ bersabda: 'Siapa yang membaca Ayat Kursi setelah setiap sholat fardhu, tidak ada yang menghalanginya masuk surga kecuali kematian.' (HR. An-Nasa'i, shahih menurut Ibnu Hibban). Ini adalah dzikir yang paling dianjurkan ulama setelah setiap sholat.",
+    },
+    {
+      id: "ds_5",
+      judul: "Tahlil & La Ilaha Illallah",
+      urutan: 5,
+      waktu: "Boleh dibaca kapan saja setelah sholat",
+      color: "var(--gold)",
+      arab: "لَا إِلَهَ إِلَّا اللهُ وَحْدَهُ لَا شَرِيكَ لَهُ، لَهُ الْمُلْكُ وَلَهُ الْحَمْدُ وَهُوَ عَلَى كُلِّ شَيْءٍ قَدِيرٌ",
+      latin: "Lā ilāha illallāhu waḥdahū lā syarīka lah, lahul-mulku wa lahul-ḥamdu wa huwa 'alā kulli syay'in qadīr",
+      arti: "Tidak ada tuhan kecuali Allah semata, tidak ada sekutu bagi-Nya. Milik-Nya segala kerajaan dan segala pujian. Dan Dia Mahakuasa atas segala sesuatu",
+      sumber: "HR. Al-Bukhari no. 844 & Muslim no. 594",
+      faedah: "Nabi ﷺ bersabda: 'Siapa yang mengucapkan ini setelah setiap sholat fardhu, diampuni dosanya meski sebanyak buih lautan.' (HR. Muslim). Kalimat tahlil ini adalah dzikir paling agung dalam Islam.",
+    },
+    {
+      id: "ds_6",
+      judul: "Doa Minta Pertolongan Beribadah",
+      urutan: 6,
+      waktu: "Khusus setelah sholat Subuh & Ashar — sunnah muakkad",
+      color: "var(--purple)",
+      arab: "اللَّهُمَّ أَعِنِّي عَلَى ذِكْرِكَ وَشُكْرِكَ وَحُسْنِ عِبَادَتِكَ",
+      latin: "Allāhumma a'innī 'alā dhikrika wa syukrika wa ḥusni 'ibādatik",
+      arti: "Ya Allah, tolonglah aku untuk berdzikir kepada-Mu, bersyukur kepada-Mu, dan beribadah kepada-Mu dengan baik",
+      sumber: "HR. Abu Dawud no. 1522, shahih — diajarkan Nabi ﷺ kepada Mu'adz bin Jabal",
+      faedah: "Nabi ﷺ berpesan kepada Mu'adz: 'Wahai Mu'adz, demi Allah aku sungguh menyayangimu, maka jangan pernah tinggalkan setiap selesai sholat: Allāhumma a'innī...' Doa ini mencakup tiga fondasi ibadah: dzikir, syukur, dan husn al-'ibadah.",
+    },
+    {
+      id: "ds_7",
+      judul: "Doa Berlindung dari 4 Perkara",
+      urutan: 7,
+      waktu: "Setelah setiap sholat fardhu",
+      color: "var(--purple)",
+      arab: "اللَّهُمَّ إِنِّي أَعُوذُ بِكَ مِنَ الْجُبْنِ، وَأَعُوذُ بِكَ أَنْ أُرَدَّ إِلَى أَرْذَلِ الْعُمُرِ، وَأَعُوذُ بِكَ مِنْ فِتْنَةِ الدُّنْيَا، وَأَعُوذُ بِكَ مِنْ عَذَابِ الْقَبْرِ",
+      latin: "Allāhumma innī a'ūdhu bika minal-jubn, wa a'ūdhu bika an uradda ilā ardhali-l'umur, wa a'ūdhu bika min fitnatid-dunyā, wa a'ūdhu bika min 'adhābil-qabr",
+      arti: "Ya Allah, aku berlindung kepada-Mu dari sifat pengecut, aku berlindung kepada-Mu dari dikembalikan ke usia yang paling lemah (pikun), aku berlindung kepada-Mu dari fitnah dunia, dan aku berlindung kepada-Mu dari azab kubur",
+      sumber: "HR. Al-Bukhari no. 6374",
+      faedah: "Doa ini adalah perlindungan komprehensif: dari kelemahan jiwa (pengecut), kelemahan jasad (pikun), godaan dunia, dan siksa akhirat. Cocok sekali bagi penghafal Al-Qur'an yang butuh keberanian, kekuatan ingatan, fokus dari dunia, dan bekal akhirat.",
+    },
+    {
+      id: "ds_8",
+      judul: "Doa Kebaikan Dunia & Akhirat",
+      urutan: 8,
+      waktu: "Setelah setiap sholat",
+      color: "var(--blue)",
+      arab: "رَبَّنَا آتِنَا فِي الدُّنْيَا حَسَنَةً وَفِي الْآخِرَةِ حَسَنَةً وَقِنَا عَذَابَ النَّارِ",
+      latin: "Rabbanā ātinā fid-dunyā ḥasanatan wa fil-ākhirati ḥasanatan wa qinā 'adhāban-nār",
+      arti: "Ya Tuhan kami, berikanlah kepada kami kebaikan di dunia dan kebaikan di akhirat, dan peliharalah kami dari azab neraka",
+      sumber: "QS. Al-Baqarah: 201 — HR. Al-Bukhari & Muslim",
+      faedah: "Anas bin Malik berkata: 'Doa yang paling banyak dipanjatkan Nabi ﷺ adalah doa ini.' (HR. Muslim). Imam As-Suyuthi: doa ini mencakup seluruh kebaikan dunia dan akhirat dalam satu kalimat yang singkat dan sempurna.",
+    },
+    {
+      id: "ds_9",
+      judul: "Doa Nabi untuk Keluarga & Umat",
+      urutan: 9,
+      waktu: "Setelah sholat Subuh & Maghrib",
+      color: "var(--green)",
+      arab: "اللَّهُمَّ اغْفِرْ لِي وَلِوَالِدَيَّ وَارْحَمْهُمَا كَمَا رَبَّيَانِي صَغِيرًا",
+      latin: "Allāhummagh-fir lī wa liwālidayya warḥamhumā kamā rabbayānī ṣaghīrā",
+      arti: "Ya Allah, ampunilah aku dan kedua orang tuaku, dan kasihilah mereka sebagaimana mereka telah mendidikku waktu kecil",
+      sumber: "Terinspirasi dari QS. Al-Isra: 24, doa yang diajarkan para ulama",
+      faedah: "Imam Ibnu Katsir: mendoakan orang tua setelah sholat adalah amalan terbaik seorang anak. Bagi penghafal Al-Qur'an, pahala hafalannya akan mengalir juga kepada orang tua yang telah mendukung dan mendidiknya.",
+    },
+    {
+      id: "ds_10",
+      judul: "Sholawat Penutup Majlis",
+      urutan: 10,
+      waktu: "Penutup setelah semua dzikir",
+      color: "var(--gold)",
+      arab: "سُبْحَانَكَ اللَّهُمَّ وَبِحَمْدِكَ، أَشْهَدُ أَنْ لَا إِلَهَ إِلَّا أَنْتَ، أَسْتَغْفِرُكَ وَأَتُوبُ إِلَيْكَ",
+      latin: "Subḥānakallāhumma wa biḥamdik, asyhadu an lā ilāha illā anta, astaghfiruka wa atūbu ilaik",
+      arti: "Maha Suci Engkau ya Allah dan dengan memuji-Mu, aku bersaksi bahwa tidak ada tuhan selain Engkau, aku memohon ampun kepada-Mu dan bertaubat kepada-Mu",
+      sumber: "HR. At-Tirmidzi no. 3433, shahih — Kaffaratul Majlis (penebus majlis)",
+      faedah: "Doa kaffaratul majlis ini cocok dibaca sebagai penutup seluruh rangkaian dzikir setelah sholat. Ia menghapus kekurangan dan kelalaian yang terjadi selama sholat dan dzikir.",
+    },
+  ];
+
+
+
+  // ===== DOA SCREEN =====
+  const DoaScreen = () => {
+    const [activeTab, setActiveTabDoa] = useState("sebelum");
+    const [expandedDoa, setExpandedDoa] = useState(null);
+    const [expandedTips, setExpandedTips] = useState(null);
+    const [expandedDzikir, setExpandedDzikir] = useState(null);
+    const [dzikir_waktu, setDzikirWaktu] = useState("pagi");
+
+    const DOA_SEBELUM = [
+      {
+        id: "niat",
+        judul: "Niat Menghafal Al-Qur'an",
+        arab: "نَوَيْتُ حِفْظَ الْقُرْآنِ الْكَرِيمِ لِوَجْهِ اللهِ تَعَالَى",
+        latin: "Nawaytu ḥifẓal-Qur'ānil-Karīmi liwajhillāhi ta'ālā",
+        arti: "Aku niatkan menghafal Al-Qur'an Al-Karim semata-mata karena Allah Ta'ala",
+        sumber: "Niat yang diajarkan para ulama hafidz sebagai pembuka sesi hafalan",
+        faedah: "Imam Ibnu Rajab al-Hanbali: 'Amal dimulai dari niat yang lurus. Hafalan yang diniatkan ikhlas karena Allah akan mendapat pertolongan khusus dari-Nya dan menjadi lebih mudah diingat.'",
+        color: "var(--gold)",
+      },
+      {
+        id: "ilmu",
+        judul: "Doa Mohon Ilmu yang Bermanfaat",
+        arab: "اللَّهُمَّ إِنِّي أَسْأَلُكَ عِلْمًا نَافِعًا، وَرِزْقًا طَيِّبًا، وَعَمَلًا مُتَقَبَّلًا",
+        latin: "Allāhumma innī as'aluka 'ilman nāfi'an, wa rizqan ṭayyiban, wa 'amalan mutaqabbalan",
+        arti: "Ya Allah, sesungguhnya aku memohon kepada-Mu ilmu yang bermanfaat, rezeki yang baik, dan amal yang diterima",
+        sumber: "HR. Ibnu Majah no. 925, shahih — dibaca setelah salam Subuh",
+        faedah: "Imam Nawawi dalam Al-Adzkar: dianjurkan membaca doa ini sebelum setiap majelis ilmu dan sesi menghafal Al-Qur'an",
+        color: "var(--gold)",
+      },
+      {
+        id: "fahm",
+        judul: "Doa Mohon Kemudahan Memahami",
+        arab: "رَبِّ اشْرَحْ لِي صَدْرِي وَيَسِّرْ لِي أَمْرِي وَاحْلُلْ عُقْدَةً مِنْ لِسَانِي يَفْقَهُوا قَوْلِي",
+        latin: "Rabbisy-raḥlī ṣadrī, wa yassir lī amrī, waḥlul 'uqdatam-millisānī yafqahū qawlī",
+        arti: "Ya Tuhanku, lapangkanlah dadaku, mudahkanlah urusanku, dan lepaskanlah kekakuan dari lidahku agar mereka memahami perkataanku",
+        sumber: "QS. Thaha: 25–28 — doa Nabi Musa 'alaihissalam",
+        faedah: "Imam Al-Qurthubi: doa ini adalah 'kunci langit' untuk kemudahan berbicara dan menghafal. Para ulama hafidz membacanya sebagai pembuka setiap sesi hafalan.",
+        color: "var(--blue)",
+      },
+      {
+        id: "hifz",
+        judul: "Doa Khusus Penghafal Al-Qur'an",
+        arab: "اللَّهُمَّ ارْحَمْنِي بِالْقُرْآنِ، وَاجْعَلْهُ لِي إِمَامًا وَنُورًا وَهُدىً وَرَحْمَةً، اللَّهُمَّ ذَكِّرْنِي مِنْهُ مَا نَسِيتُ، وَعَلِّمْنِي مِنْهُ مَا جَهِلْتُ",
+        latin: "Allāhummarḥamnī bil-Qur'ān, waj'alhu lī imāman wa nūran wa hudan wa raḥmah. Allāhumma dhakkirnī minhu mā nasītu wa 'allimnī minhu mā jahiltu",
+        arti: "Ya Allah, rahmatilah aku dengan Al-Qur'an, jadikanlah ia bagiku pemimpin, cahaya, petunjuk, dan rahmat. Ya Allah, ingatkanlah aku dari apa yang aku lupa darinya, dan ajarilah aku dari apa yang aku tidak ketahui darinya",
+        sumber: "HR. Al-Hakim (1/739), dihasankan oleh Syaikh Al-Albani",
+        faedah: "Imam Ibnu Katsir menyebut doa ini sebagai doa khusus para huffadz (penghafal). Kalimat 'dzakkirnī mā nasītu' secara langsung memohon kepada Allah untuk membantu mengingat hafalan yang terlupa.",
+        color: "var(--purple)",
+      },
+      {
+        id: "tawfiq",
+        judul: "Doa Mohon Taufik & Kemudahan",
+        arab: "اللَّهُمَّ لَا سَهْلَ إِلَّا مَا جَعَلْتَهُ سَهْلًا، وَأَنْتَ تَجْعَلُ الْحَزْنَ إِذَا شِئْتَ سَهْلًا",
+        latin: "Allāhumma lā sahla illā mā ja'altahu sahlā, wa anta taj'alul-ḥazna idhā shi'ta sahlā",
+        arti: "Ya Allah, tidak ada yang mudah kecuali apa yang Engkau jadikan mudah, dan Engkau menjadikan yang sulit itu mudah jika Engkau menghendaki",
+        sumber: "HR. Ibnu Hibban, shahih",
+        faedah: "Imam Ibnul Qayyim: doa ini adalah pengakuan bahwa segala kemudahan berasal dari Allah. Membacanya sebelum menghafal menanamkan tawakal yang menguatkan hati untuk terus berusaha.",
+        color: "var(--green)",
+      },
+    ];
+
+    const DOA_SESUDAH = [
+      {
+        id: "syukur",
+        judul: "Doa Syukur Selesai Menghafal",
+        arab: "الْحَمْدُ لِلَّهِ الَّذِي بِنِعْمَتِهِ تَتِمُّ الصَّالِحَاتُ",
+        latin: "Alḥamdulillāhil-ladhī bini'matihī tatimmuṣ-ṣāliḥāt",
+        arti: "Segala puji bagi Allah yang dengan nikmat-Nya segala kebaikan menjadi sempurna",
+        sumber: "HR. Al-Hakim dari Ibnu Abbas, dihasankan",
+        faedah: "Imam Al-Munawi: syukur atas nikmat menghafal akan menambah keberkahan hafalan dan memudahkan sesi berikutnya. Syukur adalah pupuk yang menumbuhkan nikmat.",
+        color: "var(--gold)",
+      },
+      {
+        id: "tsabat",
+        judul: "Doa Mohon Hafalan Dikuatkan",
+        arab: "اللَّهُمَّ ثَبِّتْنِي عَلَى حِفْظِ كِتَابِكَ، وَانْفَعْنِي بِهِ فِي الدُّنْيَا وَالآخِرَةِ",
+        latin: "Allāhumma thabbitnī 'alā ḥifẓi kitābik, wanfa'nī bihī fid-dunyā wal-ākhirah",
+        arti: "Ya Allah, teguhkanlah aku atas hafalan kitab-Mu, dan berilah aku manfaat darinya di dunia dan akhirat",
+        sumber: "Doa yang diajarkan para masyaikh Qur'an di pesantren-pesantren tahfidz",
+        faedah: "Syaikh Ibnu Baz: memohon kepada Allah untuk menjaga hafalan sama pentingnya dengan proses menghafal itu sendiri. Allah-lah penjaga sejati Al-Qur'an dalam dada.",
+        color: "var(--blue)",
+      },
+      {
+        id: "amal",
+        judul: "Doa Agar Hafalan Menjadi Amal",
+        arab: "اللَّهُمَّ إِنِّي أَعُوذُ بِكَ مِنْ عِلْمٍ لَا يَنْفَعُ، وَمِنْ قَلْبٍ لَا يَخْشَعُ، وَمِنْ نَفْسٍ لَا تَشْبَعُ، وَمِنْ دُعَاءٍ لَا يُسْمَعُ",
+        latin: "Allāhumma innī a'ūdhu bika min 'ilmin lā yanfa', wa min qalbin lā yakhsha', wa min nafsin lā tashba', wa min du'ā'in lā yusma'",
+        arti: "Ya Allah, aku berlindung kepada-Mu dari ilmu yang tidak bermanfaat, dari hati yang tidak khusyuk, dari jiwa yang tidak pernah puas, dan dari doa yang tidak didengar",
+        sumber: "HR. Muslim no. 2722, dari Zaid bin Arqam",
+        faedah: "Imam Nawawi: doa ini adalah benteng dari riya dan kesombongan ilmu. Penghafal Al-Qur'an sangat rentan terhadap ujian kesombongan, doa ini menjaganya.",
+        color: "var(--purple)",
+      },
+      {
+        id: "keluarga",
+        judul: "Doa untuk Keluarga Penghafal",
+        arab: "رَبَّنَا هَبْ لَنَا مِنْ أَزْوَاجِنَا وَذُرِّيَّاتِنَا قُرَّةَ أَعْيُنٍ وَاجْعَلْنَا لِلْمُتَّقِينَ إِمَامًا",
+        latin: "Rabbanā hab lanā min azwājinā wa dhurriyyātinā qurrata a'yunin waj'alnā lil-muttaqīna imāmā",
+        arti: "Ya Tuhan kami, anugerahkanlah kepada kami pasangan dan keturunan yang menyejukkan hati, dan jadikanlah kami pemimpin bagi orang-orang yang bertakwa",
+        sumber: "QS. Al-Furqan: 74",
+        faedah: "Syaikh Utsman Al-Khamis: penghafal yang mendoakan keluarganya mendapat keberkahan berlipat. Hafalan adalah warisan terindah yang bisa diteruskan ke anak-cucu.",
+        color: "var(--green)",
+      },
+    ];
+
+    const TIPS_ULAMA = [
+      {
+        id: "ikhlas",
+        icon: "✦",
+        judul: "Ikhlas & Niat yang Benar",
+        ulama: "Imam Ibnul Qayyim Al-Jauziyyah",
+        wafat: "751 H",
+        color: "var(--gold)",
+        isi: "Ikhlas adalah ruh dari setiap amal. Hafalan yang dicampuri riya' — meski satu huruf — akan menjadi beban di akhirat, bukan pahala. Periksa niat sebelum setiap sesi: 'Untuk siapa aku menghafal ini?'",
+        kutipan: "\"Al-Qur'an adalah firman Allah. Maka yang paling berhak menjaganya adalah mereka yang hatinya paling bersih dari selain Allah.\"",
+        amal: ["Perbarui niat setiap duduk untuk menghafal", "Sembunyikan hafalan — tidak perlu dipamerkan sebelum kuat", "Jadikan sholat sebagai tempat 'menguji' hafalan, bukan panggung"],
+      },
+      {
+        id: "istiqamah",
+        icon: "⟳",
+        judul: "Istiqamah Lebih Utama dari Banyak",
+        ulama: "Imam Al-Bukhari",
+        wafat: "256 H",
+        color: "var(--blue)",
+        isi: "Imam Al-Bukhari hafal Al-Qur'an sejak kecil dan tidak pernah meninggalkan wirid hariannya meski dalam perjalanan atau sakit. Beliau berkata: 'Amalan yang paling dicintai Allah adalah yang paling ajeg, meskipun sedikit.'",
+        kutipan: "\"Orang yang hafal sedikit tapi istiqamah muraja'ahnya lebih mulia dari yang hafal banyak lalu melupakannya.\"",
+        amal: ["Tetapkan target harian minimal: 3 ayat/hari", "Jangan skip muraja'ah meski hanya 5 menit", "Tandai kalender — streak konsekutif membangun motivasi"],
+      },
+      {
+        id: "wudhu",
+        icon: "◇",
+        judul: "Kebersihan Lahir Membantu Kebersihan Batin",
+        ulama: "Imam Malik bin Anas",
+        wafat: "179 H",
+        color: "var(--blue)",
+        isi: "Imam Malik tidak pernah membaca atau mengajarkan hadits kecuali dalam keadaan berwudhu dan berpakaian bersih. Beliau berkata bahwa Allah menjadikan ilmu suci, maka ia hanya akan hinggap di jiwa yang menjaga kesucian.",
+        kutipan: "\"Tidak pantas bagi seorang yang menyimpan kalam Allah di dadanya untuk bermalas-malasan dalam menjaga wudhu dan kebersihan.\"",
+        amal: ["Mulai sesi hafalan dalam keadaan berwudhu", "Pilih tempat bersih dan tenang, jauh dari TV/musik", "Kenakan pakaian yang sopan — tubuh yang terjaga memengaruhi fokus pikiran"],
+      },
+      {
+        id: "tadabbur",
+        icon: "◐",
+        judul: "Tadabbur Sebelum Menghafal",
+        ulama: "Imam Ibnu Jarir Al-Thabari",
+        wafat: "310 H",
+        color: "var(--purple)",
+        isi: "Al-Thabari menulis tafsir 30 jilid karena beliau meyakini bahwa memahami makna adalah fondasi hafalan yang kuat. Beliau selalu membaca terjemahan dan tafsir ringkas sebelum menghafalkan ayat apapun.",
+        kutipan: "\"Siapa yang menghafal tanpa memahami, ia seperti membangun rumah di atas pasir. Siapa yang memahami lalu menghafal, ia membangun di atas batu karang.\"",
+        amal: ["Baca terjemahan ayat target sebelum menghafal", "Tanyakan: apa yang Allah ingin aku pahami dari ayat ini?", "Hubungkan ayat dengan kehidupan nyata sehari-hari"],
+      },
+      {
+        id: "tilawah",
+        icon: "♪",
+        judul: "Perbanyak Tilawah Sebelum Menghafal",
+        ulama: "Imam As-Suyuthi",
+        wafat: "911 H",
+        color: "var(--purple)",
+        isi: "As-Suyuthi — ulama yang menulis lebih dari 500 kitab — membaca minimal 1 juz tilawah setiap hari seumur hidupnya. Beliau berkata bahwa telinga yang terbiasa mendengar ayat akan memudahkan lisan menghafalnya.",
+        kutipan: "\"Jangan langsung menghafal tanpa membaca dulu berkali-kali. Dengarkan sendiri suaramu membacannya — itu adalah cara paling alami otak menyimpan bunyi.\"",
+        amal: ["Baca ayat target minimal 7× dengan tartil sebelum menghafal", "Dengarkan murattal qari terpercaya", "Rekam suaramu sendiri dan dengarkan ulang"],
+      },
+      {
+        id: "lapar",
+        icon: "◉",
+        judul: "Hindari Perut Terlalu Kenyang",
+        ulama: "Imam Al-Ghazali",
+        wafat: "505 H",
+        color: "var(--green)",
+        isi: "Al-Ghazali dalam Ihya Ulumuddin menjelaskan bahwa terlalu kenyang adalah musuh ilmu dan hafalan. Darah yang mengalir ke perut akan mengurangi aliran ke otak, menyebabkan kantuk dan lemahnya konsentrasi.",
+        kutipan: "\"Kenyangnya perut adalah kekeringan hati, beratnya badan, hilangnya kecerdasan, dan lemahnya hafalan.\"",
+        amal: ["Menghafal terbaik: 1–2 jam setelah Subuh saat perut belum penuh", "Jika siang, tunggu 1,5 jam setelah makan besar", "Air putih cukup — dehidrasi ringan menurunkan memori 10–15%"],
+      },
+      {
+        id: "dosa",
+        icon: "✧",
+        judul: "Jauhi Maksiat, Jaga Akhlak",
+        ulama: "Imam Asy-Syafi'i",
+        wafat: "204 H",
+        color: "var(--green)",
+        isi: "Kisah masyhur: Imam Asy-Syafi'i mengadu kepada gurunya Imam Waqi' tentang hafalannya yang buruk. Waqi' menjawab: 'Tinggalkan maksiat, karena ilmu adalah cahaya dan cahaya Allah tidak diberikan kepada orang yang bermaksiat.'",
+        kutipan: "\"Ilmu adalah cahaya. Dan cahaya Allah tidak diberikan kepada orang yang bermaksiat.\" — Imam Waqi' kepada Asy-Syafi'i muda",
+        amal: ["Jaga pandangan dari yang haram — mata yang terjaga membantu fokus hafalan", "Hindari musik yang melalaikan — telinga yang terbiasa Al-Qur'an lebih tajam", "Perbanyak istighfar sebelum mulai — bersihkan hati seperti membersihkan layar"],
+      },
+      {
+        id: "muraja",
+        icon: "⟲",
+        judul: "Muraja'ah adalah Separuh Hafalan",
+        ulama: "Imam Ibnu Abi Syaibah",
+        wafat: "235 H",
+        color: "var(--red)",
+        isi: "Para ulama salaf berkata: menghafal itu mudah, menjaga hafalan itulah yang berat. Imam Ahmad bin Hanbal setiap malam mengulang minimal sepertujuh Al-Qur'an dalam shalatnya, sehingga beliau mengkhatamkan Al-Qur'an dalam sholat setiap 7 malam.",
+        kutipan: "\"Hafalan yang tidak dimuraja'ah 3 hari berturut-turut ibarat buah yang dipetik sebelum matang — akan busuk sebelum bermanfaat.\"",
+        amal: ["Gunakan menu Muraja'ah di app setiap hari", "Jadikan sholat sebagai 'ujian hafalan' — recite ayat hafalan di setiap rakaat", "Sebelum tidur: recite satu halaman hafalan tanpa lihat"],
+      },
+    ];
+
+    const tabStyle = (active) => ({
+      flex: 1, padding: "9px 0", border: "none", borderRadius: 10, cursor: "pointer",
+      background: active ? "var(--gold)" : "transparent",
+      color: active ? "var(--bg)" : "var(--text-secondary)",
+      fontSize: 11, fontWeight: 700, letterSpacing: "0.08em",
+      fontFamily: "'DM Sans', sans-serif",
+    });
+
+    const currentDoa = activeTab === "sebelum" ? DOA_SEBELUM : activeTab === "sesudah" ? DOA_SESUDAH : null;
+
+    return (
+      <div style={{ padding: "0 0 140px" }}>
+        {/* Header */}
+        <div style={{ padding: "56px 20px 20px" }}>
+          <h2 style={{ fontSize: 24, fontFamily: "'Playfair Display', serif", color: "var(--text)", margin: 0 }}>
+            Doa & <span style={{ color: "var(--gold)" }}>Adab</span> Menghafal
+          </h2>
+          <div style={{ fontSize: 11, color: "var(--muted)", marginTop: 6, fontFamily: "'DM Sans', sans-serif", lineHeight: 1.6 }}>
+            Adab para ulama salaf dalam menjaga hafalan Al-Qur'an
+          </div>
+        </div>
+
+        {/* Tab selector */}
+        <div style={{ padding: "0 20px", marginBottom: 20 }}>
+          <div style={{ display: "flex", background: "var(--card)", borderRadius: 14, padding: 4, border: "1px solid var(--border)", gap: 2 }}>
+            {[
+              { id: "sebelum", label: "Sblm Hafal" },
+              { id: "sesudah", label: "Stlh Hafal" },
+              { id: "dzikir",  label: "Pagi/Petang" },
+              { id: "sholat",  label: "Usai Sholat" },
+              { id: "tips",    label: "Ulama" },
+            ].map(t => (
+              <button key={t.id} style={{
+                flex: 1, padding: "8px 1px", border: "none", borderRadius: 9, cursor: "pointer",
+                background: activeTab === t.id ? "var(--gold)" : "transparent",
+                color: activeTab === t.id ? "var(--bg)" : "var(--text-secondary)",
+                fontSize: 8, fontWeight: 700, letterSpacing: "0.02em",
+                fontFamily: "'DM Sans', sans-serif", lineHeight: 1.3,
+              }} onClick={() => setActiveTabDoa(t.id)}>{t.label}</button>
+            ))}
+          </div>
+        </div>
+
+        {/* DOA cards */}
+        {currentDoa && (
+          <div style={{ padding: "0 20px" }}>
+            {/* Banner info */}
+            <div style={{
+              background: "var(--gold)12", border: "1px solid var(--gold)33",
+              borderRadius: 14, padding: "12px 16px", marginBottom: 16,
+              display: "flex", gap: 10, alignItems: "flex-start",
+            }}>
+              <span style={{ fontSize: 16, flexShrink: 0 }}>📿</span>
+              <div style={{ fontSize: 11, color: "var(--text-secondary)", fontFamily: "'DM Sans', sans-serif", lineHeight: 1.7 }}>
+                {activeTab === "sebelum"
+                  ? "Baca doa-doa ini sebelum memulai sesi hafalan. Tidak harus semuanya — pilih yang paling menyentuh hati."
+                  : "Tutup setiap sesi hafalan dengan doa syukur dan permohonan agar Allah menjaga hafalan dalam dada."}
+              </div>
+            </div>
+
+            {currentDoa.map((doa) => {
+              const isOpen = expandedDoa === doa.id;
+              return (
+                <div key={doa.id} style={{
+                  background: "var(--card)", borderRadius: 18, marginBottom: 14,
+                  border: `1px solid ${isOpen ? doa.color + "55" : "var(--border)"}`,
+                  overflow: "hidden",
+                }}>
+                  {/* Header tap */}
+                  <div onClick={() => setExpandedDoa(isOpen ? null : doa.id)} style={{
+                    padding: "16px 18px", cursor: "pointer",
+                    display: "flex", alignItems: "flex-start", gap: 12,
+                  }}>
+                    <div style={{
+                      width: 36, height: 36, borderRadius: 10, flexShrink: 0,
+                      background: `${doa.color}22`, border: `1px solid ${doa.color}44`,
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      fontSize: 16, color: doa.color,
+                    }}>🤲</div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 13, color: "var(--text)", fontFamily: "'Playfair Display', serif", fontWeight: 700 }}>
+                        {doa.judul}
+                      </div>
+                      <div style={{ fontSize: 10, color: "var(--muted)", fontFamily: "'DM Sans', sans-serif", marginTop: 3 }}>
+                        {doa.sumber}
+                      </div>
+                    </div>
+                    <span style={{ color: "var(--muted)", fontSize: 18, flexShrink: 0, transform: isOpen ? "rotate(90deg)" : "none", transition: "transform 0.2s" }}>›</span>
+                  </div>
+
+                  {/* Expanded content */}
+                  {isOpen && (
+                    <div style={{ padding: "0 18px 18px" }}>
+                      {/* Arab text */}
+                      <div style={{
+                        background: `${doa.color}0C`, border: `1px solid ${doa.color}22`,
+                        borderRadius: 14, padding: "18px 16px", marginBottom: 14, textAlign: "right",
+                      }}>
+                        <div style={{
+                          fontSize: 22, color: "var(--text)", lineHeight: 2.2,
+                          fontFamily: "'Scheherazade New', 'Amiri', serif",
+                          direction: "rtl",
+                        }}>
+                          {doa.arab}
+                        </div>
+                      </div>
+
+                      {/* Latin */}
+                      <div style={{
+                        fontSize: 12, color: doa.color, fontFamily: "'DM Sans', sans-serif",
+                        fontStyle: "italic", lineHeight: 1.8, marginBottom: 10,
+                        padding: "0 4px",
+                      }}>
+                        {doa.latin}
+                      </div>
+
+                      {/* Arti */}
+                      <div style={{
+                        fontSize: 12, color: "var(--text-secondary)", fontFamily: "'DM Sans', sans-serif",
+                        lineHeight: 1.8, marginBottom: 14, padding: "0 4px",
+                      }}>
+                        <span style={{ color: "var(--muted)", fontSize: 10 }}>Artinya: </span>
+                        {doa.arti}
+                      </div>
+
+                      {/* Faedah ulama */}
+                      <div style={{
+                        background: "var(--bg-deeper)", borderRadius: 12, padding: "12px 14px",
+                        borderLeft: `3px solid ${doa.color}`,
+                      }}>
+                        <div style={{ fontSize: 9, color: doa.color, fontFamily: "'DM Sans', sans-serif", fontWeight: 700, letterSpacing: "0.1em", marginBottom: 6 }}>
+                          💡 FAEDAH ULAMA
+                        </div>
+                        <div style={{ fontSize: 11, color: "var(--text-secondary)", fontFamily: "'DM Sans', sans-serif", lineHeight: 1.7 }}>
+                          {doa.faedah}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* TIPS ULAMA tab */}
+        {activeTab === "tips" && (
+          <div style={{ padding: "0 20px" }}>
+            <div style={{
+              background: "var(--purple)12", border: "1px solid var(--purple)33",
+              borderRadius: 14, padding: "12px 16px", marginBottom: 16,
+              display: "flex", gap: 10, alignItems: "flex-start",
+            }}>
+              <span style={{ fontSize: 16, flexShrink: 0 }}>📚</span>
+              <div style={{ fontSize: 11, color: "var(--text-secondary)", fontFamily: "'DM Sans', sans-serif", lineHeight: 1.7 }}>
+                Kumpulan adab & tips menghafal dari para ulama salaf. Mereka adalah bukti hidup bahwa Al-Qur'an bisa dihafal oleh siapa saja yang benar-benar bersungguh-sungguh.
+              </div>
+            </div>
+
+            {TIPS_ULAMA.map((tip) => {
+              const isOpen = expandedTips === tip.id;
+              return (
+                <div key={tip.id} style={{
+                  background: "var(--card)", borderRadius: 18, marginBottom: 14,
+                  border: `1px solid ${isOpen ? tip.color + "55" : "var(--border)"}`,
+                  overflow: "hidden",
+                }}>
+                  <div onClick={() => setExpandedTips(isOpen ? null : tip.id)} style={{
+                    padding: "16px 18px", cursor: "pointer",
+                    display: "flex", alignItems: "flex-start", gap: 12,
+                  }}>
+                    <div style={{
+                      width: 40, height: 40, borderRadius: 12, flexShrink: 0,
+                      background: `${tip.color}22`, border: `1px solid ${tip.color}44`,
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      fontSize: 18, color: tip.color,
+                    }}>{tip.icon}</div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 13, color: "var(--text)", fontFamily: "'Playfair Display', serif", fontWeight: 700 }}>
+                        {tip.judul}
+                      </div>
+                      <div style={{ fontSize: 10, color: tip.color, fontFamily: "'DM Sans', sans-serif", marginTop: 3, fontWeight: 600 }}>
+                        {tip.ulama} <span style={{ color: "var(--muted)", fontWeight: 400 }}>— wafat {tip.wafat}</span>
+                      </div>
+                    </div>
+                    <span style={{ color: "var(--muted)", fontSize: 18, flexShrink: 0, transform: isOpen ? "rotate(90deg)" : "none", transition: "transform 0.2s" }}>›</span>
+                  </div>
+
+                  {isOpen && (
+                    <div style={{ padding: "0 18px 18px" }}>
+                      {/* Isi */}
+                      <div style={{ fontSize: 12, color: "var(--text-secondary)", fontFamily: "'DM Sans', sans-serif", lineHeight: 1.8, marginBottom: 14 }}>
+                        {tip.isi}
+                      </div>
+
+                      {/* Kutipan */}
+                      <div style={{
+                        background: `${tip.color}0C`, borderRadius: 14, padding: "14px 16px",
+                        borderLeft: `3px solid ${tip.color}`, marginBottom: 14,
+                      }}>
+                        <div style={{ fontSize: 11, color: tip.color, fontFamily: "'Playfair Display', serif", fontStyle: "italic", lineHeight: 1.8 }}>
+                          {tip.kutipan}
+                        </div>
+                        <div style={{ fontSize: 9, color: "var(--muted)", fontFamily: "'DM Sans', sans-serif", marginTop: 6, letterSpacing: "0.08em" }}>
+                          — {tip.ulama}
+                        </div>
+                      </div>
+
+                      {/* Amal praktis */}
+                      <div style={{ background: "var(--bg-deeper)", borderRadius: 12, padding: "12px 14px" }}>
+                        <div style={{ fontSize: 9, color: tip.color, fontFamily: "'DM Sans', sans-serif", fontWeight: 700, letterSpacing: "0.1em", marginBottom: 8 }}>
+                          ✦ AMAL PRAKTIS
+                        </div>
+                        {tip.amal.map((a, i) => (
+                          <div key={i} style={{ display: "flex", gap: 8, marginBottom: 6, alignItems: "flex-start" }}>
+                            <div style={{ width: 18, height: 18, borderRadius: 6, background: `${tip.color}22`, border: `1px solid ${tip.color}44`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9, color: tip.color, flexShrink: 0, marginTop: 1 }}>
+                              {i + 1}
+                            </div>
+                            <div style={{ fontSize: 11, color: "var(--text-secondary)", fontFamily: "'DM Sans', sans-serif", lineHeight: 1.6 }}>
+                              {a}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* ===== DZIKIR PAGI & PETANG ===== */}
+        {activeTab === "dzikir" && (
+          <div style={{ padding: "0 20px" }}>
+            {/* Waktu selector */}
+            <div style={{ display: "flex", gap: 10, marginBottom: 16 }}>
+              {[
+                { id: "pagi",   label: "🌅 Dzikir Pagi",   sub: "Setelah Subuh", color: "var(--gold)" },
+                { id: "petang", label: "🌆 Dzikir Petang",  sub: "Setelah Ashar", color: "var(--purple)" },
+              ].map(w => (
+                <div key={w.id} onClick={() => setDzikirWaktu(w.id)} style={{
+                  flex: 1, background: dzikir_waktu === w.id ? `${w.color}20` : "var(--card)",
+                  border: `1px solid ${dzikir_waktu === w.id ? w.color + "66" : "var(--border)"}`,
+                  borderRadius: 14, padding: "12px 14px", cursor: "pointer", textAlign: "center",
+                }}>
+                  <div style={{ fontSize: 13, color: dzikir_waktu === w.id ? w.color : "var(--text)", fontFamily: "'DM Sans', sans-serif", fontWeight: 700 }}>{w.label}</div>
+                  <div style={{ fontSize: 9, color: "var(--muted)", fontFamily: "'DM Sans', sans-serif", marginTop: 3 }}>{w.sub}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* Info banner */}
+            <div style={{
+              background: dzikir_waktu === "pagi" ? "var(--gold)10" : "var(--purple)10",
+              border: `1px solid ${dzikir_waktu === "pagi" ? "var(--gold)30" : "var(--purple)30"}`,
+              borderRadius: 14, padding: "11px 14px", marginBottom: 16,
+              fontSize: 11, color: "var(--text-secondary)", fontFamily: "'DM Sans', sans-serif", lineHeight: 1.7,
+            }}>
+              {dzikir_waktu === "pagi"
+                ? "📖 HR. Abu Dawud & At-Tirmidzi — Dibaca setelah sholat Subuh hingga matahari terbit"
+                : "📖 HR. Abu Dawud & At-Tirmidzi — Dibaca setelah sholat Ashar hingga matahari terbenam"}
+            </div>
+
+            {(dzikir_waktu === "pagi" ? DZIKIR_PAGI : DZIKIR_PETANG).map((dz, idx) => {
+              const isOpen = expandedDzikir === dz.id;
+              const accentColor = dzikir_waktu === "pagi" ? "var(--gold)" : "var(--purple)";
+              return (
+                <div key={dz.id} style={{
+                  background: "var(--card)", borderRadius: 18, marginBottom: 12,
+                  border: `1px solid ${isOpen ? accentColor + "55" : "var(--border)"}`,
+                  overflow: "hidden",
+                }}>
+                  {/* Header */}
+                  <div onClick={() => setExpandedDzikir(isOpen ? null : dz.id)} style={{
+                    padding: "14px 16px", cursor: "pointer",
+                    display: "flex", alignItems: "center", gap: 12,
+                  }}>
+                    {/* Nomor */}
+                    <div style={{
+                      width: 34, height: 34, borderRadius: 10, flexShrink: 0,
+                      background: `${accentColor}20`, border: `1px solid ${accentColor}44`,
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      fontSize: 12, color: accentColor, fontWeight: 700, fontFamily: "'DM Sans', sans-serif",
+                    }}>{idx + 1}</div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 13, color: "var(--text)", fontFamily: "'Playfair Display', serif", fontWeight: 700 }}>{dz.judul}</div>
+                      <div style={{ display: "flex", gap: 8, marginTop: 3, alignItems: "center", flexWrap: "wrap" }}>
+                        <span style={{ fontSize: 9, color: accentColor, fontFamily: "'DM Sans', sans-serif", fontWeight: 700,
+                          background: `${accentColor}18`, padding: "2px 7px", borderRadius: 6 }}>
+                          {dz.ulang}× ulang
+                        </span>
+                        <span style={{ fontSize: 9, color: "var(--muted)", fontFamily: "'DM Sans', sans-serif" }}>{dz.sumber}</span>
+                      </div>
+                    </div>
+                    <span style={{ color: "var(--muted)", fontSize: 18, transform: isOpen ? "rotate(90deg)" : "none", transition: "transform 0.2s", flexShrink: 0 }}>›</span>
+                  </div>
+
+                  {/* Expanded */}
+                  {isOpen && (
+                    <div style={{ padding: "0 16px 16px" }}>
+                      {/* Arab */}
+                      <div style={{
+                        background: `${accentColor}0A`, border: `1px solid ${accentColor}22`,
+                        borderRadius: 14, padding: "18px 16px", marginBottom: 12,
+                        textAlign: "right",
+                      }}>
+                        <div style={{
+                          fontSize: 20, color: "var(--text)", lineHeight: 2.2,
+                          fontFamily: "'Scheherazade New', 'Amiri', serif",
+                          direction: "rtl",
+                        }}>{dz.arab}</div>
+                      </div>
+                      {/* Latin */}
+                      <div style={{ fontSize: 11, color: accentColor, fontFamily: "'DM Sans', sans-serif", fontStyle: "italic", lineHeight: 1.8, marginBottom: 8, padding: "0 4px" }}>
+                        {dz.latin}
+                      </div>
+                      {/* Arti */}
+                      <div style={{ fontSize: 11, color: "var(--text-secondary)", fontFamily: "'DM Sans', sans-serif", lineHeight: 1.8, marginBottom: 12, padding: "0 4px" }}>
+                        <span style={{ color: "var(--muted)", fontSize: 10 }}>Artinya: </span>{dz.arti}
+                      </div>
+                      {/* Faedah */}
+                      {dz.faedah && (
+                        <div style={{ background: "var(--bg-deeper)", borderRadius: 12, padding: "11px 14px", borderLeft: `3px solid ${accentColor}` }}>
+                          <div style={{ fontSize: 9, color: accentColor, fontFamily: "'DM Sans', sans-serif", fontWeight: 700, letterSpacing: "0.1em", marginBottom: 5 }}>💡 FAEDAH</div>
+                          <div style={{ fontSize: 11, color: "var(--text-secondary)", fontFamily: "'DM Sans', sans-serif", lineHeight: 1.7 }}>{dz.faedah}</div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+        {/* ===== DZIKIR SETELAH SHOLAT ===== */}
+        {activeTab === "sholat" && (
+          <div style={{ padding: "0 20px" }}>
+            {/* Banner */}
+            <div style={{
+              background: "var(--green)10", border: "1px solid var(--green)30",
+              borderRadius: 14, padding: "12px 16px", marginBottom: 16,
+              display: "flex", gap: 10, alignItems: "flex-start",
+            }}>
+              <span style={{ fontSize: 16, flexShrink: 0 }}>🕌</span>
+              <div style={{ fontSize: 11, color: "var(--text-secondary)", fontFamily: "'DM Sans', sans-serif", lineHeight: 1.7 }}>
+                Dzikir setelah sholat fardhu berdasarkan hadits shahih. Urutan sesuai yang dipraktikkan Nabi ﷺ — dari salam hingga selesai.
+              </div>
+            </div>
+
+            {/* Urutan panduan singkat */}
+            <div style={{
+              background: "var(--card)", borderRadius: 14, padding: "12px 16px",
+              marginBottom: 16, border: "1px solid var(--border)",
+            }}>
+              <div style={{ fontSize: 10, color: "var(--gold)", fontFamily: "'DM Sans', sans-serif", fontWeight: 700, letterSpacing: "0.1em", marginBottom: 10 }}>
+                ✦ URUTAN LENGKAP
+              </div>
+              {[
+                { n: "1", t: "Istighfar 3×", c: "var(--green)" },
+                { n: "2", t: "Allāhumma antas-salām...", c: "var(--green)" },
+                { n: "3", t: "Tasbih · Tahmid · Takbir (33×)", c: "var(--blue)" },
+                { n: "4", t: "Ayat Kursi (1×)", c: "var(--gold)" },
+                { n: "5", t: "Lā ilāha illallāhu waḥdah...", c: "var(--gold)" },
+                { n: "6", t: "Allāhumma a'innī...", c: "var(--purple)" },
+                { n: "→", t: "+ Doa pilihan sesuai kebutuhan", c: "var(--muted)" },
+              ].map((row, i) => (
+                <div key={i} style={{ display: "flex", gap: 10, marginBottom: 6, alignItems: "center" }}>
+                  <div style={{ width: 22, height: 22, borderRadius: 7, background: `${row.c}20`, border: `1px solid ${row.c}44`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 9, color: row.c, fontWeight: 700, flexShrink: 0 }}>{row.n}</div>
+                  <div style={{ fontSize: 11, color: "var(--text-secondary)", fontFamily: "'DM Sans', sans-serif" }}>{row.t}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* Doa list */}
+            {DZIKIR_SHOLAT.map((dz) => {
+              const isOpen = expandedDzikir === dz.id;
+              return (
+                <div key={dz.id} style={{
+                  background: "var(--card)", borderRadius: 18, marginBottom: 12,
+                  border: `1px solid ${isOpen ? dz.color + "55" : "var(--border)"}`,
+                  overflow: "hidden",
+                }}>
+                  <div onClick={() => setExpandedDzikir(isOpen ? null : dz.id)} style={{
+                    padding: "14px 16px", cursor: "pointer",
+                    display: "flex", alignItems: "center", gap: 12,
+                  }}>
+                    <div style={{
+                      width: 34, height: 34, borderRadius: 10, flexShrink: 0,
+                      background: `${dz.color}20`, border: `1px solid ${dz.color}44`,
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      fontSize: 12, color: dz.color, fontWeight: 700, fontFamily: "'DM Sans', sans-serif",
+                    }}>{dz.urutan}</div>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 13, color: "var(--text)", fontFamily: "'Playfair Display', serif", fontWeight: 700 }}>{dz.judul}</div>
+                      <div style={{ fontSize: 9, color: "var(--muted)", fontFamily: "'DM Sans', sans-serif", marginTop: 3, lineHeight: 1.4 }}>{dz.waktu}</div>
+                    </div>
+                    <span style={{ color: "var(--muted)", fontSize: 18, transform: isOpen ? "rotate(90deg)" : "none", transition: "transform 0.2s", flexShrink: 0 }}>›</span>
+                  </div>
+
+                  {isOpen && (
+                    <div style={{ padding: "0 16px 16px" }}>
+                      {/* Arab */}
+                      <div style={{
+                        background: `${dz.color}0A`, border: `1px solid ${dz.color}22`,
+                        borderRadius: 14, padding: "18px 16px", marginBottom: 12,
+                        textAlign: "right",
+                      }}>
+                        <div style={{
+                          fontSize: 20, color: "var(--text)", lineHeight: 2.2,
+                          fontFamily: "'Scheherazade New', 'Amiri', serif",
+                          direction: "rtl",
+                        }}>{dz.arab}</div>
+                      </div>
+                      {/* Latin */}
+                      <div style={{ fontSize: 11, color: dz.color, fontFamily: "'DM Sans', sans-serif", fontStyle: "italic", lineHeight: 1.8, marginBottom: 8, padding: "0 4px", whiteSpace: "pre-line" }}>
+                        {dz.latin}
+                      </div>
+                      {/* Arti */}
+                      <div style={{ fontSize: 11, color: "var(--text-secondary)", fontFamily: "'DM Sans', sans-serif", lineHeight: 1.8, marginBottom: 12, padding: "0 4px" }}>
+                        <span style={{ color: "var(--muted)", fontSize: 10 }}>Artinya: </span>{dz.arti}
+                      </div>
+                      {/* Sumber */}
+                      <div style={{ fontSize: 10, color: "var(--muted)", fontFamily: "'DM Sans', sans-serif", marginBottom: 12, padding: "0 4px", fontStyle: "italic" }}>
+                        {dz.sumber}
+                      </div>
+                      {/* Faedah */}
+                      <div style={{ background: "var(--bg-deeper)", borderRadius: 12, padding: "11px 14px", borderLeft: `3px solid ${dz.color}` }}>
+                        <div style={{ fontSize: 9, color: dz.color, fontFamily: "'DM Sans', sans-serif", fontWeight: 700, letterSpacing: "0.1em", marginBottom: 5 }}>💡 FAEDAH</div>
+                        <div style={{ fontSize: 11, color: "var(--text-secondary)", fontFamily: "'DM Sans', sans-serif", lineHeight: 1.7 }}>{dz.faedah}</div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
+
+      </div>
+    );
+  };
+
 
   // ===== RENDER =====
   return (
@@ -2563,42 +3300,68 @@ export default function QuranHafalanApp() {
       <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=DM+Sans:wght@400;500;600;700&family=Scheherazade+New:wght@400;700&display=swap" rel="stylesheet" />
       <style>{`
         :root {
-          /* Premium Dark Mode - Midnight Indigo & Muted Gold */
-          --bg: #090B10; --bg-deeper: #05060A; --card: #12151D;
-          --border-soft: #1C212D; --border: #252B3A; --border-mid: #323A4D;
-          --muted-deep: #404B62; --muted: #6B7B96; --gold-disabled: #5E503B;
-          --muted-alt: #8294B2; --blue-dark: #4A81A5; --text-dim: #98A9C6;
-          --text-dim2: #B0BED8; --text-secondary: #C8D4E8; --text-warm: #E6DCCH;
-          --text: #F2EFE9; /* Very Soft Ivory Off-White */
-          --gold: #CBA568; --gold-dark: #A3824A; /* Muted Prestige Gold */
-          --blue: #7DB2D4; --purple: #9F8ECC; --green: #68B091;
-          --green-dark: #458A6D; --purple-dark: #7460A3; --red: #E26666;
-        }
+        --bg: #0A0C14;
+        --bg-deeper: #0D1018;
+        --card: #141824;
+        --border-soft: #1A1E2E;
+        --border: #1E2535;
+        --border-mid: #2A3045;
+        --muted-deep: #2A3050;
+        --muted-alt: #5A6080;
+        --subtle: #384058;
+        --muted: #7A8298;
+        --gold-disabled: #5A4A2E;
+        --blue-dark: #5A8FB4;
+        --text-dim: #9AA0B8;
+        --text-dim2: #8A9080;
+        --text-secondary: #B0A898;
+        --text-warm: #C8C0A8;
+        --text: #EDE0CA;
+        --gold: #D4B478;
+        --gold-dark: #A8893E;
+        --blue: #8BBDE0;
+        --purple: #A88CD4;
+        --green: #78C0A0;
+        --green-dark: #4A8F72;
+        --purple-dark: #7B5EA8;
+        --red: #F06050;
+      }
         :root.light {
-          /* Elegant Light Mode - Warm Sand & Deep Espresso */
-          --bg: #FDFBF7; --bg-deeper: #F5F2EA; --card: #FFFFFF;
-          --border-soft: #EDE8DF; --border: #E2DBCE; --border-mid: #D4CAB7;
-          --muted-deep: #B8AC9A; --muted: #948875; --gold-disabled: #D4BD86;
-          --muted-alt: #A39682; --blue-dark: #487A99; --text-dim: #756A58;
-          --text-dim2: #857A66; --text-secondary: #5E5445; --text-warm: #4A4135;
-          --text: #2D2821; /* Deep Espresso */
-          --gold: #BA9045; --gold-dark: #947132; /* Deep Muted Gold */
-          --blue: #599BC2; --purple: #8367AC; --green: #3F946D;
-          --green-dark: #2A6E4F; --purple-dark: #5C4582; --red: #D64D4D;
-        }
+        --bg: #F5F0E8;
+        --bg-deeper: #EDE8DC;
+        --card: #FFFFFF;
+        --border-soft: #E8E0D0;
+        --border: #DDD5C0;
+        --border-mid: #C8BFAA;
+        --muted-deep: #B8A890;
+        --muted-alt: #9A8D78;
+        --subtle: #C0B4A0;
+        --muted: #6A5D4A;
+        --gold-disabled: #C8A020;
+        --blue-dark: #4A7FA4;
+        --text-dim: #5A4D3A;
+        --text-dim2: #6A5D4A;
+        --text-secondary: #483C2A;
+        --text-warm: #3A2E1C;
+        --text: #1A1208;
+        --gold: #9A6E10;
+        --gold-dark: #7A5210;
+        --blue: #2A6A9C;
+        --purple: #5A3E90;
+        --green: #1A6A48;
+        --green-dark: #0A4A30;
+        --purple-dark: #4A2E78;
+        --red: #B02010;
+      }
         * { -webkit-tap-highlight-color: transparent; box-sizing: border-box;
-            transition: background-color 0.4s cubic-bezier(0.4, 0, 0.2, 1), 
-                        color 0.4s cubic-bezier(0.4, 0, 0.2, 1), 
-                        border-color 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
-        html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); }
+            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease; }
+        html, body { margin: 0; padding: 0; background: var(--bg); }
         ::-webkit-scrollbar { display: none; }
         input { -webkit-appearance: none; }
       `}</style>
 
-      <div style={{
-        position: "fixed", inset: 0, pointerEvents: "none", zIndex: 0,
-        background: "radial-gradient(ellipse 80% 50% at 50% 0%, var(--gold)08 0%, transparent 70%)"
-      }} />
+      <div style={{ position: "fixed", inset: 0, pointerEvents: "none", zIndex: 0,
+        background: "radial-gradient(ellipse 80% 50% at 50% 0%, var(--gold)08 0%, transparent 70%)" }} />
 
       <div style={{ position: "relative", zIndex: 1 }}>
         {screen === "dashboard" && <Dashboard />}
@@ -2614,9 +3377,9 @@ export default function QuranHafalanApp() {
         )}
         {screen === "muraja" && <MurajaScreen />}
         {screen === "jadwal" && <JadwalScreen />}
-        {screen === "doa" && <DoaScreen />}
         {screen === "metode" && <MetodeScreen />}
         {screen === "sholat" && <SholatScreen />}
+        {screen === "doa" && <DoaScreen />}
         {screen === "panduan" && <PanduanScreen />}
       </div>
 
