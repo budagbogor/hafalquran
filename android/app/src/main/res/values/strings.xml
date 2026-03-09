@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Hafal Quran</string>
+    <string name="title_activity_main">Hafal Quran</string>
+    <string name="package_name">com.budagbogor.hafalquran</string>
+    <string name="custom_url_scheme">com.budagbogor.hafalquran</string>
+</resources>
