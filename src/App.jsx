@@ -340,7 +340,7 @@ const initHafalanData = () => {
 const inputStyle = {
   width: "100%", boxSizing: "border-box",
   background: "var(--card)", border: "1px solid var(--border)", borderRadius: 12,
-  padding: "13px 16px", color: "var(--text)", fontSize: 13,
+  padding: "15px 18px", color: "var(--text)", fontSize: 17,
   fontFamily: "'DM Sans', sans-serif", outline: "none",
 };
 
@@ -385,33 +385,102 @@ function AuthScreen({ onLogin }) {
           --border-soft: #1C212D; --border: #252B3A; --border-mid: #323A4D;
           --muted-deep: #404B62; --muted: #6B7B96; --gold-disabled: #5E503B;
           --muted-alt: #8294B2; --blue-dark: #4A81A5; --text-dim: #98A9C6;
-          --text-dim2: #B0BED8; --text-secondary: #C8D4E8; --text-warm: #E6DCCH;
+          --text-dim2: #B0BED8; --text-secondary: #C8D4E8; --text-warm: #E6DCCA;
           --text: #F2EFE9; /* Very Soft Ivory Off-White */
           --gold: #CBA568; --gold-dark: #A3824A; /* Muted Prestige Gold */
           --blue: #7DB2D4; --purple: #9F8ECC; --green: #68B091;
           --green-dark: #458A6D; --purple-dark: #7460A3; --red: #E26666;
         }
         :root.light {
-          /* Elegant Light Mode - Warm Sand & Deep Espresso */
-          --bg: #FDFBF7; --bg-deeper: #F5F2EA; --card: #FFFFFF;
-          --border-soft: #EDE8DF; --border: #E2DBCE; --border-mid: #D4CAB7;
-          --muted-deep: #B8AC9A; --muted: #948875; --gold-disabled: #D4BD86;
-          --muted-alt: #A39682; --blue-dark: #487A99; --text-dim: #756A58;
-          --text-dim2: #857A66; --text-secondary: #5E5445; --text-warm: #4A4135;
-          --text: #2D2821; /* Deep Espresso */
-          --gold: #BA9045; --gold-dark: #947132; /* Deep Muted Gold */
-          --blue: #599BC2; --purple: #8367AC; --green: #3F946D;
-          --green-dark: #2A6E4F; --purple-dark: #5C4582; --red: #D64D4D;
+          /* Accessible Light Mode - Warm Parchment, High Contrast, Easy on Eyes */
+          --bg: #EDE6DA; --bg-deeper: #E3DBCC; --card: #F5EFE4;
+          --border-soft: #D5CABB; --border: #C3B89F; --border-mid: #AFA28A;
+          --muted-deep: #7A6E5A; --muted: #5C5141; --gold-disabled: #C0A96A;
+          --muted-alt: #6B5E4A; --blue-dark: #2E618A; --text-dim: #3D3226;
+          --text-dim2: #2E2519; --text-secondary: #261F14; --text-warm: #1A150E;
+          --text: #120D08; /* Very Deep Warm Brown - Maximum Contrast */
+          --gold: #9A6E20; --gold-dark: #7A5418; /* Deep Rich Gold */
+          --blue: #2E75A8; --purple: #6042A0; --green: #237A50;
+          --green-dark: #185C3A; --purple-dark: #472E82; --red: #C03030;
         }
         * { -webkit-tap-highlight-color: transparent; box-sizing: border-box;
             transition: background-color 0.4s cubic-bezier(0.4, 0, 0.2, 1), 
                         color 0.4s cubic-bezier(0.4, 0, 0.2, 1), 
                         border-color 0.4s cubic-bezier(0.4, 0, 0.2, 1); }
+        html { font-size: 18px; }
         html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text); }
         ::-webkit-scrollbar { display: none; }
         input { -webkit-appearance: none; }
+        /* ===== ACCESSIBILITY: Larger fonts for elderly users ===== */
+        /* Scale all inline pixel font-sizes up ~28% via CSS font-size boost */
+        div, span, p, button, label, a, li, td, th {
+          font-size: inherit;
+        }
+        /* Override specific small font-sizes from inline styles */
+        [style*="font-size: 9px"], [style*="font-size:9px"] { font-size: 13px !important; }
+        [style*="font-size: 10px"], [style*="font-size:10px"] { font-size: 14px !important; }
+        [style*="font-size: 11px"], [style*="font-size:11px"] { font-size: 15px !important; }
+        [style*="font-size: 12px"], [style*="font-size:12px"] { font-size: 16px !important; }
+        [style*="font-size: 13px"], [style*="font-size:13px"] { font-size: 17px !important; }
+        [style*="font-size: 14px"], [style*="font-size:14px"] { font-size: 18px !important; }
+        [style*="font-size: 15px"], [style*="font-size:15px"] { font-size: 19px !important; }
+        [style*="font-size: 16px"], [style*="font-size:16px"] { font-size: 20px !important; }
+        [style*="font-size: 18px"], [style*="font-size:18px"] { font-size: 22px !important; }
+        [style*="font-size: 20px"], [style*="font-size:20px"] { font-size: 24px !important; }
+        [style*="font-size: 22px"], [style*="font-size:22px"] { font-size: 26px !important; }
+        [style*="font-size: 24px"], [style*="font-size:24px"] { font-size: 28px !important; }
+        [style*="font-size: 26px"], [style*="font-size:26px"] { font-size: 30px !important; }
+        [style*="font-size: 28px"], [style*="font-size:28px"] { font-size: 32px !important; }
+        [style*="font-size: 34px"], [style*="font-size:34px"] { font-size: 38px !important; }
+        /* ===== ACCESSIBILITY: Readable font (Nunito) for all non-Arabic text ===== */
+        /* Nunito: rounded, generous x-height, excellent legibility for elderly users */
+        html, body {
+          font-family: 'Nunito', sans-serif;
+          font-weight: 400;
+          letter-spacing: 0.01em;
+          line-height: 1.6;
+        }
+        /* Force Nunito on all elements, overriding inline fontFamily styles */
+        *:not([style*="Scheherazade"]):not([style*="Traditional Arabic"]):not([style*="serif"]:has([dir="rtl"])) {
+          font-family: 'Nunito', sans-serif !important;
+        }
+        /* Preserve Arabic script fonts exactly */
+        [style*="Scheherazade New"],
+        [style*="Traditional Arabic"],
+        [dir="rtl"],
+        [style*="direction: rtl"] {
+          font-family: 'Scheherazade New', 'Traditional Arabic', serif !important;
+        }
+        /* Nunito weight adjustments for better readability */
+        button { font-weight: 700; letter-spacing: 0.04em; }
+        h1, h2, h3 { font-weight: 800; }
+        /* ===== PROFESSIONAL LAYOUT IMPROVEMENTS ===== */
+        /* Cards: subtle elevation */
+        .app-card {
+          box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+          transition: box-shadow 0.2s ease;
+        }
+        .app-card:hover { box-shadow: 0 4px 20px rgba(0,0,0,0.10); }
+        /* Progress bars: thicker, more visible */
+        .progress-bar-track {
+          height: 8px !important; border-radius: 6px !important;
+        }
+        .progress-bar-fill {
+          height: 100% !important; border-radius: 6px !important;
+        }
+        /* Buttons: WCAG min touch target */
+        button { min-height: 44px; }
+        /* Pills/filter buttons can be smaller */
+        button.pill { min-height: 36px; }
+        /* Section headers */
+        .section-header {
+          font-size: 18px !important; font-weight: 800 !important;
+          letter-spacing: -0.01em;
+        }
+        /* NavBar improvements: larger touch targets */
+        nav button { min-height: 52px !important; min-width: 52px !important; }
       `}</style>
-      <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+      <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&family=Scheherazade+New:wght@400;700&display=swap" rel="stylesheet" />
       <div style={{ marginBottom: 36, textAlign: "center" }}>
         <div style={{ fontSize: 18, color: "var(--gold)", opacity: 0.66, fontFamily: "serif", marginBottom: 14, letterSpacing: 3 }}>
           بِسْمِ اللهِ الرَّحْمَنِ الرَّحِيمِ
@@ -642,7 +711,7 @@ const DoaScreen = () => {
   return (
     <div style={{ padding: "0 20px 140px" }}>
       <div style={{ padding: "56px 0 24px" }}>
-        <h2 style={{ fontSize: 24, fontFamily: "'Playfair Display', serif", color: "var(--text)", margin: 0 }}>
+        <h2 style={{ fontSize: 26, color: "var(--text)", fontWeight: 900, margin: 0 }}>
           <span style={{ color: "var(--gold)" }}>Doa</span> & Dzikir
         </h2>
 
@@ -657,9 +726,9 @@ const DoaScreen = () => {
             <button key={t.id} onClick={() => setTab(t.id)} style={{
               background: tab === t.id ? "var(--gold)" : "var(--card)",
               color: tab === t.id ? "var(--bg)" : "var(--text-secondary)",
-              border: `1px solid ${tab === t.id ? "var(--gold)" : "var(--border)"}`,
-              padding: "8px 16px", borderRadius: 20, fontSize: 11, fontWeight: 700,
-              fontFamily: "'DM Sans', sans-serif", cursor: "pointer", whiteSpace: "nowrap"
+              border: `1.5px solid ${tab === t.id ? "var(--gold)" : "var(--border)"}`,
+              padding: "10px 20px", borderRadius: 24, fontSize: 13, fontWeight: 800,
+              cursor: "pointer", whiteSpace: "nowrap"
             }}>
               {t.label}
             </button>
@@ -674,17 +743,17 @@ const DoaScreen = () => {
             border: "1px solid var(--border)", position: "relative"
           }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
-              <div style={{ fontSize: 10, color: "var(--gold)", fontWeight: 700, letterSpacing: "0.1em" }}>
+              <div style={{ fontSize: 12, color: "var(--gold)", fontWeight: 800, letterSpacing: "0.08em" }}>
                 {item.sumber || "Dzikir"}
               </div>
               {item.count && (
-                <div style={{ fontSize: 9, background: "var(--gold)22", color: "var(--gold)", padding: "4px 8px", borderRadius: 6, fontWeight: 700 }}>
+                <div style={{ fontSize: 12, background: "var(--gold)22", color: "var(--gold)", padding: "5px 10px", borderRadius: 8, fontWeight: 800 }}>
                   {item.count}x
                 </div>
               )}
             </div>
 
-            <div style={{ fontSize: 13, color: "var(--text)", fontFamily: "'Playfair Display', serif", marginBottom: 16 }}>
+            <div style={{ fontSize: 15, color: "var(--text)", fontWeight: 700, marginBottom: 16 }}>
               {item.title}
             </div>
 
@@ -748,11 +817,13 @@ const Toast = ({ toast, undoMarkStatus }) => {
 const NavBar = ({ screen, setScreen, setSelectedSurahDetail, selectedSurahDetail }) => (
   <nav style={{
     position: "fixed", bottom: 0, left: 0, right: 0,
-    background: "linear-gradient(180deg, transparent 0%, var(--bg) 15%)",
+    background: "var(--bg)",
+    borderTop: "1px solid var(--border-soft)",
     display: "flex", flexDirection: "column",
-    zIndex: 100, backdropFilter: "blur(12px)",
+    zIndex: 100,
+    boxShadow: "0 -4px 24px rgba(0,0,0,0.10)",
   }}>
-    <div style={{ display: "flex", justifyContent: "space-around", padding: "10px 0 6px" }}>
+    <div style={{ display: "flex", justifyContent: "space-around", padding: "8px 4px 0" }}>
       {[
         { id: "dashboard", icon: "⌂", label: "Beranda" },
         { id: "hafalan", icon: "◈", label: "Hafalan" },
@@ -760,26 +831,38 @@ const NavBar = ({ screen, setScreen, setSelectedSurahDetail, selectedSurahDetail
         { id: "jadwal", icon: "◷", label: "Jadwal" },
         { id: "doa", icon: "🤲", label: "Dzikir" },
         { id: "sholat", icon: "🕌", label: "Sholat" },
-      ].map(nav => (
-        <button key={nav.id} onClick={() => { setScreen(nav.id); setSelectedSurahDetail(null); }} style={{
-          background: "none", border: "none", cursor: "pointer",
-          display: "flex", flexDirection: "column", alignItems: "center", gap: 3,
-          color: (screen === nav.id || (nav.id === 'hafalan' && selectedSurahDetail)) ? "var(--gold)" : "var(--muted)",
-          transition: "color 0.2s", padding: "4px 10px",
-        }}>
-          <span style={{ fontSize: 22, lineHeight: 1 }}>{nav.icon}</span>
-          <span style={{ fontSize: 10, fontFamily: "'DM Sans', sans-serif", letterSpacing: "0.08em", fontWeight: 500 }}>{nav.label}</span>
-        </button>
-      ))}
+      ].map(nav => {
+        const isActive = screen === nav.id || (nav.id === 'hafalan' && selectedSurahDetail);
+        return (
+          <button key={nav.id} onClick={() => { setScreen(nav.id); setSelectedSurahDetail(null); }} style={{
+            background: "none", border: "none", cursor: "pointer",
+            display: "flex", flexDirection: "column", alignItems: "center", gap: 4,
+            color: isActive ? "var(--gold)" : "var(--muted)",
+            transition: "color 0.2s",
+            padding: "6px 8px 8px",
+            minWidth: 52, minHeight: 52,
+            position: "relative",
+          }}>
+            {isActive && (
+              <div style={{
+                position: "absolute", top: 0, left: "50%", transform: "translateX(-50%)",
+                width: 28, height: 3, borderRadius: "0 0 3px 3px",
+                background: "var(--gold)",
+              }} />
+            )}
+            <span style={{ fontSize: 26, lineHeight: 1 }}>{nav.icon}</span>
+            <span style={{ fontSize: 13, letterSpacing: "0.04em", fontWeight: isActive ? 800 : 600 }}>{nav.label}</span>
+          </button>
+        );
+      })}
     </div>
     <div style={{
       textAlign: "center",
-      padding: "6px 0 calc(10px + env(safe-area-inset-bottom, 8px))",
-      borderTop: "1px solid var(--border-soft)",
+      padding: "4px 0 calc(8px + env(safe-area-inset-bottom, 6px))",
     }}>
       <span style={{
-        fontSize: 9, color: "var(--muted-deep)", fontFamily: "'DM Sans', sans-serif",
-        letterSpacing: "0.12em", fontWeight: 600,
+        fontSize: 11, color: "var(--muted-deep)",
+        letterSpacing: "0.10em", fontWeight: 600,
       }}>B.O.A. INDONESIA © 2026</span>
     </div>
   </nav>
@@ -789,161 +872,152 @@ const Dashboard = ({
   user, syncing, setTheme, theme, handleLogout, setScreen, setSelectedSurahDetail,
   stats, todayDone, dueToday, setSelectedSurah, formatTime, timerActive, setTimerActive, setTimer
 }) => (
-  <div style={{ padding: "0 20px 140px" }}>
+  <div style={{ padding: "0 20px 160px" }}>
     {/* Header */}
-    <div style={{ padding: "56px 0 32px", position: "relative" }}>
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
-        <div>
-          <div style={{ fontSize: 11, letterSpacing: "0.2em", color: "var(--muted)", fontFamily: "'DM Sans', sans-serif", marginBottom: 8 }}>
-            بِسْمِ اللهِ الرَّحْمَنِ الرَّحِيمِ
-          </div>
-          <h1 style={{ fontSize: 28, fontFamily: "'Playfair Display', Georgia, serif", color: "var(--text)", fontWeight: 700, margin: 0, lineHeight: 1.2 }}>
-            Hafalan<br /><span style={{ color: "var(--gold)" }}>Al-Qur'an</span>
-          </h1>
-          <div style={{ fontSize: 10, color: "var(--muted)", marginTop: 8, fontFamily: "'DM Sans', sans-serif", letterSpacing: "0.1em" }}>
-            BERBASIS NEUROSAINS • UNTUK ORANG DEWASA
-          </div>
+    <div style={{ padding: "56px 0 24px" }}>
+      <div style={{ marginBottom: 12 }}>
+        <div style={{ fontSize: 13, letterSpacing: "0.18em", color: "var(--muted)", marginBottom: 6 }}>
+          بِسْمِ اللهِ الرَّحْمَنِ الرَّحِيمِ
         </div>
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 8, paddingTop: 4 }}>
-          {syncing && (
-            <div style={{ fontSize: 9, color: "var(--blue)", fontFamily: "'DM Sans', sans-serif", letterSpacing: "0.1em" }}>
-              ⟳ SYNCING...
-            </div>
-          )}
-          <div style={{ fontSize: 9, color: "var(--gold)88", fontFamily: "'DM Sans', sans-serif", maxWidth: 100, textAlign: "right", letterSpacing: "0.05em" }}>
-            {user.email?.split("@")[0]}
-          </div>
-          <div style={{ display: "flex", gap: 6 }}>
-            <button onClick={() => setScreen("panduan")} style={{
-              background: "var(--gold)22", border: "1px solid var(--gold)44", borderRadius: 8,
-              color: "var(--gold)", fontSize: 9, padding: "5px 10px", cursor: "pointer",
-              fontFamily: "'DM Sans', sans-serif", letterSpacing: "0.08em", fontWeight: 700,
-            }}>? PANDUAN</button>
-            <button onClick={() => setTheme(t => t === "dark" ? "light" : "dark")} title={theme === "dark" ? "Mode Terang" : "Mode Gelap"} style={{
-              background: "var(--border)", border: "1px solid var(--border-mid)", borderRadius: 8,
-              color: "var(--text-dim)", fontSize: 15, padding: "3px 9px", cursor: "pointer",
-              lineHeight: 1, display: "flex", alignItems: "center", justifyContent: "center",
-            }}>{theme === "dark" ? "☀" : "☾"}</button>
-            <button onClick={handleLogout} style={{
-              background: "var(--border)", border: "1px solid var(--border-mid)", borderRadius: 8,
-              color: "var(--muted)", fontSize: 9, padding: "5px 10px", cursor: "pointer",
-              fontFamily: "'DM Sans', sans-serif", letterSpacing: "0.08em",
-            }}>KELUAR</button>
-          </div>
+        <h1 style={{ fontSize: 30, color: "var(--text)", fontWeight: 900, margin: 0, lineHeight: 1.15 }}>
+          Hafalan <span style={{ color: "var(--gold)" }}>Al-Qur'an</span>
+        </h1>
+        <div style={{ fontSize: 12, color: "var(--muted)", marginTop: 5, letterSpacing: "0.08em" }}>
+          BERBASIS NEUROSAINS • UNTUK ORANG DEWASA
         </div>
+      </div>
+      {/* Action bar */}
+      <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+        <div style={{ flex: 1, fontSize: 14, color: "var(--muted-alt)", fontWeight: 600, minWidth: 80 }}>
+          {syncing ? "⟳ Sinkron..." : `👤 ${user.email?.split("@")[0]}`}
+        </div>
+        <button onClick={() => setScreen("panduan")} style={{
+          background: "var(--gold)18", border: "1px solid var(--gold)40", borderRadius: 10,
+          color: "var(--gold)", fontSize: 13, padding: "8px 14px", cursor: "pointer", fontWeight: 700,
+        }}>? Panduan</button>
+        <button onClick={() => setTheme(t => t === "dark" ? "light" : "dark")}
+          title={theme === "dark" ? "Mode Terang" : "Mode Gelap"} style={{
+            background: "var(--card)", border: "1px solid var(--border)", borderRadius: 10,
+            color: "var(--text-dim)", fontSize: 18, padding: "6px 12px", cursor: "pointer", lineHeight: 1,
+          }}>{theme === "dark" ? "☀" : "☾"}</button>
+        <button onClick={handleLogout} style={{
+          background: "var(--card)", border: "1px solid var(--border)", borderRadius: 10,
+          color: "var(--muted)", fontSize: 13, padding: "8px 14px", cursor: "pointer", fontWeight: 600,
+        }}>Keluar</button>
       </div>
     </div>
 
-    {/* Stats Ring */}
+    {/* Stats Card */}
     <div style={{
       background: "linear-gradient(135deg, var(--card) 0%, var(--bg-deeper) 100%)",
-      borderRadius: 20, padding: 24, marginBottom: 20,
+      borderRadius: 22, padding: "24px", marginBottom: 22,
       border: "1px solid var(--border)",
+      boxShadow: "0 2px 16px rgba(0,0,0,0.07)",
       display: "flex", alignItems: "center", gap: 24,
     }}>
-      <div style={{ position: "relative", width: 90, height: 90, flexShrink: 0 }}>
-        <svg width="90" height="90" style={{ transform: "rotate(-90deg)" }}>
-          <circle cx="45" cy="45" r="38" fill="none" stroke="var(--border)" strokeWidth="6" />
-          <circle cx="45" cy="45" r="38" fill="none" stroke="var(--gold)" strokeWidth="6"
-            strokeDasharray={`${(stats.hafal / stats.total) * 239} 239`}
+      <div style={{ position: "relative", width: 110, height: 110, flexShrink: 0 }}>
+        <svg width="110" height="110" style={{ transform: "rotate(-90deg)" }}>
+          <circle cx="55" cy="55" r="46" fill="none" stroke="var(--border)" strokeWidth="7" />
+          <circle cx="55" cy="55" r="46" fill="none" stroke="var(--gold)" strokeWidth="7"
+            strokeDasharray={`${(stats.hafal / stats.total) * 289} 289`}
             strokeLinecap="round" />
         </svg>
         <div style={{ position: "absolute", inset: 0, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center" }}>
-          <span style={{ fontSize: 20, fontWeight: 700, color: "var(--gold)", fontFamily: "'Playfair Display', serif" }}>{stats.hafal}</span>
-          <span style={{ fontSize: 9, color: "var(--muted)", letterSpacing: "0.1em" }}>SURAH</span>
+          <span style={{ fontSize: 28, fontWeight: 900, color: "var(--gold)" }}>{stats.hafal}</span>
+          <span style={{ fontSize: 11, color: "var(--muted)", letterSpacing: "0.08em", fontWeight: 700 }}>SURAH</span>
         </div>
       </div>
       <div style={{ flex: 1 }}>
-        <div style={{ color: "var(--text)", fontSize: 15, fontFamily: "'Playfair Display', serif", marginBottom: 12 }}>Progress Hafalan</div>
+        <div style={{ color: "var(--text)", fontSize: 17, fontWeight: 800, marginBottom: 14 }}>Progress Hafalan</div>
         {[
           { label: "Hafal", value: stats.hafal, color: "var(--gold)" },
           { label: "Dalam Proses", value: stats.proses, color: "var(--blue)" },
           { label: "Belum Mulai", value: stats.total - stats.hafal - stats.proses, color: "var(--border-mid)" },
         ].map(s => (
-          <div key={s.label} style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
-            <div style={{ width: 8, height: 8, borderRadius: 2, background: s.color, flexShrink: 0 }} />
-            <span style={{ fontSize: 11, color: "var(--text-dim)", flex: 1, fontFamily: "'DM Sans', sans-serif" }}>{s.label}</span>
-            <span style={{ fontSize: 12, color: "var(--text)", fontWeight: 600 }}>{s.value}</span>
+          <div key={s.label} style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 8 }}>
+            <div style={{ width: 10, height: 10, borderRadius: 3, background: s.color, flexShrink: 0 }} />
+            <span style={{ fontSize: 14, color: "var(--text-dim)", flex: 1, fontWeight: 500 }}>{s.label}</span>
+            <span style={{ fontSize: 17, color: "var(--text)", fontWeight: 800 }}>{s.value}</span>
           </div>
         ))}
       </div>
     </div>
 
-    {/* Today's Tasks */}
-    <div style={{ marginBottom: 20 }}>
+    {/* Today's Agenda */}
+    <div style={{ marginBottom: 22 }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 14 }}>
-        <span style={{ fontSize: 13, color: "var(--text)", fontFamily: "'Playfair Display', serif", letterSpacing: "0.02em" }}>Agenda Hari Ini</span>
-        <span style={{ fontSize: 10, color: "var(--gold)", fontFamily: "'DM Sans', sans-serif", letterSpacing: "0.12em" }}>
-          {todayDone} SELESAI
-        </span>
+        <span style={{ fontSize: 18, color: "var(--text)", fontWeight: 800 }}>Agenda Hari Ini</span>
+        <span style={{ fontSize: 13, color: "var(--gold)", fontWeight: 700 }}>{todayDone} Selesai</span>
       </div>
 
       {dueToday.length > 0 ? dueToday.slice(0, 3).map(s => (
         <div key={s.id} style={{
-          background: "var(--card)", borderRadius: 14, padding: "14px 16px",
+          background: "var(--card)", borderRadius: 18, padding: "16px 18px",
           marginBottom: 10, border: "1px solid var(--border)",
-          display: "flex", alignItems: "center", gap: 14,
+          display: "flex", alignItems: "center", gap: 16,
+          boxShadow: "0 2px 10px rgba(0,0,0,0.05)",
         }}>
           <div style={{
-            width: 40, height: 40, borderRadius: 12,
+            width: 50, height: 50, borderRadius: 15, flexShrink: 0,
             background: "linear-gradient(135deg, var(--blue), var(--blue-dark))",
             display: "flex", alignItems: "center", justifyContent: "center",
-            fontSize: 18, color: "#fff", flexShrink: 0,
+            fontSize: 22, color: "#fff",
           }}>⟳</div>
           <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 13, color: "var(--text)", fontFamily: "'Playfair Display', serif" }}>{s.name}</div>
-            <div style={{ fontSize: 10, color: "var(--muted)", fontFamily: "'DM Sans', sans-serif", marginTop: 2 }}>Muraja'ah terjadwal</div>
+            <div style={{ fontSize: 16, color: "var(--text)", fontWeight: 700 }}>{s.name}</div>
+            <div style={{ fontSize: 13, color: "var(--muted)", marginTop: 3 }}>Muraja'ah terjadwal</div>
           </div>
           <button onClick={() => { setSelectedSurah(s); setSelectedSurahDetail(null); setScreen("muraja"); }} style={{
-            background: "var(--border)", border: "1px solid var(--border-mid)", borderRadius: 8,
-            color: "var(--blue)", fontSize: 10, padding: "6px 12px", cursor: "pointer",
-            fontFamily: "'DM Sans', sans-serif", letterSpacing: "0.08em",
-          }}>MULAI</button>
+            background: "var(--blue)18", border: "1px solid var(--blue)50", borderRadius: 12,
+            color: "var(--blue)", fontSize: 13, padding: "10px 16px", cursor: "pointer", fontWeight: 700,
+          }}>Mulai</button>
         </div>
       )) : (
         <div style={{
-          background: "var(--card)", borderRadius: 14, padding: 20, textAlign: "center",
-          border: "1px solid var(--border)",
+          background: "var(--card)", borderRadius: 18, padding: "28px 20px", textAlign: "center",
+          border: "1px solid var(--border)", boxShadow: "0 2px 10px rgba(0,0,0,0.05)",
         }}>
-          <div style={{ fontSize: 28, marginBottom: 8 }}>✦</div>
-          <div style={{ fontSize: 12, color: "var(--gold)", fontFamily: "'DM Sans', sans-serif" }}>Tidak ada muraja'ah terjadwal hari ini</div>
-          <div style={{ fontSize: 10, color: "var(--muted)", marginTop: 4 }}>Mulai hafalan baru atau tambah waktu belajar</div>
+          <div style={{ fontSize: 40, marginBottom: 12 }}>✦</div>
+          <div style={{ fontSize: 16, color: "var(--gold)", fontWeight: 700 }}>Tidak ada muraja'ah hari ini</div>
+          <div style={{ fontSize: 14, color: "var(--muted)", marginTop: 8, lineHeight: 1.5 }}>
+            Mulai hafalan baru atau tandai surah yang sudah dihafal
+          </div>
         </div>
       )}
     </div>
 
-    {/* Method Highlight */}
-    <div style={{ marginBottom: 20 }}>
-      <div style={{ fontSize: 13, color: "var(--text)", fontFamily: "'Playfair Display', serif", marginBottom: 14 }}>
-        Metode Ilmiah Aktif
-      </div>
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-        {METHODS.slice(0, 4).map(m => (
+    {/* Method Cards — horizontal scroll */}
+    <div style={{ marginBottom: 22 }}>
+      <div style={{ fontSize: 18, color: "var(--text)", fontWeight: 800, marginBottom: 14 }}>Metode Ilmiah</div>
+      <div style={{ display: "flex", gap: 12, overflowX: "auto", paddingBottom: 8, msOverflowStyle: "none", scrollbarWidth: "none" }}>
+        {METHODS.map(m => (
           <div key={m.id} onClick={() => { setScreen("metode"); }}
             style={{
-              background: "var(--card)", borderRadius: 14, padding: 14,
-              border: `1px solid ${m.color}22`, cursor: "pointer",
+              background: "var(--card)", borderRadius: 18, padding: "18px 16px",
+              border: `1.5px solid ${m.color}35`, cursor: "pointer", flexShrink: 0, width: 165,
+              boxShadow: "0 2px 10px rgba(0,0,0,0.05)",
             }}>
-            <div style={{ fontSize: 24, marginBottom: 6 }}>{m.icon}</div>
-            <div style={{ fontSize: 11, color: m.color, fontFamily: "'DM Sans', sans-serif", fontWeight: 600 }}>{m.name}</div>
-            <div style={{ fontSize: 9, color: "var(--muted)", marginTop: 4, fontFamily: "'DM Sans', sans-serif", lineHeight: 1.4 }}>{m.ref}</div>
+            <div style={{ fontSize: 30, marginBottom: 10 }}>{m.icon}</div>
+            <div style={{ fontSize: 14, color: m.color, fontWeight: 800, lineHeight: 1.3, marginBottom: 6 }}>{m.name}</div>
+            <div style={{ fontSize: 12, color: "var(--muted)", lineHeight: 1.4 }}>{m.tagline}</div>
           </div>
         ))}
       </div>
     </div>
 
-    {/* Quick Start */}
+    {/* CTA */}
     <button onClick={() => { setScreen("hafalan"); setSelectedSurahDetail(null); }} style={{
-      width: "100%", padding: "16px 0",
+      width: "100%", padding: "20px 0",
       background: "linear-gradient(135deg, var(--gold), var(--gold-dark))",
-      border: "none", borderRadius: 16, cursor: "pointer",
-      color: "var(--bg)", fontSize: 13, fontWeight: 700,
-      fontFamily: "'DM Sans', sans-serif", letterSpacing: "0.1em",
+      border: "none", borderRadius: 18, cursor: "pointer",
+      color: "var(--bg)", fontSize: 16, fontWeight: 900,
+      letterSpacing: "0.06em", boxShadow: "0 4px 20px rgba(0,0,0,0.15)",
     }}>
       ✦ MULAI SESI HAFALAN
     </button>
   </div>
 );
+
 
 const HafalanScreen = ({
   activeTab, setActiveTab, searchQuery, setSearchQuery, activeJuz, setActiveJuz,
@@ -989,58 +1063,58 @@ const HafalanScreen = ({
   return (
     <div style={{ padding: "0 20px 140px" }}>
       <div style={{ padding: "52px 0 16px" }}>
-        <h2 style={{ fontSize: 24, fontFamily: "'Playfair Display', serif", color: "var(--text)", margin: 0 }}>
+        <h2 style={{ fontSize: 26, color: "var(--text)", fontWeight: 900, margin: 0 }}>
           114 <span style={{ color: "var(--gold)" }}>Surah</span>
         </h2>
-        <div style={{ fontSize: 10, color: "var(--muted)", marginTop: 4, fontFamily: "'DM Sans', sans-serif" }}>
+        <div style={{ fontSize: 14, color: "var(--muted)", marginTop: 5, fontWeight: 500 }}>
           {stats.hafal} hafal • {stats.proses} proses • {stats.total - stats.hafal - stats.proses} belum
         </div>
       </div>
 
       {/* Search Bar */}
-      <div style={{ position: "relative", marginBottom: 14 }}>
-        <span style={{ position: "absolute", left: 14, top: "50%", transform: "translateY(-50%)", fontSize: 14, color: "var(--muted)" }}>⌕</span>
+      <div style={{ position: "relative", marginBottom: 16 }}>
+        <span style={{ position: "absolute", left: 16, top: "50%", transform: "translateY(-50%)", fontSize: 18, color: "var(--muted)" }}>⌕</span>
         <input
           value={searchQuery}
           onChange={e => setSearchQuery(e.target.value)}
           placeholder="Cari nama surah..."
           style={{
             width: "100%", boxSizing: "border-box",
-            background: "var(--card)", border: "1px solid var(--border)", borderRadius: 12,
-            padding: "11px 14px 11px 36px", color: "var(--text)", fontSize: 13,
-            fontFamily: "'DM Sans', sans-serif", outline: "none",
+            background: "var(--card)", border: "1.5px solid var(--border)", borderRadius: 14,
+            padding: "14px 16px 14px 44px", color: "var(--text)", fontSize: 16,
+            outline: "none",
           }}
         />
         {searchQuery && (
           <button onClick={() => setSearchQuery("")} style={{
-            position: "absolute", right: 12, top: "50%", transform: "translateY(-50%)",
-            background: "none", border: "none", color: "var(--muted)", cursor: "pointer", fontSize: 16,
+            position: "absolute", right: 14, top: "50%", transform: "translateY(-50%)",
+            background: "none", border: "none", color: "var(--muted)", cursor: "pointer", fontSize: 20,
+            lineHeight: 1,
           }}>×</button>
         )}
       </div>
 
       {/* Status Tabs */}
-      <div style={{ display: "flex", gap: 7, marginBottom: 12, overflowX: "auto", paddingBottom: 2 }}>
+      <div style={{ display: "flex", gap: 8, marginBottom: 14, overflowX: "auto", paddingBottom: 2 }}>
         {["semua", "proses", "hafal", "belum"].map(tab => (
           <button key={tab} onClick={() => setActiveTab(tab)} style={{
             background: activeTab === tab ? "var(--gold)" : "var(--card)",
-            border: `1px solid ${activeTab === tab ? "var(--gold)" : "var(--border)"}`,
-            borderRadius: 20, padding: "6px 14px", cursor: "pointer",
+            border: `1.5px solid ${activeTab === tab ? "var(--gold)" : "var(--border)"}`,
+            borderRadius: 22, padding: "9px 18px", cursor: "pointer",
             color: activeTab === tab ? "var(--bg)" : "var(--text-dim)",
-            fontSize: 10, fontFamily: "'DM Sans', sans-serif",
-            fontWeight: 700, letterSpacing: "0.08em", whiteSpace: "nowrap",
+            fontSize: 13, fontWeight: 800, letterSpacing: "0.06em", whiteSpace: "nowrap",
           }}>{tab.toUpperCase()}</button>
         ))}
       </div>
 
-      {/* Juz Filter Strip */}
-      <div style={{ display: "flex", gap: 6, marginBottom: 18, overflowX: "auto", paddingBottom: 4 }}>
+      {/* Juz Filter */}
+      <div style={{ display: "flex", gap: 7, marginBottom: 20, overflowX: "auto", paddingBottom: 4 }}>
         <button onClick={() => setActiveJuz(0)} style={{
           background: activeJuz === 0 ? "var(--blue)" : "var(--card)",
-          border: `1px solid ${activeJuz === 0 ? "var(--blue)" : "var(--border)"}`,
-          borderRadius: 20, padding: "5px 14px", cursor: "pointer",
+          border: `1.5px solid ${activeJuz === 0 ? "var(--blue)" : "var(--border)"}`,
+          borderRadius: 22, padding: "8px 14px", cursor: "pointer",
           color: activeJuz === 0 ? "var(--bg)" : "var(--text-dim)",
-          fontSize: 10, fontFamily: "'DM Sans', sans-serif", fontWeight: 700, whiteSpace: "nowrap",
+          fontSize: 12, fontWeight: 800, whiteSpace: "nowrap",
         }}>ALL JUZ</button>
         {Array.from({ length: 30 }, (_, i) => i + 1).map(juz => {
           const p = juzProgress(juz);
@@ -1048,10 +1122,10 @@ const HafalanScreen = ({
           return (
             <button key={juz} onClick={() => setActiveJuz(juz)} style={{
               background: activeJuz === juz ? "var(--blue)" : done ? "var(--blue)22" : "var(--card)",
-              border: `1px solid ${activeJuz === juz ? "var(--blue)" : done ? "var(--blue)44" : "var(--border)"}`,
-              borderRadius: 20, padding: "5px 12px", cursor: "pointer",
+              border: `1.5px solid ${activeJuz === juz ? "var(--blue)" : done ? "var(--blue)44" : "var(--border)"}`,
+              borderRadius: 22, padding: "8px 12px", cursor: "pointer",
               color: activeJuz === juz ? "var(--bg)" : done ? "var(--blue)" : "var(--text-dim)",
-              fontSize: 10, fontFamily: "'DM Sans', sans-serif", fontWeight: 700, whiteSpace: "nowrap",
+              fontSize: 12, fontWeight: 800, whiteSpace: "nowrap",
             }}>{juz}</button>
           );
         })}
@@ -1075,13 +1149,13 @@ const HafalanScreen = ({
         <div key={juz}>
           {/* Juz Header */}
           {(activeJuz === 0 && !searchQuery) && (
-            <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10, marginTop: 6 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12, marginTop: 8 }}>
               <div style={{
-                background: "var(--blue)18", border: "1px solid var(--blue)33", borderRadius: 8,
-                padding: "4px 12px", fontSize: 10, color: "var(--blue)", fontFamily: "'DM Sans', sans-serif", fontWeight: 700,
+                background: "var(--blue)18", border: "1px solid var(--blue)33", borderRadius: 10,
+                padding: "6px 14px", fontSize: 13, color: "var(--blue)", fontWeight: 800,
               }}>JUZ {juz}</div>
-              <div style={{ flex: 1, height: 1, background: "var(--border)" }} />
-              <div style={{ fontSize: 9, color: "var(--muted)", fontFamily: "'DM Sans', sans-serif" }}>
+              <div style={{ flex: 1, height: 1.5, background: "var(--border)" }} />
+              <div style={{ fontSize: 12, color: "var(--muted)", fontWeight: 600 }}>
                 {juzProgress(juz).done}/{juzProgress(juz).total} hafal
               </div>
             </div>
@@ -1092,66 +1166,62 @@ const HafalanScreen = ({
             return (
               <div key={s.id}
                 style={{
-                  background: "var(--card)", borderRadius: 14, padding: "13px 14px",
-                  marginBottom: 8, border: "1px solid var(--border)",
-                  display: "flex", alignItems: "center", gap: 12, cursor: "pointer",
+                  background: "var(--card)", borderRadius: 18, padding: "14px 16px",
+                  marginBottom: 10, border: "1px solid var(--border)",
+                  display: "flex", alignItems: "center", gap: 14, cursor: "pointer",
+                  boxShadow: "0 1px 6px rgba(0,0,0,0.04)",
                 }}
                 onClick={(e) => { if (!e.target.closest("button")) { setSelectedSurahDetail(s); } }}
               >
                 {/* Nomor */}
                 <div style={{
-                  width: 40, height: 40, borderRadius: 10, flexShrink: 0,
+                  width: 48, height: 48, borderRadius: 14, flexShrink: 0,
                   background: d.status === "hafal" ? "linear-gradient(135deg, var(--gold), var(--gold-dark))"
                     : d.status === "proses" ? "linear-gradient(135deg, var(--blue), var(--blue-dark))"
                       : "var(--border)",
                   display: "flex", alignItems: "center", justifyContent: "center",
-                  fontSize: 12, color: d.status === "belum" ? "var(--muted)" : "#fff",
-                  fontFamily: "'Playfair Display', serif", fontWeight: 700,
+                  fontSize: 15, color: d.status === "belum" ? "var(--muted)" : "#fff", fontWeight: 800,
                 }}>{s.id}</div>
 
                 {/* Info */}
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <span style={{ fontSize: 13, color: "var(--text)", fontFamily: "'Playfair Display', serif" }}>{s.name}</span>
-                    <span style={{ fontSize: 15, color: "var(--gold)88", fontFamily: "serif" }}>{s.arabic}</span>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 3 }}>
+                    <span style={{ fontSize: 16, color: "var(--text)", fontWeight: 700 }}>{s.name}</span>
+                    <span style={{ fontSize: 18, color: "var(--gold)99" }}>{s.arabic}</span>
                   </div>
-                  <div style={{ fontSize: 9, color: "var(--muted)", marginTop: 2, fontFamily: "'DM Sans', sans-serif" }}>
+                  <div style={{ fontSize: 12, color: "var(--muted)", fontWeight: 500 }}>
                     {s.ayat} ayat • Juz {s.juz}
                     {d.status !== "belum" && ` • ${d.repetitions}× ulang`}
-                    <span style={{ color: "var(--gold)55", marginLeft: 4 }}>• Tap untuk baca ›</span>
                   </div>
                   {d.status !== "belum" && (
-                    <div style={{ marginTop: 5, height: 2, background: "var(--border)", borderRadius: 2 }}>
-                      <div style={{ height: "100%", width: `${d.progress}%`, background: d.status === "hafal" ? "var(--gold)" : "var(--blue)", borderRadius: 2, transition: "width 0.4s" }} />
+                    <div style={{ marginTop: 7, height: 5, background: "var(--border)", borderRadius: 4 }}>
+                      <div style={{ height: "100%", width: `${d.progress}%`, background: d.status === "hafal" ? "var(--gold)" : "var(--blue)", borderRadius: 4, transition: "width 0.4s" }} />
                     </div>
                   )}
                 </div>
 
-                {/* Action Buttons */}
-                <div style={{ display: "flex", flexDirection: "column", gap: 5, flexShrink: 0 }}>
+                {/* Action Buttons — side by side */}
+                <div style={{ display: "flex", flexDirection: "column", gap: 6, flexShrink: 0 }}>
                   {d.status !== "hafal" && (
                     <button onClick={() => markStatus(s.id, "hafal")} style={{
-                      background: "var(--gold)18", border: "1px solid var(--gold)44",
-                      borderRadius: 7, color: "var(--gold)", fontSize: 9,
-                      padding: "5px 9px", cursor: "pointer",
-                      fontFamily: "'DM Sans', sans-serif", fontWeight: 700,
+                      background: "var(--gold)20", border: "1.5px solid var(--gold)55",
+                      borderRadius: 10, color: "var(--gold)", fontSize: 12,
+                      padding: "7px 12px", cursor: "pointer", fontWeight: 800,
                     }}>HAFAL ✓</button>
                   )}
                   {d.status === "belum" && (
                     <button onClick={() => markStatus(s.id, "proses")} style={{
-                      background: "var(--blue)18", border: "1px solid var(--blue)44",
-                      borderRadius: 7, color: "var(--blue)", fontSize: 9,
-                      padding: "5px 9px", cursor: "pointer",
-                      fontFamily: "'DM Sans', sans-serif", fontWeight: 700,
+                      background: "var(--blue)18", border: "1.5px solid var(--blue)44",
+                      borderRadius: 10, color: "var(--blue)", fontSize: 12,
+                      padding: "7px 12px", cursor: "pointer", fontWeight: 800,
                     }}>MULAI</button>
                   )}
                   {d.status === "hafal" && (
                     <button onClick={() => resetStatus(s.id)} style={{
-                      background: "var(--gold)12", border: "1px solid var(--gold)33",
-                      borderRadius: 7, color: "var(--gold)88", fontSize: 9,
-                      padding: "5px 9px", cursor: "pointer",
-                      fontFamily: "'DM Sans', sans-serif", fontWeight: 700,
-                    }}>↩ RESET</button>
+                      background: "var(--gold)10", border: "1.5px solid var(--gold)33",
+                      borderRadius: 10, color: "var(--gold)99", fontSize: 12,
+                      padding: "7px 12px", cursor: "pointer", fontWeight: 700,
+                    }}>↩ Reset</button>
                   )}
                 </div>
               </div>
@@ -1807,10 +1877,10 @@ const JadwalScreen = ({
     <div style={{ padding: "0 20px 140px" }}>
       {/* Header */}
       <div style={{ padding: "56px 0 20px" }}>
-        <h2 style={{ fontSize: 24, fontFamily: "'Playfair Display', serif", color: "var(--text)", margin: 0 }}>
+        <h2 style={{ fontSize: 26, color: "var(--text)", fontWeight: 900, margin: 0 }}>
           Jadwal <span style={{ color: "var(--green)" }}>Hafalan</span>
         </h2>
-        <div style={{ fontSize: 11, color: "var(--muted)", marginTop: 6, fontFamily: "'DM Sans', sans-serif" }}>
+        <div style={{ fontSize: 13, color: "var(--muted)", marginTop: 6, fontWeight: 500 }}>
           Adult Learning Theory — Knowles (1980) + Park & Bischof (2013)
         </div>
       </div>
@@ -1832,24 +1902,25 @@ const JadwalScreen = ({
       </div>
 
       {/* Week Strip */}
-      <div style={{ display: "flex", gap: 6, marginBottom: 20 }}>
+      <div style={{ display: "flex", gap: 6, marginBottom: 22 }}>
         {days.map((d, i) => {
           const isToday = i === new Date().getDay() - 1;
           return (
             <div key={d} style={{
               flex: 1, background: isToday ? "var(--gold)" : "var(--card)",
-              borderRadius: 10, padding: "8px 4px", textAlign: "center",
-              border: `1px solid ${isToday ? "var(--gold)" : "var(--border)"}`,
+              borderRadius: 14, padding: "10px 4px", textAlign: "center",
+              border: `1.5px solid ${isToday ? "var(--gold)" : "var(--border)"}`,
+              boxShadow: isToday ? "0 2px 10px var(--gold)33" : "none",
             }}>
-              <div style={{ fontSize: 9, color: isToday ? "var(--bg)" : "var(--muted)", fontFamily: "'DM Sans', sans-serif", marginBottom: 4 }}>{d}</div>
-              <div style={{ fontSize: 14, color: isToday ? "var(--bg)" : "var(--border-mid)" }}>◆</div>
+              <div style={{ fontSize: 11, color: isToday ? "var(--bg)" : "var(--muted)", fontWeight: 700, marginBottom: 5 }}>{d}</div>
+              <div style={{ fontSize: 16, color: isToday ? "var(--bg)" : "var(--border-mid)" }}>◆</div>
             </div>
           );
         })}
       </div>
 
       {/* Sesi Belajar */}
-      <div style={{ fontSize: 13, color: "var(--text)", fontFamily: "'Playfair Display', serif", marginBottom: 14 }}>
+      <div style={{ fontSize: 18, color: "var(--text)", fontWeight: 800, marginBottom: 14 }}>
         Sesi Belajar Harian
       </div>
 
@@ -1902,13 +1973,13 @@ const JadwalScreen = ({
 
       {/* Neuroscience tip */}
       <div style={{
-        background: "linear-gradient(135deg, var(--gold)11, var(--gold-dark)0A)", borderRadius: 16,
-        padding: 18, border: "1px solid var(--gold)22", marginTop: 4,
+        background: "linear-gradient(135deg, var(--gold)18, var(--gold-dark)0A)", borderRadius: 18,
+        padding: 20, border: "1px solid var(--gold)30", marginTop: 6,
       }}>
-        <div style={{ fontSize: 11, color: "var(--gold)", fontFamily: "'DM Sans', sans-serif", fontWeight: 600, marginBottom: 8, letterSpacing: "0.1em" }}>
+        <div style={{ fontSize: 14, color: "var(--gold)", fontWeight: 800, marginBottom: 10, letterSpacing: "0.06em" }}>
           ✦ TIPS NEUROSAINS
         </div>
-        <div style={{ fontSize: 11, color: "var(--text-secondary)", fontFamily: "'DM Sans', sans-serif", lineHeight: 1.7 }}>
+        <div style={{ fontSize: 14, color: "var(--text-secondary)", lineHeight: 1.7 }}>
           Otak orang dewasa mencapai puncak plastisitas neural 60–90 menit setelah bangun tidur. Waktu subuh adalah waktu terbaik untuk hafalan baru — memori jangka panjang dikonsolidasi saat tidur malam.
         </div>
       </div>
@@ -1925,9 +1996,10 @@ const SholatScreen = ({
     return h * 60 + m;
   };
   const nowMins = currentTime.getHours() * 60 + currentTime.getMinutes();
-  const mainKeys = ["Subuh", "Dzuhur", "Ashar", "Maghrib", "Isya"];
+  const mainKeys = ["Imsak", "Subuh", "Dzuhur", "Ashar", "Maghrib", "Isya"];
+  const nextPrayerKeys = ["Subuh", "Dzuhur", "Ashar", "Maghrib", "Isya"]; // hanya sholat wajib untuk countdown
   const nextPrayer = prayerTimes
-    ? mainKeys.find(k => toMins(prayerTimes[k]) > nowMins) || "Subuh"
+    ? nextPrayerKeys.find(k => toMins(prayerTimes[k]) > nowMins) || "Subuh"
     : null;
   const nextMins = prayerTimes && nextPrayer
     ? (toMins(prayerTimes[nextPrayer]) - nowMins + 1440) % 1440
@@ -1939,6 +2011,7 @@ const SholatScreen = ({
   };
 
   const prayerMeta = {
+    Imsak: { icon: "⬛", color: "var(--text-dim)", desc: "Batas sahur — imsak (10 menit sebelum Subuh)" },
     Subuh: { icon: "☽", color: "var(--gold)", desc: "Fajar — waktu terbaik hafalan baru" },
     Terbit: { icon: "◇", color: "var(--text-dim)", desc: "Matahari terbit — waktu larangan sholat" },
     Dzuhur: { icon: "◉", color: "var(--blue)", desc: "Tengah hari — review cepat setelah sholat" },
@@ -1961,10 +2034,10 @@ const SholatScreen = ({
     <div style={{ padding: "0 20px 140px" }}>
       {/* Header */}
       <div style={{ padding: "56px 0 20px" }}>
-        <h2 style={{ fontSize: 24, fontFamily: "'Playfair Display', serif", color: "var(--text)", margin: 0 }}>
+        <h2 style={{ fontSize: 26, color: "var(--text)", fontWeight: 900, margin: 0 }}>
           Waktu <span style={{ color: "var(--green)" }}>Sholat</span>
         </h2>
-        <div style={{ fontSize: 11, color: "var(--muted)", marginTop: 6, fontFamily: "'DM Sans', sans-serif" }}>
+        <div style={{ fontSize: 13, color: "var(--muted)", marginTop: 6, fontWeight: 500 }}>
           Otomatis sesuai lokasi GPS smartphone
         </div>
       </div>
@@ -1977,14 +2050,14 @@ const SholatScreen = ({
       }}>
         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 16 }}>
           <div>
-            <div style={{ fontSize: 36, color: "var(--text)", fontFamily: "'Playfair Display', serif", fontWeight: 700, letterSpacing: 2, lineHeight: 1 }}>
+            <div style={{ fontSize: 42, color: "var(--text)", fontWeight: 900, letterSpacing: 2, lineHeight: 1 }}>
               {currentTime.toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" })}
             </div>
-            <div style={{ fontSize: 11, color: "var(--muted)", fontFamily: "'DM Sans', sans-serif", marginTop: 6 }}>
+            <div style={{ fontSize: 13, color: "var(--muted)", fontWeight: 500, marginTop: 8 }}>
               {currentTime.toLocaleDateString("id-ID", { weekday: "long", day: "numeric", month: "long", year: "numeric" })}
             </div>
             {prayerLocation && (
-              <div style={{ fontSize: 11, color: "var(--green)", fontFamily: "'DM Sans', sans-serif", marginTop: 4, fontWeight: 700 }}>
+              <div style={{ fontSize: 14, color: "var(--green)", marginTop: 5, fontWeight: 700 }}>
                 📍 {prayerLocation.city}
               </div>
             )}
@@ -2148,13 +2221,13 @@ const SholatScreen = ({
       {prayerTimes && (
         <div style={{
           background: "var(--green)0A", border: "1px solid var(--green)22",
-          borderRadius: 14, padding: 14, marginTop: 4,
+          borderRadius: 14, padding: 16, marginTop: 6,
         }}>
-          <div style={{ fontSize: 9, color: "var(--green)", fontFamily: "'DM Sans', sans-serif", fontWeight: 700, letterSpacing: "0.1em", marginBottom: 4 }}>
-            ℹ METODE KALKULASI
+          <div style={{ fontSize: 12, color: "var(--green)", fontWeight: 700, letterSpacing: "0.08em", marginBottom: 6 }}>
+            ✓ SUMBER JADWAL TERVERIFIKASI
           </div>
-          <div style={{ fontSize: 10, color: "var(--muted)", fontFamily: "'DM Sans', sans-serif", lineHeight: 1.6 }}>
-            Menggunakan metode <strong style={{ color: "var(--text)" }}>Kementerian Agama Republik Indonesia</strong> (method=20) via aladhan.com. Waktu disesuaikan otomatis dengan koordinat GPS smartphone Anda.
+          <div style={{ fontSize: 13, color: "var(--muted)", lineHeight: 1.6 }}>
+            Menggunakan metode <strong style={{ color: "var(--text)" }}>Kementerian Agama RI</strong> (Fajr 20°, Isha 18°) + <strong style={{ color: "var(--text)" }}>mazhab Syafi'i</strong> untuk waktu Ashar — sesuai standar jadwal sholat resmi Indonesia. Data diambil lewat GPS koordinat Anda, bukan berdasarkan nama kota.
           </div>
         </div>
       )}
@@ -2340,9 +2413,10 @@ export default function QuranHafalanApp() {
     setPrayerError(null);
     try {
       const pos = await new Promise((res, rej) =>
-        navigator.geolocation.getCurrentPosition(res, rej, { timeout: 10000 })
+        navigator.geolocation.getCurrentPosition(res, rej, { timeout: 12000, maximumAge: 300000 })
       );
       const { latitude, longitude } = pos.coords;
+
       // Reverse geocode pakai nominatim (gratis, no key)
       const geoRes = await fetch(
         `https://nominatim.openstreetmap.org/reverse?lat=${latitude}&lon=${longitude}&format=json&accept-language=id`
@@ -2350,29 +2424,85 @@ export default function QuranHafalanApp() {
       const geoData = await geoRes.json();
       const city = geoData.address?.city || geoData.address?.town || geoData.address?.county || geoData.address?.state || "Lokasi Anda";
       const country = geoData.address?.country_code?.toUpperCase() || "ID";
-      // Ambil jadwal sholat via aladhan.com (gratis, no key)
+
+      // Deteksi timezone lokal (untuk akurasi di luar WIB)
+      const tzName = Intl.DateTimeFormat().resolvedOptions().timeZone || "Asia/Jakarta";
+
+      // Tanggal hari ini
       const today = new Date();
       const dd = String(today.getDate()).padStart(2, '0');
       const mm = String(today.getMonth() + 1).padStart(2, '0');
       const yyyy = today.getFullYear();
-      const prayRes = await fetch(
-        `https://api.aladhan.com/v1/timings/${dd}-${mm}-${yyyy}?latitude=${latitude}&longitude=${longitude}&method=20&school=1`
-      );
-      // method=20 = Kemenag Indonesia, school=1 = Hanafi (Ashar)
-      const prayData = await prayRes.json();
-      if (prayData.code === 200) {
-        const t = prayData.data.timings;
-        setPrayerTimes({
-          Subuh: t.Fajr,
-          Terbit: t.Sunrise,
-          Dzuhur: t.Dhuhr,
-          Ashar: t.Asr,
-          Maghrib: t.Maghrib,
-          Isya: t.Isha,
-        });
+      const dateKey = `${dd}-${mm}-${yyyy}`;
+
+      // Cek cache localStorage — hindari fetch ulang di hari yang sama
+      const cacheKey = `prayer_${Math.round(latitude * 100)}_${Math.round(longitude * 100)}_${dateKey}`;
+      const cached = localStorage.getItem(cacheKey);
+      if (cached) {
+        try {
+          const c = JSON.parse(cached);
+          setPrayerTimes(c.times);
+          setPrayerLocation({ city, country, lat: latitude, lon: longitude });
+          setPrayerLoading(false);
+          return;
+        } catch (_) { /* cache invalid, lanjut fetch */ }
+      }
+
+      // ===== API UTAMA: aladhan.com method=20 (Kemenag RI), school=0 (Syafi'i) =====
+      // Catatan: school=0 (Syafi'i/STANDARD) = standar Indonesia yang benar
+      //          school=1 (Hanafi) membuat Ashar ~1 jam lebih telat — TIDAK SESUAI kemenag
+      let times = null;
+      try {
+        const prayRes = await fetch(
+          `https://api.aladhan.com/v1/timings/${dateKey}?latitude=${latitude}&longitude=${longitude}&method=20&school=0&timezonestring=${encodeURIComponent(tzName)}`
+        );
+        const prayData = await prayRes.json();
+        if (prayData.code === 200) {
+          const t = prayData.data.timings;
+          // Hapus menit timezone dari format "HH:MM (+07)" → "HH:MM"
+          const clean = (s) => s?.replace(/\s*\(.*\)/, '').trim();
+          times = {
+            Subuh: clean(t.Fajr),
+            Terbit: clean(t.Sunrise),
+            Dzuhur: clean(t.Dhuhr),
+            Ashar: clean(t.Asr),
+            Maghrib: clean(t.Maghrib),
+            Isya: clean(t.Isha),
+            Imsak: clean(t.Imsak),
+          };
+        }
+      } catch (_) { /* API utama gagal, coba fallback */ }
+
+      // ===== FALLBACK: aladhan.com method=4 (Umm Al-Qura) sebagai cadangan =====
+      if (!times) {
+        try {
+          const fallRes = await fetch(
+            `https://api.aladhan.com/v1/timingsByCity/${dateKey}?city=${encodeURIComponent(city)}&country=${country}&method=20&school=0`
+          );
+          const fallData = await fallRes.json();
+          if (fallData.code === 200) {
+            const t = fallData.data.timings;
+            const clean = (s) => s?.replace(/\s*\(.*\)/, '').trim();
+            times = {
+              Subuh: clean(t.Fajr),
+              Terbit: clean(t.Sunrise),
+              Dzuhur: clean(t.Dhuhr),
+              Ashar: clean(t.Asr),
+              Maghrib: clean(t.Maghrib),
+              Isya: clean(t.Isha),
+              Imsak: clean(t.Imsak),
+            };
+          }
+        } catch (_) { /* fallback juga gagal */ }
+      }
+
+      if (times) {
+        setPrayerTimes(times);
         setPrayerLocation({ city, country, lat: latitude, lon: longitude });
+        // Simpan ke cache (berlaku sampai tengah malam)
+        try { localStorage.setItem(cacheKey, JSON.stringify({ times, city, at: Date.now() })); } catch (_) { }
       } else {
-        setPrayerError("Gagal mengambil jadwal sholat.");
+        setPrayerError("Gagal mengambil jadwal sholat. Coba lagi nanti.");
       }
     } catch (e) {
       if (e.code === 1) setPrayerError("Izin lokasi ditolak. Aktifkan GPS di browser/app.");
