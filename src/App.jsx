@@ -554,8 +554,10 @@ function SurahDetailScreen({ surah, hafalanData, markStatus, resetStatus, onBack
   const [activeAyah, setActiveAyah] = useState(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [audioUrl, setAudioUrl] = useState(null);
+  const [timestamps, setTimestamps] = useState([]);
   const [audioLoading, setAudioLoading] = useState(false);
   const audioRef = useRef(null);
+  const ayahRefs = useRef({});
   const d = hafalanData[surah.id];
 
   // Fetch Audio URL Handler
@@ -567,10 +569,11 @@ function SurahDetailScreen({ surah, hafalanData, markStatus, resetStatus, onBack
       setIsPlaying(false);
       try {
         // ID 7 corresponds to Mishary Rashid Alafasy in Quran.com API
-        const res = await fetch(`https://api.quran.com/api/v4/chapter_recitations/7/${surah.id}`);
+        const res = await fetch(`https://api.quran.com/api/v4/chapter_recitations/7/${surah.id}?segments=true`);
         const data = await res.json();
-        if (isMounted && data.audio_file?.audio_url) {
-          setAudioUrl(data.audio_file.audio_url);
+        if (isMounted && data.audio_file) {
+          if (data.audio_file.audio_url) setAudioUrl(data.audio_file.audio_url);
+          if (data.audio_file.timestamps) setTimestamps(data.audio_file.timestamps);
         }
       } catch (e) {
         console.error("Failed to fetch audio URL", e);
@@ -593,7 +596,32 @@ function SurahDetailScreen({ surah, hafalanData, markStatus, resetStatus, onBack
     
     audioRef.current = new Audio(audioUrl);
     
-    audioRef.current.onended = () => setIsPlaying(false);
+    const handleTimeUpdate = () => {
+      if (!timestamps.length) return;
+      const currentTimeMs = audioRef.current.currentTime * 1000;
+      
+      // Find the active verse based on current time
+      const currentVerse = timestamps.find(t => 
+        currentTimeMs >= t.timestamp_from && currentTimeMs <= t.timestamp_to
+      );
+      
+      if (currentVerse) {
+        const verseKeyParts = currentVerse.verse_key.split(':');
+        const ayahNum = parseInt(verseKeyParts[1]);
+        setActiveAyah(ayahNum);
+        
+        // Auto-scroll to active ayah if it's not in view
+        if (ayahRefs.current[ayahNum]) {
+          ayahRefs.current[ayahNum].scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }
+    };
+
+    audioRef.current.addEventListener('timeupdate', handleTimeUpdate);
+    audioRef.current.onended = () => {
+      setIsPlaying(false);
+      setActiveAyah(null);
+    };
     audioRef.current.onerror = () => {
       console.error("Audio failed to load from:", audioUrl);
       setIsPlaying(false);
@@ -751,8 +779,15 @@ function SurahDetailScreen({ surah, hafalanData, markStatus, resetStatus, onBack
         }
 
         return (
-          <div key={ayah.number} onClick={() => setActiveAyah(active ? null : ayah.numberInSurah)}
-            style={{ padding: "18px 20px", borderBottom: "1px solid var(--card)", background: active ? "var(--gold)08" : "transparent", cursor: "pointer" }}>
+          <div key={ayah.number} ref={el => ayahRefs.current[ayah.numberInSurah] = el}
+            onClick={() => setActiveAyah(active ? null : ayah.numberInSurah)}
+            style={{ 
+              padding: "18px 20px", 
+              borderBottom: "1px solid var(--card)", 
+              background: active ? "var(--gold)15" : "transparent", 
+              cursor: "pointer",
+              transition: "background 0.5s ease"
+            }}>
             <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 10 }}>
               <div style={{
                 width: 26, height: 26, borderRadius: 7,
