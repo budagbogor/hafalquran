@@ -553,24 +553,49 @@ function SurahDetailScreen({ surah, hafalanData, markStatus, resetStatus, onBack
   const [showTerjemahan, setShowTerjemahan] = useState(true);
   const [activeAyah, setActiveAyah] = useState(null);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [audioUrl, setAudioUrl] = useState(null);
+  const [audioLoading, setAudioLoading] = useState(false);
   const audioRef = useRef(null);
   const d = hafalanData[surah.id];
 
-  // Audio Handler
+  // Fetch Audio URL Handler
   useEffect(() => {
-    // Reset audio when surah changes
+    let isMounted = true;
+    const fetchAudioUrl = async () => {
+      setAudioLoading(true);
+      setAudioUrl(null);
+      setIsPlaying(false);
+      try {
+        // ID 7 corresponds to Mishary Rashid Alafasy in Quran.com API
+        const res = await fetch(`https://api.quran.com/api/v4/chapter_recitations/7/${surah.id}`);
+        const data = await res.json();
+        if (isMounted && data.audio_file?.audio_url) {
+          setAudioUrl(data.audio_file.audio_url);
+        }
+      } catch (e) {
+        console.error("Failed to fetch audio URL", e);
+      } finally {
+        if (isMounted) setAudioLoading(false);
+      }
+    };
+    fetchAudioUrl();
+    return () => { isMounted = false; };
+  }, [surah.id]);
+
+  // Audio Playback Handler
+  useEffect(() => {
+    if (!audioUrl) return;
+    
+    // Cleanup previous audio object
     if (audioRef.current) {
       audioRef.current.pause();
-      audioRef.current = null;
     }
     
-    const surahIdStr = String(surah.id).padStart(3, '0');
-    // Using Mishary Rashid Alafasy from quranicaudio.com
-    audioRef.current = new Audio(`https://download.quranicaudio.com/quran/mishari_rashid_alafasy/${surahIdStr}.mp3`);
+    audioRef.current = new Audio(audioUrl);
     
     audioRef.current.onended = () => setIsPlaying(false);
     audioRef.current.onerror = () => {
-      console.error("Audio failed to load");
+      console.error("Audio failed to load from:", audioUrl);
       setIsPlaying(false);
     };
 
@@ -580,14 +605,17 @@ function SurahDetailScreen({ surah, hafalanData, markStatus, resetStatus, onBack
         audioRef.current = null;
       }
     };
-  }, [surah.id]);
+  }, [audioUrl]);
 
   const toggleAudio = () => {
-    if (!audioRef.current) return;
+    if (!audioRef.current || !audioUrl) return;
     if (isPlaying) {
       audioRef.current.pause();
     } else {
-      audioRef.current.play().catch(e => console.error("Playback failed", e));
+      audioRef.current.play().catch(e => {
+        console.error("Playback failed", e);
+        setIsPlaying(false);
+      });
     }
     setIsPlaying(!isPlaying);
   };
@@ -654,16 +682,17 @@ function SurahDetailScreen({ surah, hafalanData, markStatus, resetStatus, onBack
             color: showTerjemahan ? "var(--blue)" : "var(--muted)",
             fontSize: 10, fontWeight: 700, fontFamily: "'DM Sans', sans-serif",
           }}>◎ TERJEMAHAN</button>
-          <button onClick={toggleAudio} style={{
-            flex: 1, padding: "8px 0", borderRadius: 10, cursor: "pointer",
+          <button onClick={toggleAudio} disabled={audioLoading || !audioUrl} style={{
+            flex: 1, padding: "8px 0", borderRadius: 10, cursor: (audioLoading || !audioUrl) ? "wait" : "pointer",
             background: isPlaying ? "var(--green)18" : "var(--card)",
             border: `1px solid ${isPlaying ? "var(--green)" : "var(--border)"}`,
-            color: isPlaying ? "var(--green)" : "var(--muted)",
+            color: isPlaying ? "var(--green)" : (audioLoading || !audioUrl) ? "var(--muted)88" : "var(--muted)",
             fontSize: 10, fontWeight: 700, fontFamily: "'DM Sans', sans-serif",
-            display: "flex", alignItems: "center", justifyContent: "center", gap: 6
+            display: "flex", alignItems: "center", justifyContent: "center", gap: 6,
+            opacity: (audioLoading || !audioUrl) ? 0.6 : 1
           }}>
-            <span style={{ fontSize: 14 }}>{isPlaying ? "Ⅱ" : "▶"}</span>
-            {isPlaying ? "PLAYING" : "AUDIO"}
+            <span style={{ fontSize: 14 }}>{audioLoading ? "◔" : isPlaying ? "Ⅱ" : "▶"}</span>
+            {audioLoading ? "LOADING" : isPlaying ? "PLAYING" : "AUDIO"}
           </button>
           {d.status === "belum" && (
             <button onClick={() => markStatus(surah.id, "proses")} style={{
