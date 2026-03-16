@@ -555,6 +555,7 @@ function SurahDetailScreen({ surah, hafalanData, markStatus, resetStatus, onBack
   const [isPlaying, setIsPlaying] = useState(false);
   const [audioUrl, setAudioUrl] = useState(null);
   const [timestamps, setTimestamps] = useState([]);
+  const [stopPoint, setStopPoint] = useState(null);
   const [audioLoading, setAudioLoading] = useState(false);
   const audioRef = useRef(null);
   const ayahRefs = useRef({});
@@ -566,6 +567,8 @@ function SurahDetailScreen({ surah, hafalanData, markStatus, resetStatus, onBack
     const fetchAudioUrl = async () => {
       setAudioLoading(true);
       setAudioUrl(null);
+      setTimestamps([]);
+      setStopPoint(null);
       setIsPlaying(false);
       try {
         // ID 7 corresponds to Mishary Rashid Alafasy in Quran.com API
@@ -600,6 +603,14 @@ function SurahDetailScreen({ surah, hafalanData, markStatus, resetStatus, onBack
       if (!timestamps.length) return;
       const currentTimeMs = audioRef.current.currentTime * 1000;
       
+      // Auto-stop if per-verse stopPoint is reached
+      if (stopPoint && currentTimeMs >= stopPoint) {
+        audioRef.current.pause();
+        setIsPlaying(false);
+        setStopPoint(null);
+        return;
+      }
+
       // Find the active verse based on current time
       const currentVerse = timestamps.find(t => 
         currentTimeMs >= t.timestamp_from && currentTimeMs <= t.timestamp_to
@@ -646,6 +657,28 @@ function SurahDetailScreen({ surah, hafalanData, markStatus, resetStatus, onBack
       });
     }
     setIsPlaying(!isPlaying);
+  };
+
+  const playVerse = (ayahNum) => {
+    if (!audioRef.current || !timestamps.length) return;
+    
+    const verseKey = `${surah.id}:${ayahNum}`;
+    const target = timestamps.find(t => t.verse_key === verseKey);
+    
+    if (target) {
+      // If already playing this verse, pause
+      if (isPlaying && activeAyah === ayahNum && stopPoint) {
+        audioRef.current.pause();
+        setIsPlaying(false);
+        setStopPoint(null);
+      } else {
+        audioRef.current.currentTime = target.timestamp_from / 1000;
+        setStopPoint(target.timestamp_to);
+        audioRef.current.play().catch(e => console.error("Verse playback failed", e));
+        setIsPlaying(true);
+        setActiveAyah(ayahNum);
+      }
+    }
   };
 
   useEffect(() => {
@@ -780,7 +813,6 @@ function SurahDetailScreen({ surah, hafalanData, markStatus, resetStatus, onBack
 
         return (
           <div key={ayah.number} ref={el => ayahRefs.current[ayah.numberInSurah] = el}
-            onClick={() => setActiveAyah(active ? null : ayah.numberInSurah)}
             style={{ 
               padding: "18px 20px", 
               borderBottom: "1px solid var(--card)", 
@@ -788,17 +820,34 @@ function SurahDetailScreen({ surah, hafalanData, markStatus, resetStatus, onBack
               cursor: "pointer",
               transition: "background 0.5s ease"
             }}>
-            <div style={{ display: "flex", justifyContent: "flex-end", marginBottom: 10 }}>
-              <div style={{
-                width: 26, height: 26, borderRadius: 7,
-                background: active ? "var(--gold)" : "var(--border)",
-                display: "flex", alignItems: "center", justifyContent: "center",
-                fontSize: 10, color: active ? "var(--bg)" : "var(--muted)",
-                fontFamily: "'DM Sans', sans-serif", fontWeight: 700,
-              }}>{ayah.numberInSurah}</div>
+            <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", gap: 12, marginBottom: 10 }}>
+              <button 
+                onClick={(e) => { e.stopPropagation(); playVerse(ayah.numberInSurah); }}
+                style={{
+                  background: (active && isPlaying && stopPoint) ? "var(--gold)" : "var(--card)",
+                  border: "1px solid var(--border)",
+                  borderRadius: "50%",
+                  width: 32, height: 32,
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  cursor: "pointer", fontSize: 12,
+                  color: (active && isPlaying && stopPoint) ? "var(--bg)" : "var(--gold)",
+                  transition: "all 0.2s ease"
+                }}
+              >
+                {(active && isPlaying && stopPoint) ? "Ⅱ" : "▶"}
+              </button>
+              <div onClick={() => setActiveAyah(active ? null : ayah.numberInSurah)}
+                style={{
+                  width: 26, height: 26, borderRadius: 7,
+                  background: active ? "var(--gold)" : "var(--border)",
+                  display: "flex", alignItems: "center", justifyContent: "center",
+                  fontSize: 10, color: active ? "var(--bg)" : "var(--muted)",
+                  fontFamily: "'DM Sans', sans-serif", fontWeight: 700,
+                }}>{ayah.numberInSurah}</div>
             </div>
-            <div style={{
-              fontSize: 24, fontFamily: "'Scheherazade New', 'Traditional Arabic', serif",
+            <div onClick={() => setActiveAyah(active ? null : ayah.numberInSurah)}
+              style={{
+                fontSize: 24, fontFamily: "'Scheherazade New', 'Traditional Arabic', serif",
               color: "var(--text)", direction: "rtl", textAlign: "right", lineHeight: 2.2,
             }}>
               {ayahText} <span style={{ color: "var(--gold)88", fontSize: 18 }}>﴿{ayah.numberInSurah}﴾</span>
