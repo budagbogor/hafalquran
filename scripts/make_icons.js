@@ -15,7 +15,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 // ===== KONFIGURASI =====
-const INPUT_IMAGE = String.raw`C:\Users\DarkSky\.gemini\antigravity\brain\8add2d83-3536-472b-a298-f8adb2f205c7\media__1773263071903.png`;
+const INPUT_IMAGE = String.raw`C:\Users\DarkSky\.gemini\antigravity\brain\d5b2d7eb-fc6e-4697-98fc-cddfab192f64\media__1773675227066.jpg`;
 
 const OUTPUT_BASE = path.join(__dirname, '..', 'android', 'app', 'src', 'main', 'res');
 
@@ -51,10 +51,10 @@ async function main() {
     const meta = await sharp(INPUT_IMAGE).metadata();
     console.log(`Ukuran asli: ${meta.width}×${meta.height}px\n`);
 
-    // Gambar 1023×683: lingkaran ada di tengah horizontal
-    const diameter = Math.min(meta.width, meta.height); // 683
-    const offsetX = Math.round((meta.width - diameter) / 2);  // (1023-683)/2 = 170
-    const offsetY = 0;
+    // Center crop based on the smaller dimension
+    const diameter = Math.min(meta.width, meta.height);
+    const offsetX = Math.round((meta.width - diameter) / 2);
+    const offsetY = Math.round((meta.height - diameter) / 2);
 
     let success = 0;
 
