@@ -720,9 +720,10 @@ function SurahDetailScreen({ surah, hafalanData, markStatus, resetStatus, onBack
       }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 14 }}>
           <button onClick={onBack} style={{
-            background: "var(--border)", border: "1px solid var(--border-mid)", borderRadius: 10,
-            color: "var(--gold)", fontSize: 20, width: 38, height: 38,
+            background: "var(--border)", border: "1px solid var(--border-mid)", borderRadius: 12,
+            color: "var(--gold)", fontSize: 24, width: 46, height: 46,
             cursor: "pointer", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center",
+            fontWeight: 900,
           }}>←</button>
           <div style={{ flex: 1 }}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
@@ -1419,9 +1420,10 @@ const MetodeScreen = ({
         }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 12 }}>
             <button onClick={() => { setActiveMethodSession(null); setSessionChecked({}); }} style={{
-              background: "var(--border)", border: "1px solid var(--border-mid)", borderRadius: 10,
-              color: m.color, fontSize: 20, width: 38, height: 38,
+              background: "var(--border)", border: "1px solid var(--border-mid)", borderRadius: 12,
+              color: m.color, fontSize: 24, width: 46, height: 46,
               cursor: "pointer", flexShrink: 0, display: "flex", alignItems: "center", justifyContent: "center",
+              fontWeight: 900,
             }}>←</button>
             <div style={{ flex: 1 }}>
               <div style={{ fontSize: 11, color: m.color, fontFamily: "'DM Sans', sans-serif", fontWeight: 700, letterSpacing: "0.1em" }}>
@@ -1810,9 +1812,10 @@ const PanduanScreen = ({ setScreen }) => {
         }}>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
             <button onClick={() => setActiveSection(null)} style={{
-              background: "var(--border)", border: "1px solid var(--border-mid)", borderRadius: 10,
-              color: sec.color, fontSize: 20, width: 38, height: 38,
+              background: "var(--border)", border: "1px solid var(--border-mid)", borderRadius: 12,
+              color: sec.color, fontSize: 24, width: 46, height: 46,
               cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0,
+              fontWeight: 900,
             }}>←</button>
             <div>
               <div style={{ fontSize: 16, color: "var(--text)", fontFamily: "'Playfair Display', serif", fontWeight: 700 }}>
